@@ -1,0 +1,280 @@
+/* Dashboard Template Styles */
+.dashboard-template {
+  min-height: 100vh;
+  display: flex;
+  background-color: var(--color-background);
+  overflow-x: hidden;
+}
+
+.dashboard-template__main {
+  flex: 1;
+  transition: margin-left var(--transition-normal);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.dashboard-template__main--sidebar-open {
+  margin-left: 280px;
+}
+
+.dashboard-template__main--sidebar-closed {
+  margin-left: 80px;
+}
+
+.dashboard-template__content {
+  flex: 1;
+  padding: var(--spacing-8);
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Header Section */
+.dashboard-template__header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 16px 24px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.dashboard-template__header-content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.dashboard-template__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-template__title {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--color-neutral-900);
+  margin: 0;
+}
+
+.dashboard-template__subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-neutral-600);
+  margin: var(--spacing-2) 0 0 0;
+  font-weight: normal;
+}
+
+.dashboard-template__actions {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: center;
+}
+
+/* Main Content Area */
+.dashboard-template__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+.dashboard-template__section {
+  background-color: var(--color-card);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-6);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-neutral-200);
+}
+
+.dashboard-template__section-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-neutral-900);
+  margin: 0 0 var(--spacing-4) 0;
+}
+
+.dashboard-template__section-content {
+  color: var(--color-neutral-700);
+}
+
+/* Grid Layout */
+.dashboard-template__grid {
+  display: grid;
+  gap: var(--spacing-6);
+}
+
+.dashboard-template__grid--2-cols {
+  grid-template-columns: 1fr 1fr;
+}
+
+.dashboard-template__grid--3-cols {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.dashboard-template__grid--auto {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Stats Cards */
+.dashboard-template__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-8);
+}
+
+.dashboard-template__stat-card {
+  background: linear-gradient(135deg, var(--color-primary-100) 0%, var(--color-primary-700) 100%);
+  color: var(--color-primary-900);
+  padding: var(--spacing-6);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.dashboard-template__stat-value {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  margin: 0;
+}
+
+.dashboard-template__stat-label {
+  font-size: var(--font-size-sm);
+  margin: var(--spacing-1) 0 0 0;
+  opacity: 0.8;
+}
+
+/* Welcome Banner */
+.dashboard-template__welcome {
+  background: linear-gradient(135deg, var(--color-primary-800) 0%, var(--color-primary-700) 100%);
+  color: white;
+  padding: var(--spacing-8);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--spacing-8);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-template__welcome::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+}
+
+.dashboard-template__welcome-content {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-template__welcome-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  margin: 0 0 var(--spacing-2) 0;
+}
+
+.dashboard-template__welcome-text {
+  font-size: var(--font-size-base);
+  margin: 0;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .dashboard-template__main--sidebar-open,
+  .dashboard-template__main--sidebar-closed {
+    margin-left: 0;
+  }
+  
+  .dashboard-template__content {
+    padding: var(--spacing-4);
+  }
+  
+  .dashboard-template__header {
+    flex-direction: column;
+    gap: var(--spacing-4);
+    align-items: flex-start;
+  }
+  
+  .dashboard-template__title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .dashboard-template__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .dashboard-template__grid--2-cols,
+  .dashboard-template__grid--3-cols {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-template__stats {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-3);
+  }
+  
+  .dashboard-template__welcome {
+    padding: var(--spacing-6);
+    text-align: center;
+  }
+  
+  .dashboard-template__welcome-title {
+    font-size: var(--font-size-xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-template__content {
+    padding: var(--spacing-3);
+  }
+  
+  .dashboard-template__section {
+    padding: var(--spacing-4);
+  }
+  
+  .dashboard-template__stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-template__stat-card {
+    padding: var(--spacing-4);
+  }
+  
+  .dashboard-template__stat-value {
+    font-size: var(--font-size-2xl);
+  }
+}
+
+/* Animation */
+.dashboard-template__content > * {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.dashboard-template__content > *:nth-child(1) { animation-delay: 0.1s; }
+.dashboard-template__content > *:nth-child(2) { animation-delay: 0.2s; }
+.dashboard-template__content > *:nth-child(3) { animation-delay: 0.3s; }
+.dashboard-template__content > *:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

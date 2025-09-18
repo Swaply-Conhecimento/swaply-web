@@ -1,0 +1,296 @@
+/* Add Course Modal Styles */
+.add-course-modal {
+  /* Modal specific styles if needed */
+}
+
+.add-course-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+/* Sections */
+.add-course-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.add-course-section__title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-primary-900);
+  margin: 0;
+  padding-bottom: var(--spacing-3);
+  border-bottom: 2px solid var(--color-primary-100);
+}
+
+.add-course-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+/* Categories */
+.add-course-categories {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.add-course-category-input {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: flex-end;
+}
+
+.add-course-category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.add-course-category-tag {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  background: var(--color-primary-100);
+  color: var(--color-primary-900);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  border: 1px solid var(--color-primary-200);
+}
+
+.add-course-category-remove {
+  background: none;
+  border: none;
+  color: var(--color-primary-700);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+}
+
+.add-course-category-remove:hover {
+  background: var(--color-primary-200);
+  color: var(--color-primary-900);
+}
+
+/* Lessons */
+.add-course-lessons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.add-course-lesson-card {
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-neutral-200);
+  transition: all var(--transition-fast);
+}
+
+.add-course-lesson-card:hover {
+  background: white;
+  border-color: var(--color-primary-200);
+}
+
+.add-course-lesson-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-4);
+  padding-bottom: var(--spacing-3);
+  border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.add-course-lesson-number {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-primary-900);
+}
+
+.add-course-lesson-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.add-course-lesson-details {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-3);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--color-neutral-200);
+}
+
+.add-course-add-lesson {
+  align-self: flex-start;
+  margin-top: var(--spacing-2);
+}
+
+/* Form Actions */
+.add-course-actions {
+  display: flex;
+  gap: var(--spacing-4);
+  justify-content: flex-end;
+  padding-top: var(--spacing-6);
+  border-top: 1px solid var(--color-neutral-200);
+}
+
+/* Textarea Support */
+.add-course-form textarea {
+  min-height: 100px;
+  resize: vertical;
+  font-family: var(--font-family-sans);
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 2px solid var(--color-neutral-200);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  color: var(--color-neutral-800);
+  background-color: var(--color-card);
+  transition: all var(--transition-fast);
+  outline: none;
+  width: 100%;
+}
+
+.add-course-form textarea:focus {
+  border-color: var(--color-primary-800);
+  box-shadow: 0 0 0 3px rgba(84, 89, 172, 0.1);
+}
+
+.add-course-form textarea::placeholder {
+  color: var(--color-neutral-400);
+}
+
+/* File Upload Area */
+.add-course-upload {
+  border: 2px dashed var(--color-neutral-300);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-8);
+  text-align: center;
+  background: var(--color-neutral-50);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.add-course-upload:hover {
+  border-color: var(--color-primary-800);
+  background: var(--color-primary-50);
+}
+
+.add-course-upload-icon {
+  color: var(--color-neutral-400);
+  margin-bottom: var(--spacing-3);
+}
+
+.add-course-upload:hover .add-course-upload-icon {
+  color: var(--color-primary-800);
+}
+
+.add-course-upload-text {
+  font-size: var(--font-size-base);
+  color: var(--color-neutral-600);
+  margin: 0;
+}
+
+.add-course-upload-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-500);
+  margin: var(--spacing-1) 0 0 0;
+}
+
+/* Animation */
+.add-course-lesson-card {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideInLesson 0.4s ease-out forwards;
+}
+
+.add-course-lesson-card:nth-child(1) { animation-delay: 0.1s; }
+.add-course-lesson-card:nth-child(2) { animation-delay: 0.2s; }
+.add-course-lesson-card:nth-child(3) { animation-delay: 0.3s; }
+.add-course-lesson-card:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes slideInLesson {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .add-course-form {
+    gap: var(--spacing-6);
+  }
+  
+  .add-course-category-input {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .add-course-actions {
+    flex-direction: column;
+  }
+  
+  .add-course-lesson-header {
+    flex-direction: column;
+    gap: var(--spacing-2);
+    align-items: flex-start;
+  }
+  
+  .add-course-upload {
+    padding: var(--spacing-6);
+  }
+}
+
+/* Loading State */
+.add-course-form--loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* Success State */
+.add-course-success {
+  text-align: center;
+  padding: var(--spacing-8);
+}
+
+.add-course-success-icon {
+  font-size: 4rem;
+  color: var(--color-success);
+  margin-bottom: var(--spacing-4);
+}
+
+.add-course-success-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-neutral-900);
+  margin: 0 0 var(--spacing-2) 0;
+}
+
+.add-course-success-text {
+  font-size: var(--font-size-base);
+  color: var(--color-neutral-600);
+  margin: 0 0 var(--spacing-6) 0;
+  line-height: 1.6;
+}
+
+/* Validation */
+.add-course-field--error {
+  border-color: var(--color-error);
+}
+
+.add-course-error-message {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-1);
+}

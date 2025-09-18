@@ -1,0 +1,203 @@
+/* Input Component Styles */
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.input-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-neutral-700);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.input-required {
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-field {
+  width: 100%;
+  border: 2px solid var(--color-neutral-200);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  color: var(--color-neutral-800);
+  background-color: var(--color-card);
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+/* Sizes */
+.input-field--small {
+  padding: var(--spacing-2) var(--spacing-3);
+  font-size: var(--font-size-sm);
+  min-height: 2rem;
+}
+
+.input-field--medium {
+  padding: var(--spacing-3) var(--spacing-4);
+  font-size: var(--font-size-base);
+  min-height: 2.5rem;
+}
+
+.input-field--large {
+  padding: var(--spacing-4) var(--spacing-5);
+  font-size: var(--font-size-lg);
+  min-height: 3rem;
+}
+
+/* With Icons */
+.input-field--with-icon.input-field--small {
+  padding-left: 2rem;
+}
+
+.input-field--with-icon.input-field--medium {
+  padding-left: 2.5rem;
+}
+
+.input-field--with-icon.input-field--large {
+  padding-left: 3rem;
+}
+
+/* States */
+.input-field:focus {
+  border-color: var(--color-primary-800);
+  box-shadow: 0 0 0 3px rgba(84, 89, 172, 0.1);
+}
+
+.input-field:hover:not(:disabled):not(.input-field--error) {
+  border-color: var(--color-neutral-300);
+}
+
+.input-field::placeholder {
+  color: var(--color-neutral-400);
+}
+
+.input-field--disabled {
+  background-color: var(--color-neutral-50);
+  border-color: var(--color-neutral-200);
+  color: var(--color-neutral-400);
+  cursor: not-allowed;
+}
+
+.input-field--error {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.input-field--error:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.input-field--full-width {
+  width: 100%;
+}
+
+/* Icons */
+.input-icon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: var(--color-neutral-400);
+}
+
+.input-icon--left {
+  left: var(--spacing-3);
+}
+
+.input-icon--right {
+  right: var(--spacing-3);
+}
+
+.input-icon svg,
+.input-icon img {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Messages */
+.input-message {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-600);
+}
+
+.input-message--error {
+  color: var(--color-error);
+}
+
+/* Special Input Types */
+.input-field[type="password"] {
+  font-family: text-security-disc, -webkit-text-security, monospace;
+}
+
+.input-field[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.input-field[type="number"]::-webkit-outer-spin-button,
+.input-field[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input-field[type="search"] {
+  -webkit-appearance: none;
+}
+
+.input-field[type="search"]::-webkit-search-decoration,
+.input-field[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+/* Autofill Styles */
+.input-field:-webkit-autofill,
+.input-field:-webkit-autofill:hover,
+.input-field:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--color-card) inset;
+  -webkit-text-fill-color: var(--color-neutral-800);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Dark Theme Support */
+[data-theme="dark"] .input-field {
+  background-color: var(--color-card);
+  border-color: var(--color-neutral-200);
+  color: var(--color-neutral-800);
+}
+
+[data-theme="dark"] .input-field:focus {
+  border-color: var(--color-primary-800);
+  box-shadow: 0 0 0 3px rgba(84, 89, 172, 0.1);
+}
+
+[data-theme="dark"] .input-field:hover:not(:disabled):not(.input-field--error) {
+  border-color: var(--color-neutral-300);
+}
+
+[data-theme="dark"] .input-field--disabled {
+  background-color: var(--color-neutral-50);
+  border-color: var(--color-neutral-200);
+  color: var(--color-neutral-400);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .input-field--large {
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--font-size-base);
+    min-height: 2.5rem;
+  }
+}

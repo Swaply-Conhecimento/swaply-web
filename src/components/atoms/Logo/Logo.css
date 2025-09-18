@@ -1,0 +1,53 @@
+/* Logo Component Styles */
+.logo {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Sizes */
+.logo--small {
+  height: 2rem; /* 32px */
+  width: auto;
+}
+
+.logo--medium {
+  height: 3rem; /* 48px */
+  width: auto;
+}
+
+.logo--large {
+  height: 4rem; /* 64px */
+  width: auto;
+}
+
+.logo--xlarge {
+  height: 6rem; /* 96px */
+  width: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .logo--large {
+    height: 3rem;
+  }
+  
+  .logo--xlarge {
+    height: 4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo--medium {
+    height: 2.5rem;
+  }
+  
+  .logo--large {
+    height: 2.5rem;
+  }
+  
+  .logo--xlarge {
+    height: 3rem;
+  }
+}
