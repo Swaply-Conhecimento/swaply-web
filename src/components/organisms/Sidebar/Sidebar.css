@@ -147,6 +147,7 @@
 
 .sidebar__menu-button--active:hover {
   background-color: var(--color-primary-900);
+  color: white;
   transform: translateX(2px);
 }
 
@@ -261,16 +262,16 @@
     transform: translateX(-100%);
     transition: transform var(--transition-normal);
   }
-  
+
   .sidebar--open {
     transform: translateX(0);
     width: 280px;
   }
-  
+
   .sidebar--closed {
     transform: translateX(-100%);
   }
-  
+
   .sidebar__toggle {
     display: none;
   }
@@ -310,11 +311,25 @@
   transform: translateX(-10px);
 }
 
-.sidebar__menu-item:nth-child(1) { transition-delay: 0ms; }
-.sidebar__menu-item:nth-child(2) { transition-delay: 50ms; }
-.sidebar__menu-item:nth-child(3) { transition-delay: 100ms; }
-.sidebar__menu-item:nth-child(4) { transition-delay: 150ms; }
-.sidebar__menu-item:nth-child(5) { transition-delay: 200ms; }
+.sidebar__menu-item:nth-child(1) {
+  transition-delay: 0ms;
+}
+
+.sidebar__menu-item:nth-child(2) {
+  transition-delay: 50ms;
+}
+
+.sidebar__menu-item:nth-child(3) {
+  transition-delay: 100ms;
+}
+
+.sidebar__menu-item:nth-child(4) {
+  transition-delay: 150ms;
+}
+
+.sidebar__menu-item:nth-child(5) {
+  transition-delay: 200ms;
+}
 
 /* Dark Theme Support */
 [data-theme="dark"] .sidebar {

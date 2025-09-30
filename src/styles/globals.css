@@ -8,7 +8,7 @@
   --color-primary-800: #5459AC;
   --color-primary-700: #648DB3;
   --color-primary-100: #B2D8CE;
-  
+
   --color-neutral-50: #F8FAFC;
   --color-neutral-100: #F1F5F9;
   --color-neutral-200: #E2E8F0;
@@ -19,15 +19,15 @@
   --color-neutral-700: #334155;
   --color-neutral-800: #1E293B;
   --color-neutral-900: #0F172A;
-  
+
   --color-success: #22C55E;
   --color-warning: #F59E0B;
   --color-error: #EF4444;
-  
+
   --color-sidebar: #B2D8CE;
   --color-background: #F8FAFC;
   --color-card: #FFFFFF;
-  
+
   /* Typography */
   --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-size-xs: 0.75rem;
@@ -38,7 +38,7 @@
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
   --font-size-4xl: 2.25rem;
-  
+
   /* Spacing */
   --spacing-1: 0.25rem;
   --spacing-2: 0.5rem;
@@ -51,7 +51,7 @@
   --spacing-12: 3rem;
   --spacing-16: 4rem;
   --spacing-20: 5rem;
-  
+
   /* Border Radius */
   --radius-sm: 0.125rem;
   --radius-base: 0.25rem;
@@ -60,18 +60,18 @@
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
   --radius-full: 9999px;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  
+
   /* Transitions */
   --transition-fast: 150ms ease-in-out;
   --transition-normal: 300ms ease-in-out;
   --transition-slow: 500ms ease-in-out;
-  
+
   /* Z-Index */
   --z-index-dropdown: 1000;
   --z-index-sticky: 1020;
@@ -79,7 +79,7 @@
   --z-index-modal: 1040;
   --z-index-popover: 1050;
   --z-index-tooltip: 1060;
-  
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -98,13 +98,13 @@
   --color-neutral-700: #E2E8F0;
   --color-neutral-800: #F1F5F9;
   --color-neutral-900: #F8FAFC;
-  
+
   --color-sidebar: #1E293B;
   --color-background: #0F172A;
   --color-card: #1E293B;
-  
+
   --color-primary-100: rgba(178, 216, 206, 0.2);
-  
+
   color-scheme: dark;
 }
 
@@ -157,18 +157,40 @@ body {
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: 1.25;
   color: var(--color-neutral-900);
 }
 
-h1 { font-size: var(--font-size-4xl); }
-h2 { font-size: var(--font-size-3xl); }
-h3 { font-size: var(--font-size-2xl); }
-h4 { font-size: var(--font-size-xl); }
-h5 { font-size: var(--font-size-lg); }
-h6 { font-size: var(--font-size-base); }
+h1 {
+  font-size: var(--font-size-4xl);
+}
+
+h2 {
+  font-size: var(--font-size-3xl);
+}
+
+h3 {
+  font-size: var(--font-size-2xl);
+}
+
+h4 {
+  font-size: var(--font-size-xl);
+}
+
+h5 {
+  font-size: var(--font-size-lg);
+}
+
+h6 {
+  font-size: var(--font-size-base);
+}
 
 p {
   margin-bottom: var(--spacing-4);
@@ -219,7 +241,54 @@ a:hover {
 
 /* VLibras Widget Positioning */
 div[vw] {
+  position: fixed !important;
   z-index: 10000 !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+div[vw] * {
+  box-sizing: border-box !important;
+}
+
+div[vw] .vw-plugin-wrapper {
+  transform: scale(0.9);
+  transform-origin: bottom right;
+}
+
+div[vw-access-button] {
+  position: fixed !important;
+  z-index: 10001 !important;
+  display: block !important;
+  visibility: visible !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  width: 64px !important;
+  height: 64px !important;
+  background-color: #1976d2 !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+}
+
+/* Ensure VLibras shows/hides based on settings */
+div[vw].vlibras-hidden {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+@media (max-width: 768px) {
+  div[vw] {
+    right: 8px !important;
+    bottom: 8px !important;
+  }
+
+  div[vw] .vw-plugin-wrapper {
+    transform: scale(0.8);
+  }
 }
 
 /* Audio Reading Styles */
@@ -230,8 +299,15 @@ div[vw] {
 }
 
 @keyframes audioReading {
-  0%, 100% { background-color: rgba(84, 89, 172, 0.1); }
-  50% { background-color: rgba(84, 89, 172, 0.2); }
+
+  0%,
+  100% {
+    background-color: rgba(84, 89, 172, 0.1);
+  }
+
+  50% {
+    background-color: rgba(84, 89, 172, 0.2);
+  }
 }
 
 [data-theme="dark"] .audio-reading-active {
@@ -278,10 +354,21 @@ div[vw] {
   justify-content: space-between;
 }
 
-.gap-2 { gap: var(--spacing-2); }
-.gap-4 { gap: var(--spacing-4); }
-.gap-6 { gap: var(--spacing-6); }
-.gap-8 { gap: var(--spacing-8); }
+.gap-2 {
+  gap: var(--spacing-2);
+}
+
+.gap-4 {
+  gap: var(--spacing-4);
+}
+
+.gap-6 {
+  gap: var(--spacing-6);
+}
+
+.gap-8 {
+  gap: var(--spacing-8);
+}
 
 .text-center {
   text-align: center;
@@ -360,8 +447,16 @@ div[vw] {
   .container {
     padding: 0 var(--spacing-3);
   }
-  
-  h1 { font-size: var(--font-size-3xl); }
-  h2 { font-size: var(--font-size-2xl); }
-  h3 { font-size: var(--font-size-xl); }
+
+  h1 {
+    font-size: var(--font-size-3xl);
+  }
+
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  h3 {
+    font-size: var(--font-size-xl);
+  }
 }

@@ -1,0 +1,74 @@
+#colorblind-controls {
+    position: fixed;
+    top: 1rem;
+    right: 200px;
+    background-color: var(--color-surface);
+    padding: 12px 16px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    border: 1px solid var(--color-neutral-300);
+    min-width: 220px;
+}
+
+#colorblind-controls label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+
+#colorblind-controls select {
+    font-size: 14px;
+    padding: 6px 12px;
+    border: 1px solid var(--color-neutral-300);
+    border-radius: var(--radius-base);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    flex: 1;
+}
+
+#colorblind-controls select:hover {
+    border-color: var(--color-primary-600);
+}
+
+#colorblind-controls select:focus {
+    border-color: var(--color-primary-800);
+    outline: 2px solid var(--color-primary-800);
+    outline-offset: 2px;
+}
+
+/* Dark theme support */
+[data-theme="dark"] #colorblind-controls {
+    background: var(--color-neutral-800);
+    border-color: var(--color-neutral-600);
+}
+
+[data-theme="dark"] #colorblind-controls select {
+    background-color: var(--color-neutral-700);
+    border-color: var(--color-neutral-500);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    #colorblind-controls {
+        top: 0.5rem;
+        right: 110px;
+        padding: 8px 12px;
+        min-width: 160px;
+    }
+
+    #colorblind-controls label {
+        font-size: 12px;
+    }
+
+    #colorblind-controls select {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+}

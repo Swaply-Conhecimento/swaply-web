@@ -1,103 +1,95 @@
-import { useEffect } from 'react';
-import { useApp } from '../contexts/AppContext';
+import { useEffect } from "react";
+import { useApp } from "../contexts/AppContext";
 
 export const useAccessibility = () => {
   const { state, actions } = useApp();
 
   useEffect(() => {
     const root = document.documentElement;
-    
-    // Apply font size
-    root.setAttribute('data-font-size', state.settings.fontSize);
-    
-    // Apply VLibras if enabled
-    if (state.settings.accessibility.vlibras) {
-      loadVLibras();
+    // Ensure language is pt-BR for accessibility tools
+    try {
+      root.setAttribute("lang", "pt-BR");
+    } catch (error) {
+      console.warn("Error setting language:", error);
     }
-    
+
+    // Apply font size
+    root.setAttribute("data-font-size", state.settings.fontSize);
+
+    // VLibras control - show/hide the existing widget
+    const vlibrasWidget = document.querySelector("div[vw]");
+    if (vlibrasWidget) {
+      if (state.settings.accessibility.vlibras) {
+        console.log("Showing VLibras widget");
+        vlibrasWidget.classList.remove("vlibras-hidden");
+      } else {
+        console.log("Hiding VLibras widget");
+        vlibrasWidget.classList.add("vlibras-hidden");
+      }
+    }
+
     // Apply audio reading setup
     if (state.settings.accessibility.audioDescription) {
       setupAudioReading();
     }
-    
-    // Log current settings for debugging
-    console.log('Accessibility settings:', state.settings.accessibility);
+
+    console.log("Accessibility settings:", state.settings.accessibility);
   }, [state.settings]);
-
-  const loadVLibras = () => {
-    // Check if VLibras is already loaded
-    if (window.VLibras) {
-      return;
-    }
-
-    // Create VLibras script
-    const script = document.createElement('script');
-    script.src = 'https://vlibras.gov.br/app/vlibras-plugin.js';
-    script.async = true;
-    script.onload = () => {
-      if (window.VLibras) {
-        new window.VLibras.Widget('https://vlibras.gov.br/app');
-      }
-    };
-    document.head.appendChild(script);
-  };
 
   const setupAudioReading = () => {
     // Setup Speech Synthesis for audio reading
-    if ('speechSynthesis' in window) {
-      // Audio reading is available
-      console.log('Speech synthesis available');
+    if ("speechSynthesis" in window) {
+      console.log("Speech synthesis available");
     }
   };
 
   const readText = (text) => {
     if (!state.settings.accessibility.audioDescription) {
-      console.log('Audio reading is disabled');
+      console.log("Audio reading is disabled");
       return;
     }
 
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       try {
         // Cancel any ongoing speech
         window.speechSynthesis.cancel();
-        
+
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'pt-BR';
+        utterance.lang = "pt-BR";
         utterance.rate = 0.9;
         utterance.pitch = 1;
         utterance.volume = 1;
-        
+
         utterance.onstart = () => {
-          console.log('Started reading:', text);
+          console.log("Started reading:", text);
           actions.setReading(true);
         };
-        
+
         utterance.onend = () => {
-          console.log('Finished reading');
+          console.log("Finished reading");
           actions.setReading(false);
         };
-        
+
         utterance.onerror = (event) => {
-          console.error('Speech synthesis error:', event);
+          console.error("Speech synthesis error:", event);
           actions.setReading(false);
         };
-        
+
         // Small delay to ensure previous speech is cancelled
         setTimeout(() => {
           window.speechSynthesis.speak(utterance);
         }, 100);
-        
       } catch (error) {
-        console.error('Error in readText:', error);
+        console.error("Error in readText:", error);
         actions.setReading(false);
       }
     } else {
-      console.log('Speech synthesis not supported');
+      console.log("Speech synthesis not supported");
     }
   };
 
   const stopReading = () => {
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
       actions.setReading(false);
     }
@@ -108,22 +100,23 @@ export const useAccessibility = () => {
   };
 
   const toggleVLibras = (enabled) => {
-    actions.updateSettings({ 
-      accessibility: { 
-        ...state.settings.accessibility, 
-        vlibras: enabled 
-      } 
+    console.log("toggleVLibras called with:", enabled);
+    actions.updateSettings({
+      accessibility: {
+        ...state.settings.accessibility,
+        vlibras: enabled,
+      },
     });
   };
 
   const toggleAudioReading = (enabled) => {
-    actions.updateSettings({ 
-      accessibility: { 
-        ...state.settings.accessibility, 
-        audioDescription: enabled 
-      } 
+    actions.updateSettings({
+      accessibility: {
+        ...state.settings.accessibility,
+        audioDescription: enabled,
+      },
     });
-    
+
     if (!enabled) {
       stopReading();
     }
@@ -137,6 +130,6 @@ export const useAccessibility = () => {
     toggleAudioReading,
     isReading: state.isReading,
     settings: state.settings.accessibility,
-    fontSize: state.settings.fontSize
+    fontSize: state.settings.fontSize,
   };
 };

@@ -41,6 +41,48 @@
   border-left: 1px solid var(--color-neutral-200);
 }
 
+/* Animated transitions between login/register */
+.auth-form__right {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-form__form {
+  will-change: transform, opacity;
+}
+
+.auth-form__form--login {
+  animation: slideInFromLeft 300ms var(--transition-fast);
+}
+
+.auth-form__form--register {
+  animation: slideInFromRight 300ms var(--transition-fast);
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .auth-form__header {
   text-align: center;
   margin-bottom: var(--spacing-8);
@@ -76,6 +118,16 @@
   flex-direction: column;
   gap: var(--spacing-6);
   flex: 1;
+}
+
+.auth-form__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.auth-form__forgot {
+  align-self: center;
 }
 
 .auth-form__fields {
@@ -225,6 +277,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -238,27 +291,27 @@
     align-items: flex-start;
     padding-top: var(--spacing-4);
   }
-  
+
   .auth-form__container {
     max-width: 100%;
   }
-  
+
   .auth-form__content {
     grid-template-columns: 1fr;
     gap: var(--spacing-4);
     min-height: auto;
   }
-  
+
   .auth-form__right {
     border-left: none;
     border-top: 1px solid var(--color-neutral-200);
     padding-top: var(--spacing-6);
   }
-  
+
   .auth-form__title {
     font-size: var(--font-size-2xl);
   }
-  
+
   .auth-form__password-row {
     flex-direction: column;
   }
@@ -275,7 +328,7 @@
   .auth-form {
     background: var(--color-neutral-900);
   }
-  
+
   .auth-form__card {
     border: 2px solid var(--color-neutral-300);
   }

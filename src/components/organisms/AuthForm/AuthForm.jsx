@@ -1,25 +1,32 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-import { User, Envelope, Lock, Globe, Eye, EyeSlash } from '@phosphor-icons/react';
-import Logo from '../../atoms/Logo';
-import Button from '../../atoms/Button';
-import FormField, { validations } from '../../molecules/FormField';
-import Card from '../../molecules/Card';
-import './AuthForm.css';
+import React, { useState } from "react";
+import PropTypes from "prop-types";
+import {
+  User,
+  Envelope,
+  Lock,
+  Globe,
+  Eye,
+  EyeSlash,
+} from "@phosphor-icons/react";
+import Logo from "../../atoms/Logo";
+import Button from "../../atoms/Button";
+import FormField, { validations } from "../../molecules/FormField";
+import Card from "../../molecules/Card";
+import "./AuthForm.css";
 
 const AuthForm = ({
-  mode = 'login',
+  mode = "login",
   onSubmit,
   onModeChange,
   loading = false,
   error,
-  className = '',
+  className = "",
 }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
     acceptTerms: false,
   });
 
@@ -27,21 +34,21 @@ const AuthForm = ({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const isLogin = mode === 'login';
-  const isRegister = mode === 'register';
+  const isLogin = mode === "login";
+  const isRegister = mode === "register";
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
 
     // Clear field error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
@@ -50,27 +57,27 @@ const AuthForm = ({
     const newErrors = {};
 
     if (isRegister && !formData.name.trim()) {
-      newErrors.name = 'Nome é obrigatório';
+      newErrors.name = "Nome é obrigatório";
     }
 
     if (!formData.email) {
-      newErrors.email = 'Email é obrigatório';
+      newErrors.email = "Email é obrigatório";
     } else if (validations.email(formData.email) !== true) {
       newErrors.email = validations.email(formData.email);
     }
 
     if (!formData.password) {
-      newErrors.password = 'Senha é obrigatória';
+      newErrors.password = "Senha é obrigatória";
     } else if (isRegister && validations.password(formData.password) !== true) {
       newErrors.password = validations.password(formData.password);
     }
 
     if (isRegister && formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'As senhas não coincidem';
+      newErrors.confirmPassword = "As senhas não coincidem";
     }
 
     if (isRegister && !formData.acceptTerms) {
-      newErrors.acceptTerms = 'Você deve aceitar os termos de uso';
+      newErrors.acceptTerms = "Você deve aceitar os termos de uso";
     }
 
     setErrors(newErrors);
@@ -79,14 +86,14 @@ const AuthForm = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       onSubmit(formData);
     }
   };
 
   const handleGoogleLogin = () => {
-    console.log('Login with Google');
+    console.log("Login with Google");
   };
 
   const togglePasswordVisibility = () => {
@@ -100,20 +107,24 @@ const AuthForm = ({
   return (
     <div className={`auth-form ${className}`}>
       <div className="auth-form__container">
-        <Card variant="elevated" padding="large" shadow="lg" className="auth-form__card">
+        <Card
+          variant="elevated"
+          padding="large"
+          shadow="lg"
+          className="auth-form__card"
+        >
           <div className="auth-form__content">
             {/* Left Side - Logo and Info */}
             <div className="auth-form__left">
               <div className="auth-form__header">
                 <Logo variant="simples" size="large" />
                 <h1 className="auth-form__title">
-                  {isLogin ? 'Login' : 'Cadastrar'}
+                  {isLogin ? "Login" : "Cadastrar"}
                 </h1>
                 <p className="auth-form__subtitle">
-                  {isLogin 
-                    ? 'Por favor, faça o login para acessar o site'
-                    : 'Crie sua conta para aproveitar ao máximo do site'
-                  }
+                  {isLogin
+                    ? "Por favor, faça o login para acessar o site"
+                    : "Crie sua conta para aproveitar ao máximo do site"}
                 </p>
               </div>
 
@@ -127,7 +138,7 @@ const AuthForm = ({
                   onClick={handleGoogleLogin}
                 >
                   <Globe size={20} />
-                  {isLogin ? 'Logar com Google' : 'Continuar com Google'}
+                  {isLogin ? "Logar com Google" : "Continuar com Google"}
                 </Button>
               </div>
 
@@ -137,27 +148,36 @@ const AuthForm = ({
 
               <div className="auth-form__footer">
                 <p className="auth-form__switch">
-                  {isLogin ? 'Não tem conta? ' : 'Já possui conta? '}
+                  {isLogin ? "Não tem conta? " : "Já possui conta? "}
                   <button
                     type="button"
-                    onClick={() => onModeChange(isLogin ? 'register' : 'login')}
+                    onClick={() => onModeChange(isLogin ? "register" : "login")}
                     className="auth-form__link"
                   >
-                    {isLogin ? 'Criar Conta' : 'Login'}
+                    {isLogin ? "Criar Conta" : "Login"}
                   </button>
                 </p>
               </div>
             </div>
 
             {/* Right Side - Form */}
-            <div className="auth-form__right">
-              {error && (
-                <div className="auth-form__error">
-                  {error}
-                </div>
-              )}
+            <div
+              className={`auth-form__right auth-form__right--${
+                isLogin ? "login" : "register"
+              }`}
+            >
+              {error && <div className="auth-form__error">{error}</div>}
 
-              <form onSubmit={handleSubmit} className="auth-form__form">
+              <form
+                onSubmit={handleSubmit}
+                className={`auth-form__form ${
+                  loading ? "auth-form__form--loading" : ""
+                } ${
+                  isLogin
+                    ? "auth-form__form--login"
+                    : "auth-form__form--register"
+                }`}
+              >
                 <div className="auth-form__fields">
                   {isRegister && (
                     <FormField
@@ -189,7 +209,7 @@ const AuthForm = ({
                     <FormField
                       label="Senha"
                       name="password"
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={handleInputChange}
                       error={errors.password}
@@ -201,7 +221,11 @@ const AuthForm = ({
                           onClick={togglePasswordVisibility}
                           className="auth-form__password-toggle"
                         >
-                          {showPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                          {showPassword ? (
+                            <EyeSlash size={20} />
+                          ) : (
+                            <Eye size={20} />
+                          )}
                         </button>
                       }
                       required
@@ -211,7 +235,7 @@ const AuthForm = ({
                       <FormField
                         label="Confirmar senha"
                         name="confirmPassword"
-                        type={showConfirmPassword ? 'text' : 'password'}
+                        type={showConfirmPassword ? "text" : "password"}
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
                         error={errors.confirmPassword}
@@ -223,7 +247,11 @@ const AuthForm = ({
                             onClick={toggleConfirmPasswordVisibility}
                             className="auth-form__password-toggle"
                           >
-                            {showConfirmPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                            {showConfirmPassword ? (
+                              <EyeSlash size={20} />
+                            ) : (
+                              <Eye size={20} />
+                            )}
                           </button>
                         }
                         required
@@ -244,11 +272,16 @@ const AuthForm = ({
                           className="auth-form__checkbox-input"
                         />
                         <span className="auth-form__checkbox-text">
-                          Li e aceito os <a href="/terms" className="auth-form__link">Termos de Uso</a>
+                          Li e aceito os{" "}
+                          <a href="/terms" className="auth-form__link">
+                            Termos de Uso
+                          </a>
                         </span>
                       </label>
                       {errors.acceptTerms && (
-                        <span className="auth-form__error-text">{errors.acceptTerms}</span>
+                        <span className="auth-form__error-text">
+                          {errors.acceptTerms}
+                        </span>
                       )}
                     </div>
                   )}
@@ -259,20 +292,33 @@ const AuthForm = ({
                         type="checkbox"
                         className="auth-form__checkbox-input"
                       />
-                      <span className="auth-form__checkbox-text">Lembrar de mim</span>
+                      <span className="auth-form__checkbox-text">
+                        Lembrar de mim
+                      </span>
                     </label>
                   )}
                 </div>
 
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="large"
-                  fullWidth
-                  loading={loading}
-                >
-                  {isLogin ? 'Logar' : 'Criar Conta'}
-                </Button>
+                <div className="auth-form__actions">
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="large"
+                    fullWidth
+                    loading={loading}
+                  >
+                    {isLogin ? "Logar" : "Criar Conta"}
+                  </Button>
+                  {isLogin && (
+                    <button
+                      type="button"
+                      className="auth-form__link auth-form__forgot"
+                      onClick={() => console.log("forgot password")}
+                    >
+                      Esqueci minha senha
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
           </div>
@@ -283,7 +329,7 @@ const AuthForm = ({
 };
 
 AuthForm.propTypes = {
-  mode: PropTypes.oneOf(['login', 'register']),
+  mode: PropTypes.oneOf(["login", "register"]),
   onSubmit: PropTypes.func.isRequired,
   onModeChange: PropTypes.func.isRequired,
   loading: PropTypes.bool,

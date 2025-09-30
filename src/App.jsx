@@ -1,45 +1,57 @@
-import React from 'react';
-import { AppProvider, useApp } from './contexts/AppContext';
-import { Dashboard, Auth, Profile, Settings, CourseDetails, Favorites, Calendar, MyCourses, ScheduleClass, Notifications } from './components/pages';
-import { AddCourseModal } from './components/organisms';
-import { useTheme } from './hooks/useTheme';
-import { useAccessibility } from './hooks/useAccessibility';
-import './App.css';
+import React from "react";
+import { AppProvider, useApp } from "./contexts/AppContext";
+import {
+  Dashboard,
+  Auth,
+  Profile,
+  Settings,
+  CourseDetails,
+  Favorites,
+  Calendar,
+  MyCourses,
+  ScheduleClass,
+  Notifications,
+} from "./components/pages";
+import { AddCourseModal } from "./components/organisms";
+import { SvgColorBlindFilters } from "./components/molecules";
+import { useTheme } from "./hooks/useTheme";
+import { useAccessibility } from "./hooks/useAccessibility";
+import "./App.css";
 
 const AppContent = () => {
   const { state, actions } = useApp();
-  
+
   // Initialize theme and accessibility
   useTheme();
   useAccessibility();
 
   const handleLogin = () => {
-    actions.setCurrentPage('dashboard');
+    actions.setCurrentPage("dashboard");
   };
 
   const renderCurrentPage = () => {
     switch (state.currentPage) {
-      case 'dashboard':
+      case "dashboard":
         return <Dashboard />;
-      case 'auth':
+      case "auth":
         return <Auth onLogin={handleLogin} />;
-      case 'profile':
+      case "profile":
         return <Profile />;
-      case 'settings':
+      case "settings":
         return <Settings />;
-      case 'course-details':
+      case "course-details":
         return <CourseDetails />;
-      case 'favorites':
+      case "favorites":
         return <Favorites />;
-      case 'calendar':
+      case "calendar":
         return <Calendar />;
-      case 'my-courses-completed':
+      case "my-courses-completed":
         return <MyCourses initialTab="completed" />;
-      case 'my-courses-teaching':
+      case "my-courses-teaching":
         return <MyCourses initialTab="teaching" />;
-      case 'schedule-class':
+      case "schedule-class":
         return <ScheduleClass />;
-      case 'notifications':
+      case "notifications":
         return <Notifications />;
       default:
         return <Dashboard />;
@@ -48,12 +60,15 @@ const AppContent = () => {
 
   return (
     <div className="App">
+      {/* SVG Filters for colorblind support - need to be available globally */}
+      <SvgColorBlindFilters />
+
       {renderCurrentPage()}
-      
+
       {/* Modals */}
       <AddCourseModal
         isOpen={state.modals.addCourse}
-        onClose={() => actions.closeModal('addCourse')}
+        onClose={() => actions.closeModal("addCourse")}
       />
     </div>
   );
@@ -67,4 +82,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
