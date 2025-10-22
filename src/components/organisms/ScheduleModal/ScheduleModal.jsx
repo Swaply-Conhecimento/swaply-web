@@ -293,7 +293,7 @@ const ScheduleModal = ({ isOpen, onClose, course }) => {
         <Coins size={20} weight="fill" />
         <span>Custo: 1 crédito</span>
         <div className="schedule-modal__credits">
-          Seus créditos: {state.user.credits}
+          Seus créditos: {state.user?.credits || 0}
         </div>
       </div>
     </div>
@@ -329,7 +329,7 @@ const ScheduleModal = ({ isOpen, onClose, course }) => {
           <Button 
             variant="primary" 
             onClick={handleConfirmSchedule}
-            disabled={state.user.credits < 1}
+            disabled={(state.user?.credits || 0) < 1}
           >
             <Coins size={16} weight="fill" />
             Confirmar Agendamento

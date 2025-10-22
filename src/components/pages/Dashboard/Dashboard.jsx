@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../../contexts/AppContext';
+import { useCourses } from '../../../hooks';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import CourseGrid from '../../organisms/CourseGrid';
 import Card from '../../molecules/Card';
@@ -8,69 +9,95 @@ import './Dashboard.css';
 
 const Dashboard = () => {
   const { state, actions } = useApp();
-  // Mock data - em uma aplicação real, isso viria de uma API
-  const mockCourses = [
-    {
-      id: 1,
-      title: 'Desenvolvimento Web Completo com React e Node.js',
-      instructor: 'Enzo Fernandes',
-      category: 'Empreendedorismo',
-      rating: 4.3,
-      students: 2000,
-      price: 1,
-      image: null,
-    },
-    {
-      id: 2,
-      title: 'Italiano Básico',
-      instructor: 'Maria Silva',
-      category: 'Idiomas',
-      rating: 4.7,
-      students: 1500,
-      price: 2,
-      image: null,
-    },
-    {
-      id: 3,
-      title: 'LIBRAS Intermediário',
-      instructor: 'João Santos',
-      category: 'Idiomas',
-      rating: 4.5,
-      students: 800,
-      price: 1,
-      image: null,
-    },
-    {
-      id: 4,
-      title: 'Matemática para Concursos',
-      instructor: 'Ana Costa',
-      category: 'Educação',
-      rating: 4.2,
-      students: 1200,
-      price: 3,
-      image: null,
-    },
-    {
-      id: 5,
-      title: 'Marketing Digital',
-      instructor: 'Pedro Oliveira',
-      category: 'Empreendedorismo',
-      rating: 4.6,
-      students: 900,
-      price: 2,
-      image: null,
-    },
-    {
-      id: 6,
-      title: 'Python para Iniciantes',
-      instructor: 'Carlos Mendes',
-      category: 'Tecnologia',
-      rating: 4.4,
-      students: 1800,
-      price: 1,
-      image: null,
-    },
-  ];
+  const { getPopularCourses, getFeaturedCourses, getCourses, loading, error } = useCourses();
+  
+  const [popularCourses, setPopularCourses] = useState([]);
+  const [featuredCourses, setFeaturedCourses] = useState([]);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(true);
+
+  // Carregar cursos da API ao montar o componente
+  useEffect(() => {
+    const loadCourses = async () => {
+      setIsLoadingCourses(true);
+      try {
+        console.log('🔄 Iniciando carregamento de cursos...');
+        
+        // Adaptar formato da API para o formato esperado pelos componentes
+        const adaptCourse = (course) => ({
+          id: course._id,
+          title: course.title,
+          instructor: course.instructor?.name || 'Instrutor',
+          category: course.category,
+          rating: course.rating || 0,
+          students: course.currentStudents || 0,
+          price: course.pricePerHour,
+          image: course.image,
+        });
+
+        let hasLoadedAnyCourses = false;
+
+        // Tentar carregar cursos populares
+        try {
+          console.log('📊 Buscando cursos populares...');
+          const popularResult = await getPopularCourses(6);
+          console.log('✅ Cursos populares carregados:', popularResult.courses.length);
+          if (popularResult.courses.length > 0) {
+            setPopularCourses(popularResult.courses.map(adaptCourse));
+            hasLoadedAnyCourses = true;
+          }
+        } catch (popularError) {
+          console.warn('⚠️ Erro ao carregar cursos populares:', popularError.message);
+        }
+
+        // Tentar carregar cursos em destaque
+        try {
+          console.log('⭐ Buscando cursos em destaque...');
+          const featuredResult = await getFeaturedCourses(6);
+          console.log('✅ Cursos em destaque carregados:', featuredResult.courses.length);
+          if (featuredResult.courses.length > 0) {
+            setFeaturedCourses(featuredResult.courses.map(adaptCourse));
+            hasLoadedAnyCourses = true;
+          }
+        } catch (featuredError) {
+          console.warn('⚠️ Erro ao carregar cursos em destaque:', featuredError.message);
+        }
+
+        // Se não conseguiu carregar nenhum curso específico, tentar carregar cursos gerais
+        if (!hasLoadedAnyCourses) {
+          console.log('🔄 Tentando fallback: carregar cursos gerais...');
+          try {
+            const generalResult = await getCourses({ 
+              page: 1, 
+              limit: 12,
+              status: 'active' 
+            });
+            
+            if (generalResult.courses && generalResult.courses.length > 0) {
+              console.log('✅ Cursos gerais carregados:', generalResult.courses.length);
+              const adaptedCourses = generalResult.courses.map(adaptCourse);
+              setPopularCourses(adaptedCourses.slice(0, 6));
+              setFeaturedCourses(adaptedCourses.slice(6, 12));
+            }
+          } catch (fallbackError) {
+            console.error('❌ Fallback também falhou:', fallbackError.message);
+          }
+        }
+
+        console.log('✨ Carregamento de cursos concluído');
+      } catch (err) {
+        console.error('❌ Erro geral ao carregar cursos:', err);
+        console.error('Detalhes do erro:', {
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status
+        });
+      } finally {
+        setIsLoadingCourses(false);
+      }
+    };
+
+    loadCourses();
+  }, [getPopularCourses, getFeaturedCourses, getCourses]);
 
   const handleCourseClick = (course) => {
     actions.setSelectedCourse(course);
@@ -134,28 +161,58 @@ const Dashboard = () => {
             <div className="dashboard__stat-content">
               <div className="dashboard__stat-icon">🪙</div>
               <div className="dashboard__stat-info">
-                <div className="dashboard__stat-value">{state.user.credits}</div>
+                <div className="dashboard__stat-value">{state.user?.credits || 0}</div>
                 <div className="dashboard__stat-label">Seus Créditos</div>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Course Grids */}
-        <CourseGrid
-          title="Cursos mais acessados"
-          courses={mockCourses}
-          onCourseClick={handleCourseClick}
-          onShowAllClick={handleShowAllCourses}
-        />
+        {/* Loading State */}
+        {isLoadingCourses && (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <p>Carregando cursos...</p>
+          </div>
+        )}
 
-        <CourseGrid
-          title="Recomendados para você"
-          courses={mockCourses.slice(0, 3)}
-          onCourseClick={handleCourseClick}
-          onShowAllClick={handleShowAllCourses}
-        />
+        {/* Error State */}
+        {error && !isLoadingCourses && (
+          <div style={{ textAlign: 'center', padding: '40px', color: 'red' }}>
+            <p>Erro ao carregar cursos: {error}</p>
+          </div>
+        )}
 
+        {/* Course Grids - Só mostra se não estiver carregando */}
+        {!isLoadingCourses && (
+          <>
+            {/* Cursos Populares */}
+            {popularCourses.length > 0 && (
+              <CourseGrid
+                title="Cursos mais populares"
+                courses={popularCourses}
+                onCourseClick={handleCourseClick}
+                onShowAllClick={handleShowAllCourses}
+              />
+            )}
+
+            {/* Cursos em Destaque */}
+            {featuredCourses.length > 0 && (
+              <CourseGrid
+                title="Cursos em destaque"
+                courses={featuredCourses}
+                onCourseClick={handleCourseClick}
+                onShowAllClick={handleShowAllCourses}
+              />
+            )}
+
+            {/* Mensagem se não há cursos */}
+            {popularCourses.length === 0 && featuredCourses.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <p>Nenhum curso disponível no momento.</p>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Call to Action */}
         <Card className="dashboard__cta" padding="large">

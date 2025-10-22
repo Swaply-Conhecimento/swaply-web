@@ -326,7 +326,7 @@ const ScheduleClass = () => {
           <Coins size={24} weight="fill" />
           <div>
             <div className="schedule-class__cost-amount">1 crédito</div>
-            <div className="schedule-class__cost-balance">Seus créditos: {state.user.credits}</div>
+            <div className="schedule-class__cost-balance">Seus créditos: {state.user?.credits || 0}</div>
           </div>
         </div>
 
@@ -339,7 +339,7 @@ const ScheduleClass = () => {
             variant="primary" 
             size="large"
             onClick={handleConfirmSchedule}
-            disabled={state.user.credits < 1}
+            disabled={(state.user?.credits || 0) < 1}
           >
             <Coins size={16} weight="fill" />
             Confirmar Agendamento

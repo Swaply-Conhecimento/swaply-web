@@ -109,7 +109,7 @@ const CourseDetails = () => {
   };
 
   const totalCost = courseData.pricePerHour * courseData.totalHours;
-  const canAfford = state.user.credits >= totalCost;
+  const canAfford = (state.user?.credits || 0) >= totalCost;
 
   const handlePurchaseCourse = () => {
     if (canAfford) {
@@ -124,7 +124,7 @@ const CourseDetails = () => {
 
   const handlePurchaseHour = (hours = 1) => {
     const cost = courseData.pricePerHour * hours;
-    if (state.user.credits >= cost) {
+    if ((state.user?.credits || 0) >= cost) {
       // Definir o curso selecionado e navegar para página de agendamento
       actions.setSelectedCourse({
         id: courseData.id,
@@ -209,7 +209,7 @@ const CourseDetails = () => {
                     size="large" 
                     fullWidth
                     onClick={() => handlePurchaseHour(1)}
-                    disabled={state.user.credits < courseData.pricePerHour}
+                    disabled={(state.user?.credits || 0) < courseData.pricePerHour}
                   >
                     <Play size={20} />
                     Comprar 1 Hora
@@ -218,7 +218,7 @@ const CourseDetails = () => {
 
                 {!canAfford && (
                   <div className="course-details__insufficient-funds">
-                    <p>Você precisa de {totalCost - state.user.credits} moedas a mais</p>
+                    <p>Você precisa de {totalCost - (state.user?.credits || 0)} moedas a mais</p>
                     <Button variant="secondary" size="small" fullWidth>
                       Ganhar Moedas Ensinando
                     </Button>

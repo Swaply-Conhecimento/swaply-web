@@ -66,7 +66,7 @@ const Favorites = () => {
 
   // Filtrar apenas os cursos favoritos
   const favoriteCourses = allCourses.filter(course => 
-    state.user.favorites.includes(course.id)
+    state.user?.favorites?.includes(course.id)
   );
 
   const handleCourseClick = (course) => {

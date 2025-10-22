@@ -20,7 +20,7 @@ const CourseCard = ({
   ...props
 }) => {
   const { state, actions } = useApp();
-  const isFavorite = state.user.favorites.includes(id);
+  const isFavorite = state.user?.favorites?.includes(id) || false;
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation(); // Evita trigger do onClick do card

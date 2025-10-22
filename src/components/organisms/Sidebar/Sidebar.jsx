@@ -97,7 +97,7 @@ const Sidebar = ({
               <span className="sidebar__brand-name">Swaply</span>
               <div className="sidebar__credits">
                 <Coins size={20} weight="fill" />
-                <span className="sidebar__credits-amount">{state.user.credits}</span>
+                <span className="sidebar__credits-amount">{state.user?.credits || 0}</span>
               </div>
             </div>
           )}
