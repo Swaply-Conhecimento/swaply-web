@@ -12,6 +12,7 @@ import {
   BookOpen
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts/AppContext';
+import { useScheduling } from '../../../hooks/useScheduling';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../molecules/Card';
 import Button from '../../atoms/Button';
@@ -19,6 +20,7 @@ import './ScheduleClass.css';
 
 const ScheduleClass = () => {
   const { state, actions } = useApp();
+  const { scheduleClass, loading, error } = useScheduling();
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -102,33 +104,37 @@ const ScheduleClass = () => {
     setStep(3);
   };
 
-  const handleConfirmSchedule = () => {
+  const handleConfirmSchedule = async () => {
     if (!selectedDate || !selectedTime || !course) return;
 
-    // Simular agendamento
-    const scheduledClass = {
-      id: Date.now(),
-      courseId: course.id,
-      courseTitle: course.title,
-      instructor: course.instructor,
-      date: selectedDate,
-      time: selectedTime,
-      duration: 1, // 1 hora
-      zoomLink: `https://zoom.us/j/${Math.random().toString().substr(2, 9)}`,
-      status: 'scheduled'
-    };
+    try {
+      // Formatar data para o formato esperado pela API (YYYY-MM-DD)
+      const formattedDate = selectedDate.toISOString().split('T')[0];
 
-    // Deduzir crédito
-    actions.updateCredits(-1);
+      // Chamar API real para agendar aula
+      const result = await scheduleClass({
+        courseId: course._id || course.id,
+        date: formattedDate,
+        time: selectedTime,
+        duration: 1,
+      });
 
-    // Adicionar à agenda
-    actions.addScheduledClass(scheduledClass);
+      // Adicionar aula agendada ao estado
+      actions.addScheduledClass(result.class);
 
-    // Voltar ao dashboard
-    actions.setCurrentPage('dashboard');
-    
-    // Opcional: Mostrar notificação de sucesso
-    alert(`Aula agendada com sucesso!\nData: ${selectedDate.toLocaleDateString('pt-BR')}\nHorário: ${selectedTime}\nLink do Zoom será enviado por email.`);
+      // Recarregar perfil do usuário para atualizar créditos
+      await actions.refreshUser();
+
+      // Voltar ao dashboard
+      actions.setCurrentPage('dashboard');
+      
+      // Mostrar notificação de sucesso
+      alert(`Aula agendada com sucesso!\nData: ${selectedDate.toLocaleDateString('pt-BR')}\nHorário: ${selectedTime}\n\nUm email de confirmação será enviado em breve.`);
+    } catch (err) {
+      // Tratar erro
+      console.error('Erro ao agendar aula:', err);
+      alert(`Erro ao agendar aula: ${err.message || 'Tente novamente mais tarde.'}`);
+    }
   };
 
   const handleBackStep = () => {
@@ -339,10 +345,10 @@ const ScheduleClass = () => {
             variant="primary" 
             size="large"
             onClick={handleConfirmSchedule}
-            disabled={(state.user?.credits || 0) < 1}
+            disabled={(state.user?.credits || 0) < 1 || loading}
           >
             <Coins size={16} weight="fill" />
-            Confirmar Agendamento
+            {loading ? 'Agendando...' : 'Confirmar Agendamento'}
           </Button>
         </div>
       </div>

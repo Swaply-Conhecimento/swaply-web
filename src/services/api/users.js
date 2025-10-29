@@ -303,6 +303,22 @@ const userService = {
       throw new Error(getErrorMessage(error));
     }
   },
+
+  /**
+   * PUT /users/password
+   * Alterar senha do usuário logado
+   */
+  changePassword: async (passwordData) => {
+    try {
+      const { data } = await apiClient.put('/users/password', passwordData);
+      return {
+        success: true,
+        message: data.message,
+      };
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
 };
 
 export default userService;

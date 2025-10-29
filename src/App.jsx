@@ -11,9 +11,13 @@ import {
   MyCourses,
   ScheduleClass,
   Notifications,
+  ForgotPassword,
+  ResetPassword,
+  Terms,
 } from "./components/pages";
 import { AddCourseModal } from "./components/organisms";
 import { SvgColorBlindFilters } from "./components/molecules";
+import LoadingScreen from "./components/atoms/LoadingScreen";
 import { useTheme } from "./hooks/useTheme";
 import { useAccessibility } from "./hooks/useAccessibility";
 import "./App.css";
@@ -25,12 +29,53 @@ const AppContent = () => {
   useTheme();
   useAccessibility();
 
+  // Não precisa mais dessa função, o AppContext cuida do redirecionamento
   const handleLogin = () => {
-    actions.setCurrentPage("dashboard");
+    // Função vazia mantida para compatibilidade, mas não faz nada
+    // O redirecionamento é feito automaticamente pelo AppContext após login bem-sucedido
   };
 
+  // Rotas públicas que não precisam de autenticação
+  const publicPages = ['auth', 'dashboard', 'course-details', 'settings', 'forgot-password', 'reset-password', 'terms'];
+  
+  // Rotas protegidas que exigem autenticação
+  const protectedPages = [
+    'profile',
+    'favorites', 
+    'calendar',
+    'my-courses-completed',
+    'my-courses-teaching',
+    'schedule-class',
+    'notifications'
+  ];
+
+  // Verificar se usuário está tentando acessar rota protegida sem autenticação
+  React.useEffect(() => {
+    if (!state.isAuthenticated && protectedPages.includes(state.currentPage)) {
+      // Redirecionar para login se tentar acessar área protegida
+      actions.setCurrentPage('auth');
+    }
+  }, [state.isAuthenticated, state.currentPage]);
+
+  // Se ainda está carregando, mostrar tela de loading
+  if (state.isLoading) {
+    return (
+      <>
+        <SvgColorBlindFilters />
+        <LoadingScreen message="Verificando autenticação..." />
+      </>
+    );
+  }
+
   const renderCurrentPage = () => {
-    switch (state.currentPage) {
+    const page = state.currentPage;
+
+    // Se não autenticado e tentar acessar rota protegida, mostrar login
+    if (!state.isAuthenticated && protectedPages.includes(page)) {
+      return <Auth onLogin={handleLogin} />;
+    }
+
+    switch (page) {
       case "dashboard":
         return <Dashboard />;
       case "auth":
@@ -53,6 +98,12 @@ const AppContent = () => {
         return <ScheduleClass />;
       case "notifications":
         return <Notifications />;
+      case "forgot-password":
+        return <ForgotPassword />;
+      case "reset-password":
+        return <ResetPassword />;
+      case "terms":
+        return <Terms />;
       default:
         return <Dashboard />;
     }

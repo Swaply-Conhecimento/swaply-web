@@ -4,3 +4,4 @@ export { default as FormField, validations } from "./FormField";
 export { default as FontControls } from "./FontControls";
 export { ColorBlindFilter, SvgColorBlindFilters } from "./ColorBlindFilter";
 export { default as ThemeToggle } from "./ThemeToggle";
+export { default as ProtectedRoute } from "./ProtectedRoute";

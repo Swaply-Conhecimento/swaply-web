@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Base URL da API
-const API_BASE_URL = 'https://swaply-api.onrender.com/api';
+// Base URL da API - usa variável de ambiente ou fallback para produção
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://swaply-api.onrender.com/api';
 
 // Criar instância do axios
 const apiClient = axios.create({

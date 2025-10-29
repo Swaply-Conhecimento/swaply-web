@@ -5,3 +5,4 @@ export { default as Toggle } from './Toggle';
 export { default as Modal } from './Modal';
 export { default as ReadableText } from './ReadableText';
 export { default as NotificationBell } from './NotificationBell';
+export { default as LoadingScreen } from './LoadingScreen';

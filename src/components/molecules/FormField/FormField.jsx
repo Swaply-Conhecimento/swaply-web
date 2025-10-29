@@ -21,6 +21,7 @@ const FormField = ({
   leftIcon,
   rightIcon,
   className = '',
+  children,
   ...props
 }) => {
   const [touched, setTouched] = React.useState(false);
@@ -61,7 +62,34 @@ const FormField = ({
 
   return (
     <div className={`form-field ${className}`}>
-        {type === 'textarea' ? (
+        {type === 'select' ? (
+          <div className="input-wrapper">
+            {label && (
+              <label htmlFor={props.id || `input-${Math.random().toString(36).substr(2, 9)}`} className="input-label">
+                {label}
+                {required && <span className="input-required">*</span>}
+              </label>
+            )}
+            <select
+              id={props.id || `input-${Math.random().toString(36).substr(2, 9)}`}
+              name={name}
+              className={`input-field input-field--${size} ${fullWidth ? 'input-field--full-width' : ''} ${displayError ? 'input-field--error' : ''}`}
+              value={value}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              disabled={disabled}
+              required={required}
+              {...props}
+            >
+              {children}
+            </select>
+            {(displayError || helperText) && (
+              <div className={`input-message ${displayError ? 'input-message--error' : ''}`}>
+                {displayError || helperText}
+              </div>
+            )}
+          </div>
+        ) : type === 'textarea' ? (
           <div className="input-wrapper">
             {label && (
               <label htmlFor={props.id || `input-${Math.random().toString(36).substr(2, 9)}`} className="input-label">
@@ -116,7 +144,7 @@ FormField.propTypes = {
   label: PropTypes.string,
   name: PropTypes.string.isRequired,
   type: PropTypes.string,
-  value: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onChange: PropTypes.func,
   onBlur: PropTypes.func,
   placeholder: PropTypes.string,
@@ -130,6 +158,7 @@ FormField.propTypes = {
   leftIcon: PropTypes.node,
   rightIcon: PropTypes.node,
   className: PropTypes.string,
+  children: PropTypes.node,
 };
 
 // Common validation functions

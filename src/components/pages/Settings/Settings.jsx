@@ -11,15 +11,22 @@ import {
   Desktop,
   TextAa,
   SpeakerHigh,
+  Lock,
+  EyeSlash,
+  Trash,
+  UserCircle,
 } from "@phosphor-icons/react";
 // Removed unused old molecules imports
 import { useApp } from "../../../contexts/AppContext";
 import { useTheme } from "../../../hooks/useTheme";
 import { useAccessibility } from "../../../hooks/useAccessibility";
+import { userService } from "../../../services/api";
 import DashboardTemplate from "../../templates/DashboardTemplate";
 import Card from "../../molecules/Card";
 import Button from "../../atoms/Button";
 import Toggle from "../../atoms/Toggle";
+import FormField from "../../molecules/FormField";
+import DeleteAccountModal from "../../organisms/DeleteAccountModal";
 import "./Settings.css";
 import SvgColorBlindFilters from "../../molecules/ColorBlindFilter/SvgColorBlindFilters";
 
@@ -159,6 +166,25 @@ const Settings = () => {
   } = useAccessibility();
 
   const [activeSection, setActiveSection] = useState("accessibility");
+  
+  // Estado para alteração de senha
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmNewPassword: '',
+  });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+
+  // Estado para modal de exclusão de conta
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+
 
   const menuItems = [
     {
@@ -192,16 +218,81 @@ const Settings = () => {
     });
   };
 
-  const handleSendEmail = () => {
-    console.log("Sending password reset email...");
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({ ...prev, [name]: value }));
+    setPasswordError('');
+    setPasswordSuccess('');
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordLoading(true);
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    // Validações
+    if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
+      setPasswordError('As senhas não coincidem');
+      setPasswordLoading(false);
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError('A nova senha deve ter no mínimo 6 caracteres');
+      setPasswordLoading(false);
+      return;
+    }
+
+    try {
+      await userService.changePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+        confirmNewPassword: passwordForm.confirmNewPassword,
+      });
+
+      setPasswordSuccess('Senha alterada com sucesso!');
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmNewPassword: '',
+      });
+    } catch (err) {
+      setPasswordError(err.message || 'Erro ao alterar senha');
+    } finally {
+      setPasswordLoading(false);
+    }
   };
 
   const handleEditProfile = () => {
-    console.log("Edit profile...");
+    actions.setCurrentPage('profile');
   };
 
   const handleDeleteAccount = () => {
-    console.log("Delete account...");
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async (password) => {
+    setDeleteLoading(true);
+    
+    try {
+      await userService.deleteAccount(password);
+      setIsDeleteModalOpen(false);
+      
+      // Fazer logout
+      await actions.logout();
+      
+      // Redirecionar para página inicial
+      actions.setCurrentPage('dashboard');
+      
+      // Mostrar mensagem de sucesso
+      alert('✅ Conta excluída com sucesso.\n\nSentiremos sua falta!');
+    } catch (err) {
+      console.error('Erro ao excluir conta:', err);
+      alert('❌ Erro ao excluir conta: ' + (err.message || 'Tente novamente mais tarde.'));
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const renderAccessibilitySettings = () => (
@@ -489,36 +580,176 @@ const Settings = () => {
     <div className="settings__section">
       <h2 className="settings__section-title">Conta e Segurança</h2>
 
-      <Card className="settings__card" padding="large">
-        <div className="settings__option settings__option--vertical">
-          <div className="settings__option-info">
-            <h3 className="settings__option-title">Alterar Senha:</h3>
-            <p className="settings__option-description">
-              Enviaremos uma mensagem de email para que você possa alterar a sua
-              senha.
-            </p>
-          </div>
-          <Button variant="primary" onClick={handleSendEmail}>
-            Enviar Email
-          </Button>
-        </div>
-      </Card>
+      {/* Alterar Senha */}
+      {state.isAuthenticated && (
+        <Card className="settings__card" padding="large">
+          <div className="settings__option settings__option--vertical">
+            <div className="settings__option-info">
+              <div className="settings__option-header">
+                <Lock size={20} />
+                <h3 className="settings__option-title">Alterar Senha</h3>
+              </div>
+              <p className="settings__option-description">
+                Troque sua senha atual por uma nova. Sua senha deve ter no mínimo 6 caracteres.
+              </p>
+            </div>
 
+            {passwordSuccess && (
+              <div className="settings__success-message">
+                {passwordSuccess}
+              </div>
+            )}
+
+            {passwordError && (
+              <div className="settings__error-message">
+                {passwordError}
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} className="settings__password-form">
+              <FormField
+                label="Senha Atual"
+                name="currentPassword"
+                type={showCurrentPassword ? 'text' : 'password'}
+                value={passwordForm.currentPassword}
+                onChange={handlePasswordInputChange}
+                placeholder="Digite sua senha atual"
+                leftIcon={<Lock size={20} />}
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="settings__password-toggle"
+                  >
+                    {showCurrentPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                  </button>
+                }
+                required
+              />
+
+              <FormField
+                label="Nova Senha"
+                name="newPassword"
+                type={showNewPassword ? 'text' : 'password'}
+                value={passwordForm.newPassword}
+                onChange={handlePasswordInputChange}
+                placeholder="Digite sua nova senha"
+                leftIcon={<Lock size={20} />}
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="settings__password-toggle"
+                  >
+                    {showNewPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                  </button>
+                }
+                required
+              />
+
+              <FormField
+                label="Confirmar Nova Senha"
+                name="confirmNewPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={passwordForm.confirmNewPassword}
+                onChange={handlePasswordInputChange}
+                placeholder="Confirme sua nova senha"
+                leftIcon={<Lock size={20} />}
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="settings__password-toggle"
+                  >
+                    {showConfirmPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                  </button>
+                }
+                required
+              />
+
+              <div className="settings__password-requirements">
+                <p className="settings__password-requirements-title">Sua nova senha deve conter:</p>
+                <ul className="settings__password-requirements-list">
+                  <li className={passwordForm.newPassword.length >= 6 ? 'valid' : ''}>
+                    Mínimo 6 caracteres
+                  </li>
+                  <li className={/[a-z]/.test(passwordForm.newPassword) ? 'valid' : ''}>
+                    Uma letra minúscula
+                  </li>
+                  <li className={/[A-Z]/.test(passwordForm.newPassword) ? 'valid' : ''}>
+                    Uma letra maiúscula
+                  </li>
+                  <li className={/[0-9]/.test(passwordForm.newPassword) ? 'valid' : ''}>
+                    Um número
+                  </li>
+                </ul>
+              </div>
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="large"
+                loading={passwordLoading}
+                disabled={
+                  !passwordForm.currentPassword ||
+                  !passwordForm.newPassword ||
+                  !passwordForm.confirmNewPassword ||
+                  passwordLoading
+                }
+              >
+                {passwordLoading ? 'Alterando...' : 'Alterar Senha'}
+              </Button>
+            </form>
+          </div>
+        </Card>
+      )}
+
+      {/* Esqueceu a senha */}
+      {!state.isAuthenticated && (
+        <Card className="settings__card" padding="large">
+          <div className="settings__option settings__option--vertical">
+            <div className="settings__option-info">
+              <div className="settings__option-header">
+                <Lock size={20} />
+                <h3 className="settings__option-title">Esqueceu sua senha?</h3>
+              </div>
+              <p className="settings__option-description">
+                Enviaremos um link para redefinir sua senha por email.
+              </p>
+            </div>
+            <Button 
+              variant="primary" 
+              onClick={() => actions.setCurrentPage('forgot-password')}
+            >
+              Recuperar Senha
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Gerenciar Conta */}
       <Card className="settings__card" padding="large">
         <div className="settings__option settings__option--vertical">
           <div className="settings__option-info">
-            <h3 className="settings__option-title">Gerenciar Conta</h3>
+            <div className="settings__option-header">
+              <UserCircle size={20} />
+              <h3 className="settings__option-title">Gerenciar Conta</h3>
+            </div>
             <p className="settings__option-description">
-              Opções para editar ou excluir conta.
+              Edite suas informações pessoais ou exclua sua conta permanentemente.
             </p>
           </div>
           <div className="settings__account-actions">
             <Button variant="outline" onClick={handleEditProfile}>
+              <UserCircle size={18} />
               Editar Perfil
             </Button>
-            <Button variant="danger" onClick={handleDeleteAccount}>
-              Excluir Conta
-            </Button>
+            {state.isAuthenticated && (
+              <Button variant="danger" onClick={handleDeleteAccount}>
+                <Trash size={18} />
+                Excluir Conta
+              </Button>
+            )}
           </div>
         </div>
       </Card>
@@ -569,6 +800,15 @@ const Settings = () => {
           <div className="settings__content">{renderCurrentSection()}</div>
         </div>
       </div>
+
+      {/* Modal de Exclusão de Conta */}
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        loading={deleteLoading}
+        userName={state.user?.name}
+      />
     </DashboardTemplate>
   );
 };

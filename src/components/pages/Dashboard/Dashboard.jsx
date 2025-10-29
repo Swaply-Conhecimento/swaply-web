@@ -10,6 +10,7 @@ import './Dashboard.css';
 const Dashboard = () => {
   const { state, actions } = useApp();
   const { getPopularCourses, getFeaturedCourses, getCourses, loading, error } = useCourses();
+  const isAuthenticated = state.isAuthenticated;
   
   const [popularCourses, setPopularCourses] = useState([]);
   const [featuredCourses, setFeaturedCourses] = useState([]);
@@ -157,15 +158,17 @@ const Dashboard = () => {
             </div>
           </Card>
           
-          <Card className="dashboard__stat-card">
-            <div className="dashboard__stat-content">
-              <div className="dashboard__stat-icon">🪙</div>
-              <div className="dashboard__stat-info">
-                <div className="dashboard__stat-value">{state.user?.credits || 0}</div>
-                <div className="dashboard__stat-label">Seus Créditos</div>
+          {isAuthenticated && (
+            <Card className="dashboard__stat-card">
+              <div className="dashboard__stat-content">
+                <div className="dashboard__stat-icon">🪙</div>
+                <div className="dashboard__stat-info">
+                  <div className="dashboard__stat-value">{state.user?.credits || 0}</div>
+                  <div className="dashboard__stat-label">Seus Créditos</div>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          )}
         </div>
 
         {/* Loading State */}
@@ -217,21 +220,52 @@ const Dashboard = () => {
         {/* Call to Action */}
         <Card className="dashboard__cta" padding="large">
           <div className="dashboard__cta-content">
-            <h2 className="dashboard__cta-title">
-              Pronto para compartilhar seu conhecimento?
-            </h2>
-            <p className="dashboard__cta-text">
-              Crie seu primeiro curso e comece a ensinar milhares de pessoas ao redor do mundo.
-              <br />A cada hora de aula, você ganha 1 moeda para usar em outros cursos!
-            </p>
-            <div className="dashboard__cta-actions">
-              <Button variant="primary" size="large">
-                Criar Novo Curso
-              </Button>
-              <Button variant="outline" size="large">
-                Saiba Mais
-              </Button>
-            </div>
+            {isAuthenticated ? (
+              <>
+                <h2 className="dashboard__cta-title">
+                  Pronto para compartilhar seu conhecimento?
+                </h2>
+                <p className="dashboard__cta-text">
+                  Crie seu primeiro curso e comece a ensinar milhares de pessoas ao redor do mundo.
+                  <br />A cada hora de aula, você ganha 1 crédito para usar em outros cursos!
+                </p>
+                <div className="dashboard__cta-actions">
+                  <Button 
+                    variant="primary" 
+                    size="large"
+                    onClick={() => actions.openModal('addCourse')}
+                  >
+                    Criar Novo Curso
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="dashboard__cta-title">
+                  Comece a aprender e ensinar hoje!
+                </h2>
+                <p className="dashboard__cta-text">
+                  Crie sua conta gratuita e tenha acesso a centenas de cursos.
+                  <br />Ensine o que você sabe e ganhe créditos para aprender ainda mais!
+                </p>
+                <div className="dashboard__cta-actions">
+                  <Button 
+                    variant="primary" 
+                    size="large"
+                    onClick={() => actions.setCurrentPage('auth')}
+                  >
+                    Criar Conta Grátis
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="large"
+                    onClick={() => actions.setCurrentPage('auth')}
+                  >
+                    Já tenho conta
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </Card>
       </div>

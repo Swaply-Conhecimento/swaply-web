@@ -8,3 +8,6 @@ export { default as Calendar } from './Calendar';
 export { default as MyCourses } from './MyCourses';
 export { default as ScheduleClass } from './ScheduleClass';
 export { default as Notifications } from './Notifications';
+export { default as ForgotPassword } from './ForgotPassword';
+export { default as ResetPassword } from './ResetPassword';
+export { default as Terms } from './Terms';

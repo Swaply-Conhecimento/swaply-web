@@ -8,6 +8,7 @@ import {
   Eye,
   EyeSlash,
 } from "@phosphor-icons/react";
+import { useApp } from "../../../contexts/AppContext";
 import Logo from "../../atoms/Logo";
 import Button from "../../atoms/Button";
 import FormField, { validations } from "../../molecules/FormField";
@@ -18,6 +19,7 @@ const AuthForm = ({
   mode = "login",
   onSubmit,
   onModeChange,
+  onGoogleLogin,
   loading = false,
   error,
   className = "",
@@ -34,6 +36,7 @@ const AuthForm = ({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const { actions } = useApp();
   const isLogin = mode === "login";
   const isRegister = mode === "register";
 
@@ -92,8 +95,10 @@ const AuthForm = ({
     }
   };
 
-  const handleGoogleLogin = () => {
-    console.log("Login with Google");
+  const handleGoogleLoginClick = () => {
+    if (onGoogleLogin) {
+      onGoogleLogin();
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -135,7 +140,8 @@ const AuthForm = ({
                   variant="outline"
                   size="large"
                   fullWidth
-                  onClick={handleGoogleLogin}
+                  onClick={handleGoogleLoginClick}
+                  disabled={loading}
                 >
                   <Globe size={20} />
                   {isLogin ? "Logar com Google" : "Continuar com Google"}
@@ -273,9 +279,13 @@ const AuthForm = ({
                         />
                         <span className="auth-form__checkbox-text">
                           Li e aceito os{" "}
-                          <a href="/terms" className="auth-form__link">
+                          <button
+                            type="button"
+                            className="auth-form__link"
+                            onClick={() => actions.setCurrentPage('terms')}
+                          >
                             Termos de Uso
-                          </a>
+                          </button>
                         </span>
                       </label>
                       {errors.acceptTerms && (
@@ -313,7 +323,7 @@ const AuthForm = ({
                     <button
                       type="button"
                       className="auth-form__link auth-form__forgot"
-                      onClick={() => console.log("forgot password")}
+                      onClick={() => actions.setCurrentPage('forgot-password')}
                     >
                       Esqueci minha senha
                     </button>
@@ -332,6 +342,7 @@ AuthForm.propTypes = {
   mode: PropTypes.oneOf(["login", "register"]),
   onSubmit: PropTypes.func.isRequired,
   onModeChange: PropTypes.func.isRequired,
+  onGoogleLogin: PropTypes.func,
   loading: PropTypes.bool,
   error: PropTypes.string,
   className: PropTypes.string,

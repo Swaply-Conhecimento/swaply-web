@@ -11,6 +11,7 @@ import userService from './users';
 import courseService from './courses';
 import reviewService from './reviews';
 import notificationService from './notifications';
+import classService from './classes';
 
 /**
  * Exportação de serviços organizados por domínio
@@ -31,6 +32,9 @@ export const api = {
   // Notificações
   notifications: notificationService,
 
+  // Agendamento de Aulas
+  classes: classService,
+
   // Helpers
   helpers: {
     getErrorMessage,
@@ -47,7 +51,8 @@ export {
   userService, 
   courseService, 
   reviewService, 
-  notificationService 
+  notificationService,
+  classService
 };
 
 export { 

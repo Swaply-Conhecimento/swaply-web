@@ -34,6 +34,27 @@
   gap: var(--spacing-4);
 }
 
+/* Row Layout */
+.add-course-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-4);
+}
+
+/* Error Message */
+.add-course-error {
+  background: var(--color-error-light, #fee);
+  border: 1px solid var(--color-error, #c00);
+  color: var(--color-error, #c00);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
 /* Categories */
 .add-course-categories {
   display: flex;

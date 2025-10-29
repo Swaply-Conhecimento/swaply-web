@@ -178,7 +178,12 @@ const courseService = {
         message: data.message,
       };
     } catch (error) {
-      throw new Error(getErrorMessage(error));
+      // Preservar a resposta original do erro
+      const err = new Error(getErrorMessage(error));
+      err.response = error.response;
+      err.status = error.response?.status;
+      err.data = error.response?.data;
+      throw err;
     }
   },
 

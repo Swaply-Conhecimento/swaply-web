@@ -11,6 +11,7 @@ export { useNotifications } from './useNotifications';
 export { useReviews } from './useReviews';
 export { useTheme } from './useTheme';
 export { useAccessibility } from './useAccessibility';
+export { useScheduling } from './useScheduling';
 
 
 

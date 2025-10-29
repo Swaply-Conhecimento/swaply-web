@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calendar as CalendarIcon, 
   CaretLeft, 
@@ -10,6 +10,7 @@ import {
   Users
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts/AppContext';
+import { useScheduling } from '../../../hooks/useScheduling';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../molecules/Card';
 import Button from '../../atoms/Button';
@@ -18,51 +19,41 @@ import './Calendar.css';
 
 const Calendar = () => {
   const { state } = useApp();
-  const [currentDate, setCurrentDate] = useState(new Date(2024, 0, 1)); // Janeiro 2024
+  const { getUserCalendar, loading } = useScheduling();
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState('student'); // 'student' ou 'instructor'
   const [selectedDate, setSelectedDate] = useState(null);
+  const [calendarData, setCalendarData] = useState(null);
 
-  // Mock data para agendamentos
-  const mockScheduledClasses = {
-    student: [
-      { date: 15, course: 'Matemática', instructor: 'Prof. João Silva', time: '09:00', status: 'confirmed' },
-      { date: 16, course: 'Física', instructor: 'Prof. Maria Santos', time: '14:00', status: 'confirmed' },
-      { date: 18, course: 'Matemática', instructor: 'Prof. João Silva', time: '09:00', status: 'confirmed' },
-      { date: 22, course: 'Física', instructor: 'Prof. Maria Santos', time: '14:00', status: 'confirmed' },
-      { date: 23, course: 'Matemática', instructor: 'Prof. João Silva', time: '09:00', status: 'confirmed' },
-      { date: 25, course: 'Física', instructor: 'Prof. Maria Santos', time: '14:00', status: 'confirmed' },
-    ],
-    instructor: [
-      { date: 17, course: 'RPG Iniciante', student: 'Ana Silva', time: '19:00', status: 'confirmed' },
-      { date: 18, course: 'Jardinagem', student: 'Carlos Santos', time: '15:00', status: 'confirmed' },
-      { date: 24, course: 'RPG Iniciante', student: 'Maria Costa', time: '19:00', status: 'confirmed' },
-      { date: 26, course: 'Jardinagem', student: 'Pedro Lima', time: '15:00', status: 'confirmed' },
-      { date: 31, course: 'RPG Iniciante', student: 'Julia Oliveira', time: '19:00', status: 'confirmed' },
-    ]
+  // Carregar dados do calendário ao mudar o mês
+  useEffect(() => {
+    loadCalendarData();
+  }, [currentDate]);
+
+  const loadCalendarData = async () => {
+    try {
+      const month = currentDate.getMonth() + 1;
+      const year = currentDate.getFullYear();
+      
+      const result = await getUserCalendar(month, year, 'month');
+      setCalendarData(result);
+    } catch (err) {
+      console.error('Erro ao carregar calendário:', err);
+      // Se houver erro, usar aulas do contexto como fallback
+      setCalendarData({
+        events: state.scheduledClasses || [],
+        summary: {
+          totalClasses: state.scheduledClasses?.length || 0,
+          completedClasses: 0,
+          upcomingClasses: state.scheduledClasses?.length || 0,
+          cancelledClasses: 0
+        }
+      });
+    }
   };
 
-  // Mock data - próximas aulas
-  const mockClasses = [
-    { date: '17/01/2024', course: 'Matemática', instructor: 'Prof. João Silva', time: '09:00', type: 'student' },
-    { date: '24/01/2024', course: 'Física', instructor: 'Prof. Maria Santos', time: '14:00', type: 'student' },
-    { date: '26/01/2024', course: 'Jardinagem', student: 'Pedro Lima', time: '15:00', type: 'instructor' },
-    { date: '30/01/2024', course: 'RPG Iniciante', student: 'Julia Oliveira', time: '19:00', type: 'instructor' },
-    { date: '16/02/2024', course: 'Matemática', instructor: 'Prof. João Silva', time: '09:00', type: 'student' },
-  ];
-
-  // Converter aulas agendadas do contexto para formato do calendário
-  const scheduledClasses = state.scheduledClasses.map(scheduledClass => ({
-    date: scheduledClass.date.toLocaleDateString('pt-BR'),
-    course: scheduledClass.courseTitle,
-    instructor: scheduledClass.instructor,
-    time: scheduledClass.time,
-    type: 'student',
-    zoomLink: scheduledClass.zoomLink,
-    status: scheduledClass.status
-  }));
-
-  // Combinar todas as aulas
-  const upcomingClasses = [...mockClasses, ...scheduledClasses];
+  // Usar dados reais do calendário ou aulas do contexto como fallback
+  const upcomingClasses = calendarData?.events || state.scheduledClasses || [];
 
   const availableSlots = [
     '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'
@@ -90,7 +81,14 @@ const Calendar = () => {
   };
 
   const getClassesForDate = (day) => {
-    return mockScheduledClasses[viewMode].filter(cls => cls.date === day);
+    if (!calendarData?.events) return [];
+    
+    return calendarData.events.filter(event => {
+      const eventDate = new Date(event.date);
+      return eventDate.getDate() === day && 
+             eventDate.getMonth() === currentDate.getMonth() &&
+             eventDate.getFullYear() === currentDate.getFullYear();
+    });
   };
 
   const hasClassOnDate = (day) => {

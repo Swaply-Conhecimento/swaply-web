@@ -76,6 +76,8 @@ const actionTypes = {
   
   // Classes
   ADD_SCHEDULED_CLASS: 'ADD_SCHEDULED_CLASS',
+  SET_SCHEDULED_CLASSES: 'SET_SCHEDULED_CLASSES',
+  REMOVE_SCHEDULED_CLASS: 'REMOVE_SCHEDULED_CLASS',
   
   // Notifications
   SET_NOTIFICATIONS: 'SET_NOTIFICATIONS',
@@ -204,6 +206,20 @@ const appReducer = (state, action) => {
         scheduledClasses: [...state.scheduledClasses, action.payload],
       };
     
+    case actionTypes.SET_SCHEDULED_CLASSES:
+      return {
+        ...state,
+        scheduledClasses: action.payload,
+      };
+    
+    case actionTypes.REMOVE_SCHEDULED_CLASS:
+      return {
+        ...state,
+        scheduledClasses: state.scheduledClasses.filter(
+          cls => cls._id !== action.payload && cls.id !== action.payload
+        ),
+      };
+    
     case actionTypes.SET_NOTIFICATIONS:
       return {
         ...state,
@@ -286,7 +302,9 @@ export const AppProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       
       if (!token) {
+        // Sem token - usuário começa deslogado no dashboard (catálogo)
         dispatch({ type: actionTypes.SET_LOADING, payload: false });
+        dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'dashboard' });
         return;
       }
 
@@ -314,6 +332,15 @@ export const AppProvider = ({ children }) => {
         } catch (error) {
           console.error('Erro ao carregar notificações:', error);
         }
+
+        // Carregar aulas agendadas
+        try {
+          const classService = await import('../services/api/classes').then(mod => mod.default);
+          const { classes } = await classService.getScheduledClasses();
+          dispatch({ type: actionTypes.SET_SCHEDULED_CLASSES, payload: classes });
+        } catch (error) {
+          console.error('Erro ao carregar aulas agendadas:', error);
+        }
       } catch (error) {
         console.error('Token inválido:', error);
         localStorage.removeItem('token');
@@ -330,7 +357,10 @@ export const AppProvider = ({ children }) => {
     // Auth Actions
     login: async (credentials) => {
       try {
+        console.log('🔑 AppContext: Iniciando login...', credentials.email);
         const { user, token, refreshToken } = await authService.login(credentials);
+        
+        console.log('✅ AppContext: Login bem-sucedido, atualizando estado...');
         
         dispatch({
           type: actionTypes.SET_AUTH,
@@ -340,15 +370,30 @@ export const AppProvider = ({ children }) => {
         dispatch({ type: actionTypes.SET_USER, payload: user });
         dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'dashboard' });
         
+        console.log('✅ AppContext: Estado atualizado, usuário autenticado');
         return { success: true };
       } catch (error) {
+        console.error('❌ AppContext: Erro no login:', error.message);
+        
+        // Garantir que não há autenticação
+        dispatch({
+          type: actionTypes.SET_AUTH,
+          payload: { isAuthenticated: false, token: null, refreshToken: null },
+        });
+        
+        // Manter na página de auth
+        dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'auth' });
+        
         return { success: false, error: error.message };
       }
     },
 
     register: async (userData) => {
       try {
+        console.log('📝 AppContext: Iniciando registro...', userData.email);
         const { user, token, refreshToken } = await authService.register(userData);
+        
+        console.log('✅ AppContext: Registro bem-sucedido, atualizando estado...');
         
         dispatch({
           type: actionTypes.SET_AUTH,
@@ -358,8 +403,20 @@ export const AppProvider = ({ children }) => {
         dispatch({ type: actionTypes.SET_USER, payload: user });
         dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'dashboard' });
         
+        console.log('✅ AppContext: Estado atualizado, usuário registrado e autenticado');
         return { success: true };
       } catch (error) {
+        console.error('❌ AppContext: Erro no registro:', error.message);
+        
+        // Garantir que não há autenticação
+        dispatch({
+          type: actionTypes.SET_AUTH,
+          payload: { isAuthenticated: false, token: null, refreshToken: null },
+        });
+        
+        // Manter na página de auth
+        dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'auth' });
+        
         return { success: false, error: error.message };
       }
     },
@@ -490,9 +547,28 @@ export const AppProvider = ({ children }) => {
 
     addNotification: (notification) => dispatch({ type: actionTypes.ADD_NOTIFICATION, payload: notification }),
 
+    // Class Actions
+    loadScheduledClasses: async () => {
+      try {
+        const classService = await import('../services/api/classes').then(mod => mod.default);
+        const { classes } = await classService.getScheduledClasses();
+        dispatch({ type: actionTypes.SET_SCHEDULED_CLASSES, payload: classes });
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    },
+
+    addScheduledClass: (classData) => {
+      dispatch({ type: actionTypes.ADD_SCHEDULED_CLASS, payload: classData });
+    },
+
+    removeScheduledClass: (classId) => {
+      dispatch({ type: actionTypes.REMOVE_SCHEDULED_CLASS, payload: classId });
+    },
+
     // Other Actions
     updateCredits: (amount) => dispatch({ type: actionTypes.UPDATE_CREDITS, payload: amount }),
-    addScheduledClass: (classData) => dispatch({ type: actionTypes.ADD_SCHEDULED_CLASS, payload: classData }),
     setReading: (isReading) => dispatch({ type: actionTypes.SET_READING, payload: isReading }),
   };
 

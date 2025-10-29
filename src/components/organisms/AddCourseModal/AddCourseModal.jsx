@@ -8,9 +8,11 @@ import {
   Trash,
   FileText,
   Upload,
-  X
+  X,
+  Coins
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts/AppContext';
+import { useCourses } from '../../../hooks/useCourses';
 import Modal from '../../atoms/Modal';
 import Button from '../../atoms/Button';
 import FormField from '../../molecules/FormField';
@@ -22,22 +24,32 @@ const AddCourseModal = ({
   onClose,
   className = '',
 }) => {
-  const { actions } = useApp();
+  const { actions, state } = useApp();
+  const { createCourse, loading } = useCourses();
+  
   const [formData, setFormData] = useState({
-    name: '',
+    title: '',
     description: '',
-    categories: [],
-    curriculum: '',
-    lessons: [
-      {
-        id: 1,
-        title: 'Introdução ao Curso',
-        description: 'Aula introdutória de apresentação do curso'
-      }
-    ]
+    category: '',
+    subcategory: '',
+    level: 'Iniciante',
+    language: 'Português',
+    pricePerHour: 10,
+    totalHours: 10,
+    maxStudents: 30,
+    tags: [],
+    features: [],
+    curriculum: [],
+    schedule: [],
+    requirements: [],
+    objectives: [],
+    status: 'draft'
   });
 
-  const [newCategory, setNewCategory] = useState('');
+  const [newTag, setNewTag] = useState('');
+  const [newFeature, setNewFeature] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -47,85 +59,184 @@ const AddCourseModal = ({
     }));
   };
 
-  const handleAddCategory = () => {
-    if (newCategory.trim() && !formData.categories.includes(newCategory.trim())) {
+  const handleAddTag = () => {
+    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
       setFormData(prev => ({
         ...prev,
-        categories: [...prev.categories, newCategory.trim()]
+        tags: [...prev.tags, newTag.trim()]
       }));
-      setNewCategory('');
+      setNewTag('');
     }
   };
 
-  const handleRemoveCategory = (categoryToRemove) => {
+  const handleRemoveTag = (tagToRemove) => {
     setFormData(prev => ({
       ...prev,
-      categories: prev.categories.filter(cat => cat !== categoryToRemove)
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
     }));
   };
 
-  const handleAddLesson = () => {
-    const newLesson = {
-      id: Date.now(),
-      title: '',
-      description: ''
-    };
+  const handleAddFeature = () => {
+    if (newFeature.trim() && !formData.features.includes(newFeature.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        features: [...prev.features, newFeature.trim()]
+      }));
+      setNewFeature('');
+    }
+  };
+
+  const handleRemoveFeature = (featureToRemove) => {
     setFormData(prev => ({
       ...prev,
-      lessons: [...prev.lessons, newLesson]
+      features: prev.features.filter(f => f !== featureToRemove)
     }));
   };
 
-  const handleUpdateLesson = (lessonId, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      lessons: prev.lessons.map(lesson =>
-        lesson.id === lessonId
-          ? { ...lesson, [field]: value }
-          : lesson
-      )
-    }));
-  };
-
-  const handleRemoveLesson = (lessonId) => {
-    setFormData(prev => ({
-      ...prev,
-      lessons: prev.lessons.filter(lesson => lesson.id !== lessonId)
-    }));
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Creating course:', formData);
-    
-    // Simulate course creation
-    const newCourse = {
-      id: Date.now(),
-      ...formData,
-      instructor: 'Você',
-      createdAt: new Date().toISOString(),
-      status: 'draft'
-    };
-    
-    // Here you would send to API
-    console.log('Course created:', newCourse);
-    
-    // Reset form and close modal
+    setError('');
+    setSuccess(false);
+
+    // Validações básicas
+    if (!formData.title.trim()) {
+      setError('O título do curso é obrigatório');
+      return;
+    }
+
+    if (!formData.description.trim()) {
+      setError('A descrição do curso é obrigatória');
+      return;
+    }
+
+    if (!formData.category.trim()) {
+      setError('A categoria é obrigatória');
+      return;
+    }
+
+    // Validar números
+    if (formData.pricePerHour < 1) {
+      setError('O preço por hora deve ser no mínimo 1 crédito');
+      return;
+    }
+
+    if (formData.totalHours < 1) {
+      setError('O total de horas deve ser no mínimo 1 hora');
+      return;
+    }
+
+    if (formData.maxStudents < 1) {
+      setError('O máximo de alunos deve ser no mínimo 1 aluno');
+      return;
+    }
+
+    try {
+      // ✅ Criar curso via API real
+      const courseData = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        category: formData.category.trim(),
+        level: formData.level,
+        language: formData.language,
+        pricePerHour: Number(formData.pricePerHour) || 10,
+        totalHours: Number(formData.totalHours) || 10,
+        maxStudents: Number(formData.maxStudents) || 30,
+        tags: formData.tags.length > 0 ? formData.tags : ['curso', 'educação'],
+        features: formData.features.length > 0 ? formData.features : ['Acesso vitalício', 'Certificado de conclusão'],
+        curriculum: formData.curriculum.length > 0 ? formData.curriculum : [
+          {
+            id: 1,
+            title: 'Módulo 1',
+            duration: Number(formData.totalHours) || 10,
+            lessons: ['Introdução', 'Conteúdo Principal', 'Conclusão']
+          }
+        ],
+        schedule: formData.schedule.length > 0 ? formData.schedule : [
+          { day: 'Segunda', time: '19:00-21:00' }
+        ],
+        requirements: formData.requirements.length > 0 ? formData.requirements : ['Interesse no tema'],
+        objectives: formData.objectives.length > 0 ? formData.objectives : ['Aprender o conteúdo do curso'],
+        status: formData.status || 'draft'
+      };
+
+      // Adicionar subcategoria apenas se preenchida
+      if (formData.subcategory && formData.subcategory.trim()) {
+        courseData.subcategory = formData.subcategory.trim();
+      }
+
+      // Debug: Log do payload
+      console.log('📤 Enviando dados do curso:', JSON.stringify(courseData, null, 2));
+
+      const result = await createCourse(courseData);
+
+      if (result.success) {
+        setSuccess(true);
+        
+        // Recarregar dados do usuário para atualizar estatísticas
+        await actions.refreshUser();
+        
+        // Mostrar mensagem de sucesso
+        alert(`Curso "${formData.title}" criado com sucesso!\n\nVocê pode editá-lo depois em "Minhas Aulas".`);
+        
+        // Resetar formulário
+        resetForm();
+        
+        // Fechar modal
+        onClose();
+      }
+    } catch (err) {
+      console.error('❌ Erro ao criar curso:', err);
+      console.error('📥 Status do erro:', err.status);
+      console.error('📥 Resposta do erro:', err.response?.data || err.data);
+      console.error('📥 Erro completo:', JSON.stringify({
+        message: err.message,
+        status: err.status,
+        data: err.data,
+        response: err.response
+      }, null, 2));
+      
+      // Extrair mensagem de erro mais detalhada
+      let errorMessage = 'Erro ao criar curso. Tente novamente.';
+      
+      const errorData = err.response?.data || err.data;
+      
+      if (errorData?.message) {
+        errorMessage = errorData.message;
+      } else if (errorData?.errors) {
+        errorMessage = Array.isArray(errorData.errors) 
+          ? errorData.errors.join(', ')
+          : errorData.errors;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+    }
+  };
+
+  const resetForm = () => {
     setFormData({
-      name: '',
+      title: '',
       description: '',
-      categories: [],
-      curriculum: '',
-      lessons: [
-        {
-          id: 1,
-          title: 'Introdução ao Curso',
-          description: 'Aula introdutória de apresentação do curso'
-        }
-      ]
+      category: '',
+      subcategory: '',
+      level: 'Iniciante',
+      language: 'Português',
+      pricePerHour: 10,
+      totalHours: 10,
+      maxStudents: 30,
+      tags: [],
+      features: [],
+      curriculum: [],
+      schedule: [],
+      requirements: [],
+      objectives: [],
+      status: 'draft'
     });
-    
-    onClose();
+    setNewTag('');
+    setNewFeature('');
+    setError('');
+    setSuccess(false);
   };
 
   return (
@@ -137,6 +248,13 @@ const AddCourseModal = ({
       className={`add-course-modal ${className}`}
     >
       <form onSubmit={handleSubmit} className="add-course-form">
+        {/* Mensagem de erro */}
+        {error && (
+          <div className="add-course-error">
+            ⚠️ {error}
+          </div>
+        )}
+
         {/* Basic Information */}
         <div className="add-course-section">
           <h3 className="add-course-section__title">
@@ -146,10 +264,10 @@ const AddCourseModal = ({
           
           <div className="add-course-fields">
             <FormField
-              label="Nome do Curso:"
-              name="name"
+              label="Nome do Curso *"
+              name="title"
               type="text"
-              value={formData.name}
+              value={formData.title}
               onChange={handleInputChange}
               placeholder="Ex: Desenvolvimento Web com React"
               required
@@ -157,7 +275,7 @@ const AddCourseModal = ({
             />
 
             <FormField
-              label="Descrição:"
+              label="Descrição *"
               name="description"
               type="textarea"
               value={formData.description}
@@ -166,44 +284,135 @@ const AddCourseModal = ({
               required
               fullWidth
             />
+
+            <div className="add-course-row">
+              <FormField
+                label="Categoria *"
+                name="category"
+                type="text"
+                value={formData.category}
+                onChange={handleInputChange}
+                placeholder="Ex: Programação, Design, Marketing"
+                required
+                fullWidth
+              />
+
+              <FormField
+                label="Subcategoria"
+                name="subcategory"
+                type="text"
+                value={formData.subcategory}
+                onChange={handleInputChange}
+                placeholder="Ex: Frontend, UI/UX"
+                fullWidth
+              />
+            </div>
+
+            <div className="add-course-row">
+              <FormField
+                label="Nível"
+                name="level"
+                type="select"
+                value={formData.level}
+                onChange={handleInputChange}
+                fullWidth
+              >
+                <option value="Iniciante">Iniciante</option>
+                <option value="Intermediário">Intermediário</option>
+                <option value="Avançado">Avançado</option>
+              </FormField>
+
+              <FormField
+                label="Idioma"
+                name="language"
+                type="select"
+                value={formData.language}
+                onChange={handleInputChange}
+                fullWidth
+              >
+                <option value="Português">Português</option>
+                <option value="Inglês">Inglês</option>
+                <option value="Espanhol">Espanhol</option>
+              </FormField>
+            </div>
           </div>
         </div>
 
-        {/* Categories */}
+        {/* Preços e Limites */}
+        <div className="add-course-section">
+          <h3 className="add-course-section__title">
+            <Coins size={20} />
+            Preços e Limites
+          </h3>
+          
+          <div className="add-course-row">
+            <FormField
+              label="Preço por Hora (Créditos)"
+              name="pricePerHour"
+              type="number"
+              value={formData.pricePerHour}
+              onChange={handleInputChange}
+              min="1"
+              fullWidth
+            />
+
+            <FormField
+              label="Total de Horas"
+              name="totalHours"
+              type="number"
+              value={formData.totalHours}
+              onChange={handleInputChange}
+              min="1"
+              fullWidth
+            />
+
+            <FormField
+              label="Máximo de Alunos"
+              name="maxStudents"
+              type="number"
+              value={formData.maxStudents}
+              onChange={handleInputChange}
+              min="1"
+              fullWidth
+            />
+          </div>
+        </div>
+
+        {/* Tags */}
         <div className="add-course-section">
           <h3 className="add-course-section__title">
             <FileText size={20} />
-            Categoria(s):
+            Tags (palavras-chave)
           </h3>
           
           <div className="add-course-categories">
             <div className="add-course-category-input">
               <FormField
-                name="newCategory"
+                name="newTag"
                 type="text"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                placeholder="Digite uma categoria"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                placeholder="Ex: react, javascript, web"
                 fullWidth
               />
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={handleAddCategory}
-                disabled={!newCategory.trim()}
+                onClick={handleAddTag}
+                disabled={!newTag.trim() || loading}
               >
                 + Adicionar
               </Button>
             </div>
             
-            {formData.categories.length > 0 && (
+            {formData.tags.length > 0 && (
               <div className="add-course-category-list">
-                {formData.categories.map((category, index) => (
+                {formData.tags.map((tag, index) => (
                   <div key={index} className="add-course-category-tag">
-                    <span>{category}</span>
+                    <span>{tag}</span>
                     <button
                       type="button"
-                      onClick={() => handleRemoveCategory(category)}
+                      onClick={() => handleRemoveTag(tag)}
                       className="add-course-category-remove"
                     >
                       <X size={16} />
@@ -215,71 +424,49 @@ const AddCourseModal = ({
           </div>
         </div>
 
-        {/* Lessons */}
+        {/* Features */}
         <div className="add-course-section">
           <h3 className="add-course-section__title">
-            <Clock size={20} />
-            Aulas:
+            <Plus size={20} />
+            Recursos do Curso
           </h3>
           
-          <div className="add-course-lessons">
-            {formData.lessons.map((lesson, index) => (
-              <Card key={lesson.id} className="add-course-lesson-card" padding="medium">
-                <div className="add-course-lesson-header">
-                  <span className="add-course-lesson-number">
-                    {index + 1} - {lesson.title || 'Nova Aula'}
-                  </span>
-                  {formData.lessons.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="small"
-                      onClick={() => handleRemoveLesson(lesson.id)}
-                    >
-                      <Trash size={16} />
-                    </Button>
-                  )}
-                </div>
-                
-                <div className="add-course-lesson-fields">
-                  <FormField
-                    label="Título da Aula"
-                    name={`lesson-title-${lesson.id}`}
-                    type="text"
-                    value={lesson.title}
-                    onChange={(e) => handleUpdateLesson(lesson.id, 'title', e.target.value)}
-                    placeholder="Ex: Introdução ao React"
-                    fullWidth
-                  />
-                  
-                  <FormField
-                    label="Descrição"
-                    name={`lesson-description-${lesson.id}`}
-                    type="textarea"
-                    value={lesson.description}
-                    onChange={(e) => handleUpdateLesson(lesson.id, 'description', e.target.value)}
-                    placeholder="Aula introdutória de apresentação do curso"
-                    fullWidth
-                  />
-                </div>
-                
-                <div className="add-course-lesson-details">
-                  <Button variant="ghost" size="small">
-                    Ver detalhes
-                  </Button>
-                </div>
-              </Card>
-            ))}
+          <div className="add-course-categories">
+            <div className="add-course-category-input">
+              <FormField
+                name="newFeature"
+                type="text"
+                value={newFeature}
+                onChange={(e) => setNewFeature(e.target.value)}
+                placeholder="Ex: Certificado, Material complementar"
+                fullWidth
+              />
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleAddFeature}
+                disabled={!newFeature.trim() || loading}
+              >
+                + Adicionar
+              </Button>
+            </div>
             
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleAddLesson}
-              className="add-course-add-lesson"
-            >
-              <Plus size={20} />
-              + Criar aula
-            </Button>
+            {formData.features.length > 0 && (
+              <div className="add-course-category-list">
+                {formData.features.map((feature, index) => (
+                  <div key={index} className="add-course-category-tag">
+                    <span>{feature}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFeature(feature)}
+                      className="add-course-category-remove"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -290,6 +477,7 @@ const AddCourseModal = ({
             variant="outline"
             size="large"
             onClick={onClose}
+            disabled={loading}
           >
             Cancelar
           </Button>
@@ -297,8 +485,10 @@ const AddCourseModal = ({
             type="submit"
             variant="primary"
             size="large"
+            loading={loading}
+            disabled={loading || !formData.title || !formData.description || !formData.category}
           >
-            Criar Curso
+            {loading ? 'Criando Curso...' : 'Criar Curso'}
           </Button>
         </div>
       </form>

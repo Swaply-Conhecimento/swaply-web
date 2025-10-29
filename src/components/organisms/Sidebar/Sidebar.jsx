@@ -9,7 +9,9 @@ import {
   Bell,
   Gear,
   SignOut,
-  Coins
+  SignIn,
+  Coins,
+  BookOpen
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts/AppContext';
 import Logo from '../../atoms/Logo';
@@ -20,7 +22,19 @@ const Sidebar = ({
 }) => {
   const { state, actions } = useApp();
   const unreadNotificationsCount = state.notifications.filter(n => !n.isRead).length;
-  const menuItems = [
+  const isAuthenticated = state.isAuthenticated;
+  // Menu para usuários NÃO autenticados
+  const guestMenuItems = [
+    {
+      id: 'dashboard',
+      label: 'Catálogo',
+      icon: <BookOpen size={24} />,
+      page: 'dashboard',
+    },
+  ];
+
+  // Menu para usuários AUTENTICADOS
+  const authenticatedMenuItems = [
     {
       id: 'dashboard',
       label: 'Início',
@@ -57,10 +71,28 @@ const Sidebar = ({
       label: 'Notificações',
       icon: <Bell size={24} />,
       page: 'notifications',
+      badge: unreadNotificationsCount,
     },
   ];
 
-  const settingsItems = [
+  // Menu de configurações para NÃO autenticados
+  const guestSettingsItems = [
+    {
+      id: 'settings',
+      label: 'Configurações',
+      icon: <Gear size={24} />,
+      page: 'settings',
+    },
+    {
+      id: 'login',
+      label: 'Entrar',
+      icon: <SignIn size={24} />,
+      page: 'auth',
+    },
+  ];
+
+  // Menu de configurações para AUTENTICADOS
+  const authenticatedSettingsItems = [
     {
       id: 'settings',
       label: 'Configurações',
@@ -75,12 +107,16 @@ const Sidebar = ({
     },
   ];
 
-  const handleMenuClick = (item) => {
+  // Selecionar menus baseado em autenticação
+  const menuItems = isAuthenticated ? authenticatedMenuItems : guestMenuItems;
+  const settingsItems = isAuthenticated ? authenticatedSettingsItems : guestSettingsItems;
+
+  const handleMenuClick = async (item) => {
     if (item.action === 'openModal') {
       actions.openModal(item.modal);
     } else if (item.action === 'logout') {
-      // Handle logout
-      console.log('Logout clicked');
+      // Logout real
+      await actions.logout();
       actions.setCurrentPage('auth');
     } else if (item.page) {
       actions.setCurrentPage(item.page);
@@ -95,10 +131,12 @@ const Sidebar = ({
           {state.sidebarOpen && (
             <div className="sidebar__brand">
               <span className="sidebar__brand-name">Swaply</span>
-              <div className="sidebar__credits">
-                <Coins size={20} weight="fill" />
-                <span className="sidebar__credits-amount">{state.user?.credits || 0}</span>
-              </div>
+              {isAuthenticated && (
+                <div className="sidebar__credits">
+                  <Coins size={20} weight="fill" />
+                  <span className="sidebar__credits-amount">{state.user?.credits || 0}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -117,9 +155,9 @@ const Sidebar = ({
               >
                 <span className="sidebar__menu-icon">
                   {item.icon}
-                  {item.id === 'notifications' && unreadNotificationsCount > 0 && (
+                  {item.badge && item.badge > 0 && (
                     <span className="sidebar__notification-badge">
-                      {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
+                      {item.badge > 99 ? '99+' : item.badge}
                     </span>
                   )}
                 </span>
