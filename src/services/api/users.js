@@ -131,14 +131,21 @@ const userService = {
   /**
    * GET /users/credits/balance
    * Obter saldo de créditos atual
+   * 
+   * Nota: A API pode retornar 'balance' ou 'credits' + 'creditPrice'
    */
   getCreditBalance: async () => {
     try {
       const { data } = await apiClient.get('/users/credits/balance');
+      // Suporta ambos os formatos de resposta
+      const balance = data.data.balance || data.data.credits;
+      const creditPrice = data.data.creditPrice;
+      
       return {
         success: true,
-        credits: data.data.credits,
-        creditPrice: data.data.creditPrice,
+        balance,
+        credits: balance, // Mantém compatibilidade
+        creditPrice,
       };
     } catch (error) {
       throw new Error(getErrorMessage(error));
@@ -314,6 +321,56 @@ const userService = {
       return {
         success: true,
         message: data.message,
+      };
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
+
+  /**
+   * GET /users/reviews
+   * Obter avaliações feitas pelo usuário
+   */
+  getUserReviews: async (params = {}) => {
+    try {
+      const { data } = await apiClient.get('/users/reviews', { params });
+      return {
+        success: true,
+        reviews: data.data,
+        pagination: data.pagination,
+      };
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
+
+  /**
+   * GET /users/reviews/received
+   * Obter avaliações recebidas pelo usuário (como instrutor)
+   */
+  getReceivedReviews: async (params = {}) => {
+    try {
+      const { data } = await apiClient.get('/users/reviews/received', { params });
+      return {
+        success: true,
+        reviews: data.data,
+        pagination: data.pagination,
+      };
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
+
+  /**
+   * GET /users/reviews/stats
+   * Obter estatísticas de avaliações do instrutor
+   */
+  getReviewStats: async () => {
+    try {
+      const { data } = await apiClient.get('/users/reviews/stats');
+      return {
+        success: true,
+        stats: data.data,
       };
     } catch (error) {
       throw new Error(getErrorMessage(error));

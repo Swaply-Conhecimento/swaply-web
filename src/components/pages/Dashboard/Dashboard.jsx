@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../../../contexts/AppContext';
+import { useApp } from '../../../contexts';
 import { useCourses } from '../../../hooks';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import CourseGrid from '../../organisms/CourseGrid';

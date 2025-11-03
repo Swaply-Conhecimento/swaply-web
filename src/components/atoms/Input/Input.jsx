@@ -39,19 +39,22 @@ const Input = forwardRef(({
   ].filter(Boolean).join(' ');
 
   const inputId = props.id || `input-${Math.random().toString(36).substr(2, 9)}`;
+  const labelId = props.labelId || `${inputId}-label`;
+  const errorId = props.errorId || `${inputId}-error`;
+  const helperId = props.helperId || `${inputId}-helper`;
 
   return (
     <div className="input-wrapper">
       {label && (
-        <label htmlFor={inputId} className="input-label">
+        <label id={labelId} htmlFor={inputId} className="input-label">
           {label}
-          {required && <span className="input-required">*</span>}
+          {required && <span className="input-required" aria-label="obrigatório">*</span>}
         </label>
       )}
       
       <div className="input-container">
         {leftIcon && (
-          <div className="input-icon input-icon--left">
+          <div className="input-icon input-icon--left" aria-hidden="true">
             {leftIcon}
           </div>
         )}
@@ -68,19 +71,28 @@ const Input = forwardRef(({
           onFocus={onFocus}
           disabled={disabled}
           required={required}
+          aria-labelledby={label ? labelId : undefined}
+          aria-describedby={error ? errorId : (helperText ? helperId : undefined)}
+          aria-invalid={!!error}
+          aria-required={required}
           {...props}
         />
         
         {rightIcon && (
-          <div className="input-icon input-icon--right">
+          <div className="input-icon input-icon--right" aria-hidden="true">
             {rightIcon}
           </div>
         )}
       </div>
       
-      {(error || helperText) && (
-        <div className={`input-message ${error ? 'input-message--error' : ''}`}>
-          {error || helperText}
+      {error && (
+        <div id={errorId} className="input-message input-message--error" role="alert" aria-live="polite">
+          {error}
+        </div>
+      )}
+      {!error && helperText && (
+        <div id={helperId} className="input-message">
+          {helperText}
         </div>
       )}
     </div>
@@ -107,6 +119,9 @@ Input.propTypes = {
   rightIcon: PropTypes.node,
   className: PropTypes.string,
   id: PropTypes.string,
+  labelId: PropTypes.string,
+  errorId: PropTypes.string,
+  helperId: PropTypes.string,
 };
 
 export default Input;

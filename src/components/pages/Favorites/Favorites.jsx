@@ -1,6 +1,6 @@
 import React from 'react';
 import { Heart, BookOpen, Star } from '@phosphor-icons/react';
-import { useApp } from '../../../contexts/AppContext';
+import { useApp } from '../../../contexts';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import CourseGrid from '../../organisms/CourseGrid';
 import Card from '../../molecules/Card';

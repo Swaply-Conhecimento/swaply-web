@@ -10,14 +10,13 @@ import {
   Moon,
   Desktop,
   TextAa,
-  SpeakerHigh,
   Lock,
   EyeSlash,
   Trash,
   UserCircle,
 } from "@phosphor-icons/react";
 // Removed unused old molecules imports
-import { useApp } from "../../../contexts/AppContext";
+import { useApp } from "../../../contexts";
 import { useTheme } from "../../../hooks/useTheme";
 import { useAccessibility } from "../../../hooks/useAccessibility";
 import { userService } from "../../../services/api";
@@ -159,8 +158,6 @@ const Settings = () => {
   const {
     setFontSize,
     toggleVLibras,
-    toggleAudioReading,
-    isReading,
     settings: accessibilitySettings,
     fontSize,
   } = useAccessibility();
@@ -265,7 +262,7 @@ const Settings = () => {
   };
 
   const handleEditProfile = () => {
-    actions.setCurrentPage('profile');
+    actions.setCurrentPage('edit-profile');
   };
 
   const handleDeleteAccount = () => {
@@ -360,75 +357,6 @@ const Settings = () => {
             checked={accessibilitySettings.vlibras}
             onChange={toggleVLibras}
           />
-        </div>
-      </Card>
-
-      <Card className="settings__card" padding="large">
-        <div className="settings__option">
-          <div className="settings__option-info">
-            <div className="settings__option-header">
-              <SpeakerHigh size={20} />
-              <h3 className="settings__option-title">
-                Leitura com Faixa de Áudio
-              </h3>
-            </div>
-            <p className="settings__option-description">
-              Habilitar funcionalidade para ler textos em voz alta ao clicar
-              neles.
-            </p>
-          </div>
-          <div className="settings__audio-controls">
-            <Toggle
-              checked={accessibilitySettings.audioDescription}
-              onChange={toggleAudioReading}
-            />
-            {accessibilitySettings.audioDescription && (
-              <div className="settings__audio-actions">
-                <Button
-                  variant="outline"
-                  size="small"
-                  onClick={() => {
-                    console.log("Test audio button clicked");
-                    console.log(
-                      "Speech synthesis available:",
-                      "speechSynthesis" in window
-                    );
-                    console.log(
-                      "Audio description enabled:",
-                      accessibilitySettings.audioDescription
-                    );
-
-                    if ("speechSynthesis" in window) {
-                      window.speechSynthesis.cancel();
-                      const utterance = new SpeechSynthesisUtterance(
-                        "Esta é uma demonstração da leitura de áudio. A funcionalidade está funcionando corretamente."
-                      );
-                      utterance.lang = "pt-BR";
-                      utterance.rate = 0.9;
-                      utterance.onstart = () => console.log("Speech started");
-                      utterance.onend = () => console.log("Speech ended");
-                      window.speechSynthesis.speak(utterance);
-                    }
-                  }}
-                  disabled={isReading}
-                >
-                  {isReading ? "Lendo..." : "Testar Áudio"}
-                </Button>
-                {isReading && (
-                  <Button
-                    variant="ghost"
-                    size="small"
-                    onClick={() => {
-                      window.speechSynthesis.cancel();
-                      actions.setReading(false);
-                    }}
-                  >
-                    Parar
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       </Card>
 

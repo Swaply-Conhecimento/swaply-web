@@ -31,15 +31,27 @@ const Button = ({
     className
   ].filter(Boolean).join(' ');
 
+  // Determinar aria-label baseado no estado
+  const ariaLabel = loading 
+    ? (props['aria-label'] ? `${props['aria-label']} - Carregando...` : `${children} - Carregando...`)
+    : props['aria-label'];
+
   return (
     <button
       type={type}
       className={buttonClass}
       disabled={disabled || loading}
       onClick={onClick}
+      aria-busy={loading}
+      aria-disabled={disabled || loading}
+      aria-label={ariaLabel}
       {...props}
     >
-      {loading && <span className="btn__spinner" />}
+      {loading && (
+        <span className="btn__spinner" aria-hidden="true">
+          <span className="sr-only">Carregando...</span>
+        </span>
+      )}
       <span className={`btn__content ${loading ? 'btn__content--hidden' : ''}`}>
         {children}
       </span>

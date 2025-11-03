@@ -8,7 +8,7 @@ import {
   Eye,
   EyeSlash,
 } from "@phosphor-icons/react";
-import { useApp } from "../../../contexts/AppContext";
+import { useApp } from "../../../contexts";
 import Logo from "../../atoms/Logo";
 import Button from "../../atoms/Button";
 import FormField, { validations } from "../../molecules/FormField";

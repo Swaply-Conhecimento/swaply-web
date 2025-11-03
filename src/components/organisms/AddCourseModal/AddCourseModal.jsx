@@ -11,7 +11,7 @@ import {
   X,
   Coins
 } from '@phosphor-icons/react';
-import { useApp } from '../../../contexts/AppContext';
+import { useApp } from '../../../contexts';
 import { useCourses } from '../../../hooks/useCourses';
 import Modal from '../../atoms/Modal';
 import Button from '../../atoms/Button';

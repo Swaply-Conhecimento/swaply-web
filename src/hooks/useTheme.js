@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from '../contexts';
 
 export const useTheme = () => {
   const { state, actions } = useApp();

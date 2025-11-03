@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Eye, EyeSlash, CheckCircle, Warning } from '@phosphor-icons/react';
-import { useApp } from '../../../contexts/AppContext';
+import { useApp } from '../../../contexts';
 import { authService } from '../../../services/api';
 import AuthTemplate from '../../templates/AuthTemplate';
 import Card from '../../molecules/Card';

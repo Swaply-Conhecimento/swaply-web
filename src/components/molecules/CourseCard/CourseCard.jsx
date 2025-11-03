@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Heart } from '@phosphor-icons/react';
-import { useApp } from '../../../contexts/AppContext';
+import { useApp } from '../../../contexts';
 import Card from '../Card';
 import Button from '../../atoms/Button';
 import './CourseCard.css';

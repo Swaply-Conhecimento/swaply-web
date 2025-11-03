@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Bell, Check, X, Clock, BookOpen, User, Coins } from '@phosphor-icons/react';
-import { useApp } from '../../../contexts/AppContext';
+import { useApp } from '../../../contexts';
 import Card from '../../molecules/Card';
 import Button from '../Button';
 import './NotificationBell.css';

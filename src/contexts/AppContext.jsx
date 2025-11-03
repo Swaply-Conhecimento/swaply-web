@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useReducer, useEffect } from 'react';
 import { authService, userService } from '../services/api';
 
 // Initial State
@@ -20,8 +20,8 @@ const initialState = {
     accessibility: {
       fontSizeControl: true,
       screenReader: false,
-      audioDescription: false,
-      vlibras: false
+      vlibras: true,
+      highContrast: false,
     },
     notifications: {
       classNotifications: true,
@@ -41,10 +41,10 @@ const initialState = {
   // UI State
   selectedCourse: null,
   sidebarOpen: true,
-  isReading: false,
   scheduledClasses: [],
   notifications: [],
   unreadNotificationsCount: 0,
+  toasts: [],
 };
 
 // Action Types
@@ -87,8 +87,9 @@ const actionTypes = {
   DELETE_NOTIFICATION: 'DELETE_NOTIFICATION',
   ADD_NOTIFICATION: 'ADD_NOTIFICATION',
   
-  // Accessibility
-  SET_READING: 'SET_READING',
+  // Toasts
+  ADD_TOAST: 'ADD_TOAST',
+  REMOVE_TOAST: 'REMOVE_TOAST',
 };
 
 // Reducer
@@ -135,10 +136,10 @@ const appReducer = (state, action) => {
     case actionTypes.UPDATE_CREDITS:
       return {
         ...state,
-        user: {
+        user: state.user ? {
           ...state.user,
-          credits: state.user.credits + action.payload,
-        },
+          credits: (state.user.credits || 0) + action.payload,
+        } : null,
       };
     
     case actionTypes.SET_CURRENT_PAGE:
@@ -171,14 +172,27 @@ const appReducer = (state, action) => {
         },
       };
     
-    case actionTypes.UPDATE_SETTINGS:
+    case actionTypes.UPDATE_SETTINGS: {
+      // Merge profundo para preservar valores padrão quando backend não envia todas as propriedades
+      const mergedAccessibility = {
+        ...state.settings.accessibility,
+        ...(action.payload.accessibility || {}),
+      };
+      const mergedNotifications = {
+        ...state.settings.notifications,
+        ...(action.payload.notifications || {}),
+      };
+      
       return {
         ...state,
         settings: {
           ...state.settings,
           ...action.payload,
+          accessibility: mergedAccessibility,
+          notifications: mergedNotifications,
         },
       };
+    }
     
     case actionTypes.SET_SELECTED_COURSE:
       return {
@@ -186,7 +200,7 @@ const appReducer = (state, action) => {
         selectedCourse: action.payload,
       };
     
-    case actionTypes.TOGGLE_FAVORITE:
+    case actionTypes.TOGGLE_FAVORITE: {
       const courseId = action.payload;
       const favorites = state.user?.favorites?.includes(courseId)
         ? state.user.favorites.filter(id => id !== courseId)
@@ -199,6 +213,7 @@ const appReducer = (state, action) => {
           favorites,
         },
       };
+    }
     
     case actionTypes.ADD_SCHEDULED_CLASS:
       return {
@@ -253,7 +268,7 @@ const appReducer = (state, action) => {
         unreadNotificationsCount: 0,
       };
     
-    case actionTypes.DELETE_NOTIFICATION:
+    case actionTypes.DELETE_NOTIFICATION: {
       const notificationToDelete = state.notifications.find(
         n => n._id === action.payload || n.id === action.payload
       );
@@ -268,6 +283,7 @@ const appReducer = (state, action) => {
           ? Math.max(0, state.unreadNotificationsCount - 1) 
           : state.unreadNotificationsCount,
       };
+    }
     
     case actionTypes.ADD_NOTIFICATION:
       return {
@@ -278,10 +294,16 @@ const appReducer = (state, action) => {
           : state.unreadNotificationsCount,
       };
     
-    case actionTypes.SET_READING:
+    case actionTypes.ADD_TOAST:
       return {
         ...state,
-        isReading: action.payload,
+        toasts: [...state.toasts, action.payload],
+      };
+    
+    case actionTypes.REMOVE_TOAST:
+      return {
+        ...state,
+        toasts: state.toasts.filter(t => t.id !== action.payload),
       };
     
     default:
@@ -359,17 +381,22 @@ export const AppProvider = ({ children }) => {
       try {
         console.log('🔑 AppContext: Iniciando login...', credentials.email);
         const { user, token, refreshToken } = await authService.login(credentials);
-        
+
+        // Segurança: garantir que o token foi realmente recebido
+        if (!token) {
+          throw new Error('Token inválido recebido da API');
+        }
+
         console.log('✅ AppContext: Login bem-sucedido, atualizando estado...');
-        
+
         dispatch({
           type: actionTypes.SET_AUTH,
           payload: { isAuthenticated: true, token, refreshToken },
         });
-        
+
         dispatch({ type: actionTypes.SET_USER, payload: user });
         dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'dashboard' });
-        
+
         console.log('✅ AppContext: Estado atualizado, usuário autenticado');
         return { success: true };
       } catch (error) {
@@ -476,6 +503,12 @@ export const AppProvider = ({ children }) => {
     setCurrentPage: (page) => dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: page }),
     toggleSidebar: () => dispatch({ type: actionTypes.TOGGLE_SIDEBAR }),
 
+    // Accessibility Actions
+    setHighContrast: (enabled) => dispatch({
+      type: actionTypes.UPDATE_SETTINGS,
+      payload: { accessibility: { ...(state.settings.accessibility || {}), highContrast: enabled } },
+    }),
+
     // Modal Actions
     openModal: (modalName) => dispatch({ type: actionTypes.OPEN_MODAL, payload: modalName }),
     closeModal: (modalName) => dispatch({ type: actionTypes.CLOSE_MODAL, payload: modalName }),
@@ -569,7 +602,20 @@ export const AppProvider = ({ children }) => {
 
     // Other Actions
     updateCredits: (amount) => dispatch({ type: actionTypes.UPDATE_CREDITS, payload: amount }),
-    setReading: (isReading) => dispatch({ type: actionTypes.SET_READING, payload: isReading }),
+    
+    // Toast Actions
+    showToast: (message, type = 'info', duration = 5000) => {
+      const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      dispatch({
+        type: actionTypes.ADD_TOAST,
+        payload: { id, message, type, duration },
+      });
+      return id;
+    },
+    
+    removeToast: (id) => {
+      dispatch({ type: actionTypes.REMOVE_TOAST, payload: id });
+    },
   };
 
   return (
@@ -577,15 +623,6 @@ export const AppProvider = ({ children }) => {
       {children}
     </AppContext.Provider>
   );
-};
-
-// Hook
-export const useApp = () => {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useApp must be used within an AppProvider');
-  }
-  return context;
 };
 
 export default AppContext;

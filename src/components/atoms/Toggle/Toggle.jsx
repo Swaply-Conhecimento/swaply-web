@@ -30,11 +30,28 @@ const Toggle = ({
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleToggle();
+    }
+  };
+
   const toggleId = props.id || `toggle-${Math.random().toString(36).substr(2, 9)}`;
+  const labelId = `toggle-label-${toggleId}`;
 
   return (
     <div className="toggle-wrapper">
-      <div className={toggleClass} onClick={handleToggle}>
+      <div
+        className={toggleClass}
+        role="switch"
+        aria-checked={checked}
+        aria-disabled={disabled}
+        aria-labelledby={label ? labelId : undefined}
+        onClick={handleToggle}
+        onKeyDown={handleKeyDown}
+        tabIndex={disabled ? -1 : 0}
+      >
         <input
           type="checkbox"
           id={toggleId}
@@ -42,14 +59,16 @@ const Toggle = ({
           onChange={() => {}} // Controlled by onClick
           disabled={disabled}
           className="toggle-input"
+          aria-hidden="true"
+          tabIndex={-1}
           {...props}
         />
-        <span className="toggle-track">
+        <span className="toggle-track" aria-hidden="true">
           <span className="toggle-thumb" />
         </span>
       </div>
       {label && (
-        <label htmlFor={toggleId} className="toggle-label">
+        <label id={labelId} htmlFor={toggleId} className="toggle-label">
           {label}
         </label>
       )}

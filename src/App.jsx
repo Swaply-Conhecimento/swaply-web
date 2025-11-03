@@ -1,9 +1,10 @@
 import React from "react";
-import { AppProvider, useApp } from "./contexts/AppContext";
+import { AppProvider, useApp } from "./contexts";
 import {
   Dashboard,
   Auth,
   Profile,
+  EditProfile,
   Settings,
   CourseDetails,
   Favorites,
@@ -17,7 +18,9 @@ import {
 } from "./components/pages";
 import { AddCourseModal } from "./components/organisms";
 import { SvgColorBlindFilters } from "./components/molecules";
+import { ToastContainer } from "./components/molecules/Toast";
 import LoadingScreen from "./components/atoms/LoadingScreen";
+import SkipLink from "./components/atoms/SkipLink";
 import { useTheme } from "./hooks/useTheme";
 import { useAccessibility } from "./hooks/useAccessibility";
 import "./App.css";
@@ -41,6 +44,7 @@ const AppContent = () => {
   // Rotas protegidas que exigem autenticação
   const protectedPages = [
     'profile',
+    'edit-profile',
     'favorites', 
     'calendar',
     'my-courses-completed',
@@ -82,6 +86,8 @@ const AppContent = () => {
         return <Auth onLogin={handleLogin} />;
       case "profile":
         return <Profile />;
+      case "edit-profile":
+        return <EditProfile />;
       case "settings":
         return <Settings />;
       case "course-details":
@@ -113,6 +119,9 @@ const AppContent = () => {
     <div className="App">
       {/* SVG Filters for colorblind support - need to be available globally */}
       <SvgColorBlindFilters />
+      
+      {/* Skip Link para navegação por teclado */}
+      <SkipLink href="#main-content" />
 
       {renderCurrentPage()}
 
@@ -121,6 +130,9 @@ const AppContent = () => {
         isOpen={state.modals.addCourse}
         onClose={() => actions.closeModal("addCourse")}
       />
+      
+      {/* Toast Notifications */}
+      <ToastContainer />
     </div>
   );
 };

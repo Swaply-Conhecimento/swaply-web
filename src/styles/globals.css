@@ -108,6 +108,44 @@
   color-scheme: dark;
 }
 
+/* High Contrast Theme for better accessibility */
+[data-theme="high-contrast"] {
+  /* Backgrounds */
+  --color-background: #FFFFFF; /* white background for max contrast */
+  --color-card: #FFFFFF;
+  --color-sidebar: #F3F4F6; /* light gray sidebar */
+
+  /* Neutrals: darker text shades */
+  --color-neutral-50: #FFFFFF;
+  --color-neutral-100: #F8F9FA;
+  --color-neutral-200: #E6E7E9;
+  --color-neutral-300: #C8C9CC;
+  --color-neutral-400: #8F9094;
+  --color-neutral-500: #6B6C70;
+  --color-neutral-600: #3F4146;
+  --color-neutral-700: #222428;
+  --color-neutral-800: #0F1113;
+  --color-neutral-900: #000000;
+
+  /* Primary colors: stronger, higher contrast */
+  --color-primary-900: #0B3D91; /* deep blue */
+  --color-primary-800: #0F52C2;
+  --color-primary-700: #2B6CB0;
+  --color-primary-100: #E6F0FF; /* pale blue for selection */
+
+  /* State colors - keep vivid */
+  --color-success: #047857;
+  --color-warning: #B45309;
+  --color-error: #B91C1C;
+
+  /* Focus and selection overrides */
+  --focus-outline-color: #FFD54F; /* high-visibility yellow */
+  --selection-bg: #FFD54F;
+  --selection-color: #000000;
+
+  color-scheme: light;
+}
+
 /* Font Size Variants */
 [data-font-size="small"] {
   --font-size-xs: 0.625rem;
@@ -210,14 +248,14 @@ a:hover {
 
 /* Focus States */
 *:focus {
-  outline: 2px solid var(--color-primary-800);
+  outline: 2px solid var(--focus-outline-color, var(--color-primary-800));
   outline-offset: 2px;
 }
 
 /* Selection */
 ::selection {
-  background-color: var(--color-primary-100);
-  color: var(--color-primary-900);
+  background-color: var(--selection-bg, var(--color-primary-100));
+  color: var(--selection-color, var(--color-primary-900));
 }
 
 /* Scrollbar */
@@ -291,28 +329,6 @@ div[vw].vlibras-hidden {
   }
 }
 
-/* Audio Reading Styles */
-.audio-reading-active {
-  background-color: rgba(84, 89, 172, 0.1) !important;
-  border-radius: var(--radius-base);
-  animation: audioReading 2s infinite;
-}
-
-@keyframes audioReading {
-
-  0%,
-  100% {
-    background-color: rgba(84, 89, 172, 0.1);
-  }
-
-  50% {
-    background-color: rgba(84, 89, 172, 0.2);
-  }
-}
-
-[data-theme="dark"] .audio-reading-active {
-  background-color: rgba(178, 216, 206, 0.2) !important;
-}
 
 /* Utilities */
 .sr-only {

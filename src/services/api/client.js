@@ -50,9 +50,16 @@ apiClient.interceptors.response.use(
 
     // Se erro 401 e não é uma requisição de refresh/login
     if (error.response?.status === 401 && !originalRequest._retry) {
-      if (originalRequest.url.includes('/auth/refresh-token') || 
-          originalRequest.url.includes('/auth/login')) {
-        // Se falhou no refresh ou login, fazer logout
+      // Se for erro no login ou registro, apenas rejeitar o erro sem redirecionar
+      // O componente Auth vai tratar o erro e mostrar a mensagem
+      if (originalRequest.url.includes('/auth/login') || 
+          originalRequest.url.includes('/auth/register')) {
+        // Não fazer logout nem redirecionar - apenas rejeitar o erro
+        return Promise.reject(error);
+      }
+      
+      // Se falhou no refresh token, fazer logout
+      if (originalRequest.url.includes('/auth/refresh-token')) {
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';

@@ -578,8 +578,12 @@
 
 [data-theme="dark"] .settings__theme-option--active {
   border-color: var(--color-primary-800);
-  background: var(--color-primary-100);
-  color: var(--color-primary-900);
+  background: var(--color-primary-800);
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .settings__theme-option--active svg {
+  color: #FFFFFF;
 }
 
 [data-theme="dark"] .settings__font-size-btn {

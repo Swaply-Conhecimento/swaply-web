@@ -13,7 +13,7 @@ import {
   Coins,
   BookOpen
 } from '@phosphor-icons/react';
-import { useApp } from '../../../contexts/AppContext';
+import { useApp } from '../../../contexts';
 import Logo from '../../atoms/Logo';
 import './Sidebar.css';
 

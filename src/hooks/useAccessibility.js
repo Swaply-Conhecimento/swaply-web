@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useApp } from "../contexts/AppContext";
+import { useApp } from "../contexts";
 
 export const useAccessibility = () => {
   const { state, actions } = useApp();
@@ -16,6 +16,19 @@ export const useAccessibility = () => {
     // Apply font size
     root.setAttribute("data-font-size", state.settings.fontSize);
 
+    // Apply theme and high contrast preference
+    try {
+      if (state.settings?.accessibility?.highContrast) {
+        root.setAttribute('data-theme', 'high-contrast');
+      } else if (state.settings?.theme === 'dark') {
+        root.setAttribute('data-theme', 'dark');
+      } else {
+        root.removeAttribute('data-theme');
+      }
+    } catch (err) {
+      console.warn('Error applying theme/high-contrast:', err);
+    }
+
     // VLibras control - show/hide the existing widget
     const vlibrasWidget = document.querySelector("div[vw]");
     if (vlibrasWidget) {
@@ -28,72 +41,8 @@ export const useAccessibility = () => {
       }
     }
 
-    // Apply audio reading setup
-    if (state.settings.accessibility.audioDescription) {
-      setupAudioReading();
-    }
-
     console.log("Accessibility settings:", state.settings.accessibility);
   }, [state.settings]);
-
-  const setupAudioReading = () => {
-    // Setup Speech Synthesis for audio reading
-    if ("speechSynthesis" in window) {
-      console.log("Speech synthesis available");
-    }
-  };
-
-  const readText = (text) => {
-    if (!state.settings.accessibility.audioDescription) {
-      console.log("Audio reading is disabled");
-      return;
-    }
-
-    if ("speechSynthesis" in window) {
-      try {
-        // Cancel any ongoing speech
-        window.speechSynthesis.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "pt-BR";
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
-        utterance.volume = 1;
-
-        utterance.onstart = () => {
-          console.log("Started reading:", text);
-          actions.setReading(true);
-        };
-
-        utterance.onend = () => {
-          console.log("Finished reading");
-          actions.setReading(false);
-        };
-
-        utterance.onerror = (event) => {
-          console.error("Speech synthesis error:", event);
-          actions.setReading(false);
-        };
-
-        // Small delay to ensure previous speech is cancelled
-        setTimeout(() => {
-          window.speechSynthesis.speak(utterance);
-        }, 100);
-      } catch (error) {
-        console.error("Error in readText:", error);
-        actions.setReading(false);
-      }
-    } else {
-      console.log("Speech synthesis not supported");
-    }
-  };
-
-  const stopReading = () => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      actions.setReading(false);
-    }
-  };
 
   const setFontSize = (size) => {
     actions.updateSettings({ fontSize: size });
@@ -109,26 +58,9 @@ export const useAccessibility = () => {
     });
   };
 
-  const toggleAudioReading = (enabled) => {
-    actions.updateSettings({
-      accessibility: {
-        ...state.settings.accessibility,
-        audioDescription: enabled,
-      },
-    });
-
-    if (!enabled) {
-      stopReading();
-    }
-  };
-
   return {
-    readText,
-    stopReading,
     setFontSize,
     toggleVLibras,
-    toggleAudioReading,
-    isReading: state.isReading,
     settings: state.settings.accessibility,
     fontSize: state.settings.fontSize,
   };

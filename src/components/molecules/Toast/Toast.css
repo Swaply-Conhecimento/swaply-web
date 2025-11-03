@@ -1,0 +1,123 @@
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) var(--spacing-5);
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  min-width: 300px;
+  max-width: 500px;
+  animation: toast-slide-in 0.3s ease-out;
+  border-left: 4px solid;
+}
+
+.toast--success {
+  border-left-color: var(--color-success);
+}
+
+.toast--error {
+  border-left-color: var(--color-error);
+}
+
+.toast--warning {
+  border-left-color: var(--color-warning);
+}
+
+.toast--info {
+  border-left-color: var(--color-primary-800);
+}
+
+.toast__icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.toast--success .toast__icon {
+  color: var(--color-success);
+}
+
+.toast--error .toast__icon {
+  color: var(--color-error);
+}
+
+.toast--warning .toast__icon {
+  color: var(--color-warning);
+}
+
+.toast--info .toast__icon {
+  color: var(--color-primary-800);
+}
+
+.toast__message {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-neutral-800);
+}
+
+.toast__close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-neutral-600);
+  border-radius: var(--radius-base);
+  transition: all var(--transition-fast);
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.toast__close:hover {
+  background: var(--color-neutral-200);
+  color: var(--color-neutral-800);
+}
+
+.toast__close:focus {
+  outline: 2px solid var(--color-primary-800);
+  outline-offset: 2px;
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Dark theme */
+[data-theme="dark"] .toast {
+  background: var(--color-card);
+  border-color: var(--color-neutral-600);
+}
+
+[data-theme="dark"] .toast__message {
+  color: var(--color-neutral-200);
+}
+
+[data-theme="dark"] .toast__close {
+  color: var(--color-neutral-400);
+}
+
+[data-theme="dark"] .toast__close:hover {
+  background: var(--color-neutral-700);
+  color: var(--color-neutral-200);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .toast {
+    min-width: 280px;
+    max-width: calc(100vw - var(--spacing-8));
+  }
+}
+

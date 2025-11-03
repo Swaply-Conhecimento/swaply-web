@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { notificationService } from '../services/api';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from '../contexts';
 
 /**
  * Hook para operações de notificações

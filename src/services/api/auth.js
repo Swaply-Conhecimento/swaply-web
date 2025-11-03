@@ -11,13 +11,16 @@ const authService = {
   register: async (userData) => {
     try {
       const { data } = await apiClient.post('/auth/register', userData);
-      
-      // Armazenar tokens
-      if (data.data.token) {
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('refreshToken', data.data.refreshToken);
+      // Garantir que a API retornou token válido
+      if (!data?.data?.token) {
+        // Se não houver token, tratar como falha explícita
+        throw new Error(data?.message || 'Token não recebido no registro');
       }
-      
+
+      // Armazenar tokens
+      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('refreshToken', data.data.refreshToken);
+
       return {
         success: true,
         user: data.data.user,
@@ -36,13 +39,15 @@ const authService = {
   login: async (credentials) => {
     try {
       const { data } = await apiClient.post('/auth/login', credentials);
-      
-      // Armazenar tokens
-      if (data.data.token) {
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('refreshToken', data.data.refreshToken);
+      // Se a API respondeu sem token, tratar como erro
+      if (!data?.data?.token) {
+        throw new Error(data?.message || 'Token não recebido no login');
       }
-      
+
+      // Armazenar tokens
+      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('refreshToken', data.data.refreshToken);
+
       return {
         success: true,
         user: data.data.user,
@@ -56,11 +61,16 @@ const authService = {
 
   /**
    * POST /auth/logout
-   * Fazer logout
+   * Fazer logout (invalidar refresh token)
    */
   logout: async () => {
     try {
-      await apiClient.post('/auth/logout');
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        await apiClient.post('/auth/logout', { refreshToken });
+      } else {
+        await apiClient.post('/auth/logout');
+      }
       clearAuthData();
       return { success: true };
     } catch (error) {

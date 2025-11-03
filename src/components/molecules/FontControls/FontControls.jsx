@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useApp } from "../../../contexts/AppContext";
+import { useApp } from "../../../contexts";
 import "./FontControls.css";
 
 export default function FontControls() {

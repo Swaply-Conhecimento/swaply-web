@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useApp } from '../../../contexts/AppContext';
+import { useApp } from '../../../contexts';
 import AuthTemplate from '../../templates/AuthTemplate';
 import AuthForm from '../../organisms/AuthForm';
 import './Auth.css';

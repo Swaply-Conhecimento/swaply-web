@@ -59,19 +59,23 @@ const FormField = ({
   };
 
   const displayError = error || (touched && localError);
+  const fieldId = props.id || `input-${Math.random().toString(36).substr(2, 9)}`;
+  const labelId = `${fieldId}-label`;
+  const errorId = `${fieldId}-error`;
+  const helperId = `${fieldId}-helper`;
 
   return (
-    <div className={`form-field ${className}`}>
+    <div className={`form-field ${className}`} role="group">
         {type === 'select' ? (
           <div className="input-wrapper">
             {label && (
-              <label htmlFor={props.id || `input-${Math.random().toString(36).substr(2, 9)}`} className="input-label">
+              <label id={labelId} htmlFor={fieldId} className="input-label">
                 {label}
-                {required && <span className="input-required">*</span>}
+                {required && <span className="input-required" aria-label="obrigatório">*</span>}
               </label>
             )}
             <select
-              id={props.id || `input-${Math.random().toString(36).substr(2, 9)}`}
+              id={fieldId}
               name={name}
               className={`input-field input-field--${size} ${fullWidth ? 'input-field--full-width' : ''} ${displayError ? 'input-field--error' : ''}`}
               value={value}
@@ -79,26 +83,35 @@ const FormField = ({
               onBlur={handleBlur}
               disabled={disabled}
               required={required}
+              aria-labelledby={label ? labelId : undefined}
+              aria-describedby={displayError ? errorId : (helperText ? helperId : undefined)}
+              aria-invalid={!!displayError}
+              aria-required={required}
               {...props}
             >
               {children}
             </select>
-            {(displayError || helperText) && (
-              <div className={`input-message ${displayError ? 'input-message--error' : ''}`}>
-                {displayError || helperText}
+            {displayError && (
+              <div id={errorId} className="input-message input-message--error" role="alert" aria-live="polite">
+                {displayError}
+              </div>
+            )}
+            {!displayError && helperText && (
+              <div id={helperId} className="input-message">
+                {helperText}
               </div>
             )}
           </div>
         ) : type === 'textarea' ? (
           <div className="input-wrapper">
             {label && (
-              <label htmlFor={props.id || `input-${Math.random().toString(36).substr(2, 9)}`} className="input-label">
+              <label id={labelId} htmlFor={fieldId} className="input-label">
                 {label}
-                {required && <span className="input-required">*</span>}
+                {required && <span className="input-required" aria-label="obrigatório">*</span>}
               </label>
             )}
             <textarea
-              id={props.id || `input-${Math.random().toString(36).substr(2, 9)}`}
+              id={fieldId}
               name={name}
               className={`input-field input-field--${size} ${fullWidth ? 'input-field--full-width' : ''} ${displayError ? 'input-field--error' : ''}`}
               placeholder={placeholder}
@@ -108,17 +121,30 @@ const FormField = ({
               disabled={disabled}
               required={required}
               rows={4}
+              aria-labelledby={label ? labelId : undefined}
+              aria-describedby={displayError ? errorId : (helperText ? helperId : undefined)}
+              aria-invalid={!!displayError}
+              aria-required={required}
               {...props}
             />
-            {(displayError || helperText) && (
-              <div className={`input-message ${displayError ? 'input-message--error' : ''}`}>
-                {displayError || helperText}
+            {displayError && (
+              <div id={errorId} className="input-message input-message--error" role="alert" aria-live="polite">
+                {displayError}
+              </div>
+            )}
+            {!displayError && helperText && (
+              <div id={helperId} className="input-message">
+                {helperText}
               </div>
             )}
           </div>
         ) : (
           <Input
+            id={fieldId}
             label={label}
+            labelId={labelId}
+            errorId={errorId}
+            helperId={helperId}
             name={name}
             type={type}
             value={value}

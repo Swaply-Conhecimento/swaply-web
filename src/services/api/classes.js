@@ -146,12 +146,14 @@ const classService = {
   /**
    * PUT /classes/:id/rating
    * Avaliar aula
+   * 
+   * Nota: A API aceita tanto 'feedback' quanto 'comment' no body
    */
-  rateClass: async (classId, rating, comment = null) => {
+  rateClass: async (classId, rating, feedback = null) => {
     try {
       const { data } = await apiClient.put(`/classes/${classId}/rating`, {
         rating,
-        comment,
+        feedback, // Usando 'feedback' conforme documentação (pode ser 'comment' também)
       });
       return {
         success: true,

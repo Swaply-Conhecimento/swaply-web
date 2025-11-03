@@ -11,7 +11,7 @@ import {
   Coins,
   Check
 } from '@phosphor-icons/react';
-import { useApp } from '../../../contexts/AppContext';
+import { useApp } from '../../../contexts';
 import Modal from '../../atoms/Modal';
 import Button from '../../atoms/Button';
 import Card from '../../molecules/Card';

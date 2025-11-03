@@ -10,7 +10,7 @@ import {
   GraduationCap,
   PencilSimple
 } from '@phosphor-icons/react';
-import { useApp } from '../../../contexts/AppContext';
+import { useApp } from '../../../contexts';
 import { useUser } from '../../../hooks/useUser';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../molecules/Card';
@@ -82,8 +82,7 @@ const Profile = () => {
   };
 
   const handleEditProfile = () => {
-    // TODO: Abrir modal de edição de perfil
-    actions.setCurrentPage('settings');
+    actions.setCurrentPage('edit-profile');
   };
 
   const handleViewSchedule = () => {

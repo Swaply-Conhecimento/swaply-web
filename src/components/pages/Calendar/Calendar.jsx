@@ -9,7 +9,7 @@ import {
   Star,
   Users
 } from '@phosphor-icons/react';
-import { useApp } from '../../../contexts/AppContext';
+import { useApp } from '../../../contexts';
 import { useScheduling } from '../../../hooks/useScheduling';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../molecules/Card';

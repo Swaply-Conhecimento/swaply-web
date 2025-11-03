@@ -1,6 +1,7 @@
 export { default as Dashboard } from './Dashboard';
 export { default as Auth } from './Auth';
 export { default as Profile } from './Profile';
+export { default as EditProfile } from './EditProfile';
 export { default as Settings } from './Settings';
 export { default as CourseDetails } from './CourseDetails';
 export { default as Favorites } from './Favorites';
