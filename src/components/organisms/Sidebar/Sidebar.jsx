@@ -11,7 +11,8 @@ import {
   SignOut,
   SignIn,
   Coins,
-  BookOpen
+  BookOpen,
+  X
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts';
 import Logo from '../../atoms/Logo';
@@ -112,6 +113,11 @@ const Sidebar = ({
   const settingsItems = isAuthenticated ? authenticatedSettingsItems : guestSettingsItems;
 
   const handleMenuClick = async (item) => {
+    // Fechar sidebar no mobile após clicar em um item
+    if (window.innerWidth <= 768 && state.sidebarOpen) {
+      actions.toggleSidebar();
+    }
+
     if (item.action === 'openModal') {
       actions.openModal(item.modal);
     } else if (item.action === 'logout') {
@@ -140,6 +146,14 @@ const Sidebar = ({
             </div>
           )}
         </div>
+        {/* Botão de fechar no mobile */}
+        <button
+          className="sidebar__close-mobile"
+          onClick={actions.toggleSidebar}
+          aria-label="Fechar sidebar"
+        >
+          <X size={24} />
+        </button>
       </div>
 
       <nav className="sidebar__nav">

@@ -292,6 +292,37 @@
   line-height: 1.4;
 }
 
+/* Dark Theme Overrides for better contrast */
+[data-theme="dark"] .notifications-page__title {
+  color: #FFFFFF;
+}
+[data-theme="dark"] .notifications-page__subtitle {
+  color: rgba(255, 255, 255, 0.8);
+}
+[data-theme="dark"] .notifications-page__filter-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+[data-theme="dark"] .notifications-page__filter-btn {
+  background: var(--color-neutral-900);
+  color: var(--color-neutral-200);
+  border-color: var(--color-neutral-700);
+}
+[data-theme="dark"] .notifications-page__filter-btn:hover {
+  background: var(--color-neutral-800);
+  color: var(--color-neutral-100);
+}
+[data-theme="dark"] .notifications-page__filter-btn--active {
+  background: var(--color-primary-700);
+  border-color: var(--color-primary-700);
+  color: #FFFFFF;
+}
+[data-theme="dark"] .notifications-page__empty-content h2 {
+  color: var(--color-neutral-100);
+}
+[data-theme="dark"] .notifications-page__empty-content p {
+  color: var(--color-neutral-300);
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
   .notifications-page__header-content {

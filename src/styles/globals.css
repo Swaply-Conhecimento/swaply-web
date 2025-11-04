@@ -80,6 +80,12 @@
   --z-index-popover: 1050;
   --z-index-tooltip: 1060;
 
+  /* Breakpoints */
+  --bp-sm: 480px;   /* phones */
+  --bp-md: 768px;   /* tablets */
+  --bp-lg: 1024px;  /* small desktops */
+  --bp-xl: 1280px;  /* large desktops */
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -110,7 +116,8 @@
 
 /* Dark Theme - Text Colors */
 [data-theme="dark"] body {
-  color: var(--color-neutral-700);
+  /* Texto base mais claro para contraste adequado em fundo escuro */
+  color: var(--color-neutral-200);
 }
 
 [data-theme="dark"] h1,
@@ -124,6 +131,41 @@
 
 [data-theme="dark"] p {
   color: rgba(255, 255, 255, 0.8);
+}
+
+/* Links no modo escuro */
+[data-theme="dark"] a {
+  color: var(--color-primary-300);
+}
+[data-theme="dark"] a:hover {
+  color: var(--color-primary-200);
+}
+
+/* Placeholders mais visíveis no modo escuro */
+[data-theme="dark"] ::placeholder {
+  color: var(--color-neutral-500);
+  opacity: 1;
+}
+
+/* Labels e mensagens de formulário no modo escuro */
+[data-theme="dark"] .input-label,
+[data-theme="dark"] label {
+  color: var(--color-neutral-300);
+}
+[data-theme="dark"] .input-message {
+  color: var(--color-neutral-400);
+}
+[data-theme="dark"] .input-message--error {
+  color: #FCA5A5;
+}
+
+/* Botões ghost/outline no modo escuro com contraste melhor */
+[data-theme="dark"] .btn.btn--ghost {
+  color: var(--color-neutral-100);
+}
+[data-theme="dark"] .btn.btn--outline {
+  color: var(--color-neutral-100);
+  border-color: var(--color-neutral-600);
 }
 
 /* Textos secundários ficam mais claros no modo escuro */
@@ -502,4 +544,12 @@ div[vw].vlibras-hidden {
   h3 {
     font-size: var(--font-size-xl);
   }
+}
+
+/* Utility: hide on mobile */
+@media (max-width: 768px) {
+  .u-hide-sm { display: none !important; }
+}
+@media (min-width: 769px) {
+  .u-show-sm { display: none !important; }
 }

@@ -133,16 +133,15 @@ const Dashboard = () => {
         <div className="dashboard__welcome">
           <div className="dashboard__welcome-content">
             <h1 className="dashboard__welcome-title">
-              Aprenda Ensinando -{" "}
-              <span className="dashboard__welcome-title--no-break">
-                Ensine Aprendendo
-              </span>
+              Aprenda Ensinando - Ensine Aprendendo
             </h1>
             <p className="dashboard__welcome-text">
               Descubra novos conhecimentos e compartilhe sua expertise.
+            </p>
+            <p className="dashboard__welcome-text">
+              <strong>1 crédito = 1 hora de curso 🪙</strong>
               <br />
-              <strong>1 crédito = 1 hora de curso 🪙</strong> - Ensine para
-              ganhar!
+              Ensine para ganhar!
             </p>
           </div>
         </div>

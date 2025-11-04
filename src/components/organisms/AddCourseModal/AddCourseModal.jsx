@@ -120,13 +120,43 @@ const AddCourseModal = ({
       return;
     }
 
-    if (formData.totalHours < 1) {
-      setError('O total de horas deve ser no mínimo 1 hora');
+    // Validações conforme documentação da API
+    if (!formData.title || formData.title.trim().length === 0) {
+      setError('O título é obrigatório.');
+      return;
+    }
+    if (formData.title.trim().length > 200) {
+      setError('O título deve ter no máximo 200 caracteres.');
+      return;
+    }
+    if (!formData.description || formData.description.trim().length === 0) {
+      setError('A descrição é obrigatória.');
+      return;
+    }
+    if (formData.description.trim().length > 2000) {
+      setError('A descrição deve ter no máximo 2000 caracteres.');
+      return;
+    }
+    if (!formData.category || formData.category.trim().length === 0) {
+      setError('A categoria é obrigatória.');
       return;
     }
 
-    if (formData.maxStudents < 1) {
-      setError('O máximo de alunos deve ser no mínimo 1 aluno');
+    const allowedLevels = ['Iniciante', 'Intermediário', 'Avançado'];
+    if (!allowedLevels.includes(formData.level)) {
+      setError('Nível inválido. Use: Iniciante, Intermediário ou Avançado.');
+      return;
+    }
+
+    const pricePerHourNum = Number(formData.pricePerHour);
+    const totalHoursNum = Number(formData.totalHours);
+
+    if (Number.isNaN(pricePerHourNum) || pricePerHourNum < 1) {
+      setError('O preço por hora deve ser um número maior ou igual a 1.');
+      return;
+    }
+    if (Number.isNaN(totalHoursNum) || totalHoursNum < 1) {
+      setError('O total de horas deve ser no mínimo 1 hora');
       return;
     }
 
@@ -138,25 +168,20 @@ const AddCourseModal = ({
         category: formData.category.trim(),
         level: formData.level,
         language: formData.language,
-        pricePerHour: Number(formData.pricePerHour) || 10,
-        totalHours: Number(formData.totalHours) || 10,
-        maxStudents: Number(formData.maxStudents) || 30,
-        tags: formData.tags.length > 0 ? formData.tags : ['curso', 'educação'],
-        features: formData.features.length > 0 ? formData.features : ['Acesso vitalício', 'Certificado de conclusão'],
+        pricePerHour: pricePerHourNum,
+        totalHours: totalHoursNum,
+        // Campos opcionais conforme doc
         curriculum: formData.curriculum.length > 0 ? formData.curriculum : [
           {
             id: 1,
-            title: 'Módulo 1',
-            duration: Number(formData.totalHours) || 10,
-            lessons: ['Introdução', 'Conteúdo Principal', 'Conclusão']
+            title: 'Introdução',
+            duration: Math.min(totalHoursNum, 2),
+            lessons: ['Apresentação', 'Objetivos']
           }
         ],
         schedule: formData.schedule.length > 0 ? formData.schedule : [
-          { day: 'Segunda', time: '19:00-21:00' }
+          { day: 'Segunda', time: '09:00-11:00' }
         ],
-        requirements: formData.requirements.length > 0 ? formData.requirements : ['Interesse no tema'],
-        objectives: formData.objectives.length > 0 ? formData.objectives : ['Aprender o conteúdo do curso'],
-        status: formData.status || 'draft'
       };
 
       // Adicionar subcategoria apenas se preenchida
@@ -164,7 +189,7 @@ const AddCourseModal = ({
         courseData.subcategory = formData.subcategory.trim();
       }
 
-      // Debug: Log do payload
+      // Debug: Log do payload (apenas campos suportados pela API)
       console.log('📤 Enviando dados do curso:', JSON.stringify(courseData, null, 2));
 
       const result = await createCourse(courseData);

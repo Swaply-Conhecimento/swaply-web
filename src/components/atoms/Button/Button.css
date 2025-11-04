@@ -184,17 +184,37 @@
 }
 
 [data-theme="dark"] .btn--outline {
-  border-color: var(--color-primary-800);
-  color: var(--color-primary-800);
+  /* Borda e texto brancos para alto contraste em fundo escuro */
+  border-color: #FFFFFF;
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .btn--outline:hover:not(.btn--disabled):not(.btn--loading) {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: #FFFFFF;
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .btn--outline:active:not(.btn--disabled):not(.btn--loading) {
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
 [data-theme="dark"] .btn--ghost {
-  color: var(--color-primary-800);
+  color: #FFFFFF;
+  font-weight: 600;
+  opacity: 0.95;
 }
 
 [data-theme="dark"] .btn--ghost:hover {
-  background-color: var(--color-primary-100);
-  color: var(--color-primary-900);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+  opacity: 1;
+}
+
+[data-theme="dark"] .btn--ghost:active {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Responsive */

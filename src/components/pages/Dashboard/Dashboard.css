@@ -14,6 +14,8 @@
   position: relative;
   overflow: hidden;
   text-align: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dashboard__welcome::before {
@@ -51,9 +53,10 @@
   font-size: var(--font-size-3xl);
   font-weight: 700;
   margin: 0 0 var(--spacing-4) 0;
-  line-height: 1.2;
-  white-space: nowrap;
+  line-height: 1.3;
   color: #FFFFFF;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .dashboard__welcome-title--no-break {
@@ -269,16 +272,44 @@
   }
   
   .dashboard__welcome {
-    padding: var(--spacing-8) var(--spacing-6);
+    padding: var(--spacing-6) var(--spacing-4);
     text-align: center;
+    border-radius: var(--radius-xl);
+  }
+  
+  .dashboard__welcome-content {
+    max-width: 100%;
   }
   
   .dashboard__welcome-title {
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-xl);
+    line-height: 1.4;
+    white-space: normal;
+    word-break: break-word;
+    margin-bottom: var(--spacing-3);
+  }
+  
+  .dashboard__welcome-title--no-break {
+    white-space: normal;
+    display: inline;
   }
   
   .dashboard__welcome-text {
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    padding: 0;
+    margin: 0 0 var(--spacing-2) 0;
+  }
+  
+  .dashboard__welcome-text:last-of-type {
+    margin-bottom: 0;
+  }
+  
+  .dashboard__welcome-text strong {
     font-size: var(--font-size-base);
+    margin-top: var(--spacing-1);
+    display: block;
+    line-height: 1.5;
   }
   
   .dashboard__stats {
@@ -318,11 +349,29 @@
 
 @media (max-width: 480px) {
   .dashboard__welcome {
-    padding: var(--spacing-6) var(--spacing-4);
+    padding: var(--spacing-5) var(--spacing-3);
+    border-radius: var(--radius-lg);
+  }
+  
+  .dashboard__welcome::before,
+  .dashboard__welcome::after {
+    display: none; /* Remover elementos decorativos no mobile muito pequeno */
   }
   
   .dashboard__welcome-title {
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg);
+    line-height: 1.3;
+    margin-bottom: var(--spacing-2);
+  }
+  
+  .dashboard__welcome-text {
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+  }
+  
+  .dashboard__welcome-text strong {
+    font-size: var(--font-size-sm);
+    margin-top: var(--spacing-1);
   }
   
   .dashboard__stats {

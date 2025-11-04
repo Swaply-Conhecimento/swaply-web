@@ -430,6 +430,31 @@
   border-color: rgba(178, 216, 206, 0.3);
 }
 
+[data-theme="dark"] .profile__name {
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .profile__bio {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="dark"] .profile__join-date {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .profile__section-title {
+  color: #FFFFFF;
+}
+
+/* Forçar texto branco nos botões do header do perfil no modo escuro */
+[data-theme="dark"] .profile__actions .btn {
+  color: #FFFFFF;
+}
+[data-theme="dark"] .profile__actions .btn.btn--outline {
+  border-color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.05);
+}
+
 [data-theme="dark"] .profile__stat-card {
   background: var(--color-card);
   border-color: var(--color-neutral-200);
@@ -471,8 +496,10 @@
 }
 
 [data-theme="dark"] .profile__skill-tag {
-  background: var(--color-primary-100);
-  border-color: var(--color-primary-100);
+  /* Tag com alto contraste no modo escuro */
+  background: var(--color-primary-700);
+  border-color: var(--color-primary-700);
+  color: #FFFFFF;
 }
 
 [data-theme="dark"] .profile__skill-tag:hover {

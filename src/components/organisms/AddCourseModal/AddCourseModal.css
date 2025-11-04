@@ -212,6 +212,15 @@
   border-top: 1px solid var(--color-neutral-200);
 }
 
+/* Dark theme: ensure action buttons have white text for contrast */
+[data-theme="dark"] .add-course-actions .btn { 
+  color: #FFFFFF; 
+}
+[data-theme="dark"] .add-course-actions .btn.btn--outline { 
+  border-color: #FFFFFF; 
+  background: rgba(255, 255, 255, 0.05); 
+}
+
 /* Textarea Support */
 .add-course-form textarea {
   min-height: 100px;

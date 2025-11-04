@@ -288,11 +288,57 @@
   color: var(--color-primary-100);
 }
 
+[data-theme="dark"] .favorites__title {
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .favorites__subtitle {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="dark"] .favorites__count {
+  color: var(--color-primary-300);
+}
+
+[data-theme="dark"] .favorites__stat-value {
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .favorites__stat-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 [data-theme="dark"] .favorites__empty-card {
-  background: var(--color-neutral-800);
-  border-color: var(--color-neutral-600);
+  background: var(--color-card);
+  border-color: var(--color-neutral-700);
 }
 
 [data-theme="dark"] .favorites__empty-icon {
-  color: var(--color-neutral-500);
+  color: var(--color-neutral-400);
+}
+
+[data-theme="dark"] .favorites__empty-title {
+  color: var(--color-neutral-100);
+}
+
+[data-theme="dark"] .favorites__empty-text {
+  color: var(--color-neutral-300);
+}
+
+/* Forçar texto branco nos botões de ações do vazio no modo escuro */
+[data-theme="dark"] .favorites__empty-actions .btn {
+  color: #FFFFFF;
+}
+[data-theme="dark"] .favorites__empty-actions .btn.btn--outline {
+  border-color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Botões do cabeçalho (ex.: ações futuras) */
+[data-theme="dark"] .favorites__header-actions .btn {
+  color: #FFFFFF;
+}
+[data-theme="dark"] .favorites__header-actions .btn.btn--outline {
+  border-color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.05);
 }
