@@ -53,6 +53,7 @@
   margin: 0 0 var(--spacing-4) 0;
   line-height: 1.2;
   white-space: nowrap;
+  color: #FFFFFF;
 }
 
 .dashboard__welcome-title--no-break {
@@ -64,6 +65,7 @@
   margin: 0;
   opacity: 0.95;
   line-height: 1.8;
+  color: #FFFFFF;
 }
 
 .dashboard__welcome-text strong {
