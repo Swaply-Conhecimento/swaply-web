@@ -334,6 +334,7 @@ export const AppProvider = ({ children }) => {
   // Verificar autenticação ao carregar - só executa uma vez na montagem inicial
   useEffect(() => {
     let isMounted = true;
+    let timeoutId;
     
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
@@ -351,7 +352,15 @@ export const AppProvider = ({ children }) => {
       }
 
       try {
-        const { user } = await authService.verifyToken();
+        // Adicionar timeout para evitar travamento
+        const verifyPromise = authService.verifyToken();
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('Timeout na verificação do token')), 10000); // 10 segundos
+        });
+
+        const { user } = await Promise.race([verifyPromise, timeoutPromise]);
+        
+        if (!isMounted) return;
         
         dispatch({
           type: actionTypes.SET_AUTH,
@@ -364,29 +373,50 @@ export const AppProvider = ({ children }) => {
         
         dispatch({ type: actionTypes.SET_USER, payload: user });
 
-        // Carregar notificações recentes
-        try {
-          const { notifications, unreadCount } = await import('../services/api').then(
-            mod => mod.notificationService.getRecentNotifications()
-          );
-          dispatch({ type: actionTypes.SET_NOTIFICATIONS, payload: notifications });
-          dispatch({ type: actionTypes.SET_UNREAD_COUNT, payload: unreadCount });
-        } catch (error) {
-          console.error('Erro ao carregar notificações:', error);
+        // Carregar notificações recentes (não bloquear se falhar)
+        if (isMounted) {
+          import('../services/api').then(mod => 
+            mod.notificationService.getRecentNotifications()
+          ).then(({ notifications, unreadCount }) => {
+            if (isMounted) {
+              dispatch({ type: actionTypes.SET_NOTIFICATIONS, payload: notifications });
+              dispatch({ type: actionTypes.SET_UNREAD_COUNT, payload: unreadCount });
+            }
+          }).catch(error => {
+            console.error('Erro ao carregar notificações:', error);
+          });
         }
 
-        // Carregar aulas agendadas
-        try {
-          const classService = await import('../services/api/classes').then(mod => mod.default);
-          const { classes } = await classService.getScheduledClasses();
-          dispatch({ type: actionTypes.SET_SCHEDULED_CLASSES, payload: classes });
-        } catch (error) {
-          console.error('Erro ao carregar aulas agendadas:', error);
+        // Carregar aulas agendadas (não bloquear se falhar)
+        if (isMounted) {
+          import('../services/api/classes').then(mod => {
+            const classService = mod.default;
+            return classService.getScheduledClasses();
+          }).then(({ classes }) => {
+            if (isMounted) {
+              dispatch({ type: actionTypes.SET_SCHEDULED_CLASSES, payload: classes });
+            }
+          }).catch(error => {
+            console.error('Erro ao carregar aulas agendadas:', error);
+          });
         }
       } catch (error) {
-        console.error('Token inválido:', error);
+        console.error('Token inválido ou erro na verificação:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
+        if (isMounted) {
+          dispatch({ type: actionTypes.SET_LOADING, payload: false });
+          dispatch({
+            type: actionTypes.SET_AUTH,
+            payload: {
+              isAuthenticated: false,
+              token: null,
+              refreshToken: null,
+            },
+          });
+        }
+      } finally {
+        // Garantir que isLoading seja sempre false ao final
         if (isMounted) {
           dispatch({ type: actionTypes.SET_LOADING, payload: false });
         }
@@ -397,6 +427,9 @@ export const AppProvider = ({ children }) => {
     
     return () => {
       isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, []); // Sem dependências - só executa uma vez na montagem
 
