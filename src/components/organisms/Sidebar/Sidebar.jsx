@@ -133,7 +133,7 @@ const Sidebar = ({
     <aside className={`sidebar ${state.sidebarOpen ? 'sidebar--open' : 'sidebar--closed'} ${className}`}>
       <div className="sidebar__header">
         <div className="sidebar__logo">
-          <Logo variant="simples" size="medium" />
+          <Logo variant="simples" size="large" />
           {state.sidebarOpen && (
             <div className="sidebar__brand">
               <span className="sidebar__brand-name">Swaply</span>

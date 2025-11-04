@@ -41,20 +41,25 @@
 
 .sidebar__logo {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-3);
   min-width: 0;
   overflow: hidden;
+  width: 100%;
 }
 
 .sidebar__brand {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--spacing-1);
   opacity: 1;
   transition: opacity var(--transition-fast);
   min-width: 0;
   flex-shrink: 1;
+  width: 100%;
 }
 
 .sidebar--closed .sidebar__brand {
@@ -71,17 +76,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+  text-align: center;
 }
 
 .sidebar__credits {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-1);
   font-size: var(--font-size-sm);
   color: var(--color-primary-800);
   font-weight: 600;
   min-width: 0;
   flex-shrink: 0;
+  width: 100%;
 }
 
 .sidebar__credits-icon {

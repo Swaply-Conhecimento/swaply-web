@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import LogoSemSlogan from '../../../assets/LogoSemSlogan.svg';
 import LogoComSlogan from '../../../assets/LogoComSlogan.svg';
-import LogoSimples from '../../../assets/LogoSimples.svg';
+import LogoSimples2 from '../../../assets/LogoSimples2.svg';
 import './Logo.css';
 
 const Logo = ({
@@ -16,7 +16,7 @@ const Logo = ({
       case 'com-slogan':
         return LogoComSlogan;
       case 'simples':
-        return LogoSimples;
+        return LogoSimples2;
       case 'sem-slogan':
       default:
         return LogoSemSlogan;
