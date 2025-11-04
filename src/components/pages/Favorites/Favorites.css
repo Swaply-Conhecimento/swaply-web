@@ -318,11 +318,11 @@
 }
 
 [data-theme="dark"] .favorites__empty-title {
-  color: var(--color-neutral-100);
+  color: #FFFFFF;
 }
 
 [data-theme="dark"] .favorites__empty-text {
-  color: var(--color-neutral-300);
+  color: #FFFFFF;
 }
 
 /* Forçar texto branco nos botões de ações do vazio no modo escuro */

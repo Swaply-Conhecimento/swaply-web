@@ -265,14 +265,6 @@ const EditProfile = () => {
                   ) : (
                     <User size={64} weight="duotone" />
                   )}
-                  <button
-                    type="button"
-                    className="edit-profile__avatar-edit"
-                    onClick={handleAvatarClick}
-                    aria-label="Alterar foto de perfil"
-                  >
-                    <Camera size={20} />
-                  </button>
                 </div>
                 <input
                   ref={fileInputRef}
