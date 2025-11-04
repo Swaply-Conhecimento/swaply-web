@@ -318,15 +318,35 @@ const AppContext = createContext();
 export const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Verificar autenticação ao carregar
+  // Carregar configurações do localStorage ao iniciar
   useEffect(() => {
+    try {
+      const savedSettings = localStorage.getItem('appSettings');
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+        dispatch({ type: actionTypes.UPDATE_SETTINGS, payload: parsedSettings });
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar configurações do localStorage:', error);
+    }
+  }, []);
+
+  // Verificar autenticação ao carregar - só executa uma vez na montagem inicial
+  useEffect(() => {
+    let isMounted = true;
+    
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
       
+      // Páginas públicas que não devem ser alteradas pelo checkAuth
+      const publicPages = ['auth', 'dashboard', 'course-details', 'settings', 'forgot-password', 'reset-password', 'terms'];
+      
       if (!token) {
-        // Sem token - usuário começa deslogado no dashboard (catálogo)
-        dispatch({ type: actionTypes.SET_LOADING, payload: false });
-        dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'dashboard' });
+        // Sem token - usuário começa deslogado
+        // NÃO alterar a página aqui - deixar como está (pode ser 'terms' ou qualquer outra página pública)
+        if (isMounted) {
+          dispatch({ type: actionTypes.SET_LOADING, payload: false });
+        }
         return;
       }
 
@@ -367,12 +387,18 @@ export const AppProvider = ({ children }) => {
         console.error('Token inválido:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
-        dispatch({ type: actionTypes.SET_LOADING, payload: false });
+        if (isMounted) {
+          dispatch({ type: actionTypes.SET_LOADING, payload: false });
+        }
       }
     };
 
     checkAuth();
-  }, []);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Sem dependências - só executa uma vez na montagem
 
   // Actions com integração da API
   const actions = {
@@ -480,13 +506,44 @@ export const AppProvider = ({ children }) => {
     },
 
     updateSettings: async (settings) => {
+      // Atualizar estado local imediatamente para feedback visual instantâneo
+      dispatch({ type: actionTypes.UPDATE_SETTINGS, payload: settings });
+      
+      // Persistir no localStorage para usuários não logados
       try {
-        const { settings: updatedSettings } = await userService.updateSettings(settings);
-        dispatch({ type: actionTypes.UPDATE_SETTINGS, payload: updatedSettings });
-        return { success: true };
+        const currentSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+        const mergedSettings = {
+          ...currentSettings,
+          ...settings,
+          accessibility: {
+            ...(currentSettings.accessibility || {}),
+            ...(settings.accessibility || {}),
+          },
+          notifications: {
+            ...(currentSettings.notifications || {}),
+            ...(settings.notifications || {}),
+          },
+        };
+        localStorage.setItem('appSettings', JSON.stringify(mergedSettings));
       } catch (error) {
-        return { success: false, error: error.message };
+        console.warn('Erro ao salvar configurações no localStorage:', error);
       }
+      
+      // Se estiver autenticado, tentar salvar na API
+      if (state.isAuthenticated) {
+        try {
+          const { settings: updatedSettings } = await userService.updateSettings(settings);
+          // Atualizar com resposta completa da API
+          dispatch({ type: actionTypes.UPDATE_SETTINGS, payload: updatedSettings });
+          return { success: true };
+        } catch (error) {
+          console.warn('Erro ao salvar configurações na API:', error);
+          // Manter mudanças locais mesmo se API falhar
+          return { success: false, error: error.message };
+        }
+      }
+      
+      return { success: true };
     },
 
     refreshUser: async () => {

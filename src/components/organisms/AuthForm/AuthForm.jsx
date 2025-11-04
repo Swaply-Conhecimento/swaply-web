@@ -4,7 +4,6 @@ import {
   User,
   Envelope,
   Lock,
-  Globe,
   Eye,
   EyeSlash,
 } from "@phosphor-icons/react";
@@ -19,7 +18,6 @@ const AuthForm = ({
   mode = "login",
   onSubmit,
   onModeChange,
-  onGoogleLogin,
   loading = false,
   error,
   className = "",
@@ -30,6 +28,7 @@ const AuthForm = ({
     password: "",
     confirmPassword: "",
     acceptTerms: false,
+    rememberMe: false,
   });
 
   const [errors, setErrors] = useState({});
@@ -95,12 +94,6 @@ const AuthForm = ({
     }
   };
 
-  const handleGoogleLoginClick = () => {
-    if (onGoogleLogin) {
-      onGoogleLogin();
-    }
-  };
-
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -111,10 +104,10 @@ const AuthForm = ({
 
   return (
     <div className={`auth-form ${className}`}>
-      <div className="auth-form__container">
+      <div className={`auth-form__container ${isLogin ? 'auth-form__container--login' : 'auth-form__container--register'}`}>
         <Card
           variant="elevated"
-          padding="large"
+          padding="medium"
           shadow="lg"
           className="auth-form__card"
         >
@@ -131,25 +124,6 @@ const AuthForm = ({
                     ? "Por favor, faça o login para acessar o site"
                     : "Crie sua conta para aproveitar ao máximo do site"}
                 </p>
-              </div>
-
-              {/* Google Login */}
-              <div className="auth-form__social">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="large"
-                  fullWidth
-                  onClick={handleGoogleLoginClick}
-                  disabled={loading}
-                >
-                  <Globe size={20} />
-                  {isLogin ? "Logar com Google" : "Continuar com Google"}
-                </Button>
-              </div>
-
-              <div className="auth-form__divider">
-                <span>ou</span>
               </div>
 
               <div className="auth-form__footer">
@@ -297,15 +271,20 @@ const AuthForm = ({
                   )}
 
                   {isLogin && (
+                    <div className="auth-form__checkbox">
                     <label className="auth-form__checkbox-label">
                       <input
                         type="checkbox"
+                          name="rememberMe"
+                          checked={formData.rememberMe}
+                          onChange={handleInputChange}
                         className="auth-form__checkbox-input"
                       />
                       <span className="auth-form__checkbox-text">
                         Lembrar de mim
                       </span>
                     </label>
+                    </div>
                   )}
                 </div>
 
@@ -342,7 +321,6 @@ AuthForm.propTypes = {
   mode: PropTypes.oneOf(["login", "register"]),
   onSubmit: PropTypes.func.isRequired,
   onModeChange: PropTypes.func.isRequired,
-  onGoogleLogin: PropTypes.func,
   loading: PropTypes.bool,
   error: PropTypes.string,
   className: PropTypes.string,

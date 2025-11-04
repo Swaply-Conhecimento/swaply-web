@@ -1,9 +1,9 @@
 /* Auth Page Styles */
 .auth-page {
   width: 100%;
-  max-width: 1100px;
+  /* Removido max-width para não limitar a largura do AuthForm */
   margin: 0 auto;
-  padding: var(--spacing-6) var(--spacing-4);
+  padding: var(--spacing-2) var(--spacing-4);
 }
 
 /* Animation */

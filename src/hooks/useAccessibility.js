@@ -14,35 +14,55 @@ export const useAccessibility = () => {
     }
 
     // Apply font size
-    root.setAttribute("data-font-size", state.settings.fontSize);
+    root.setAttribute("data-font-size", state.settings.fontSize || 'medium');
+  }, [state.settings.fontSize]);
 
-    // Apply theme and high contrast preference
+  // Separate effect for high contrast theme (doesn't interfere with useTheme)
+  useEffect(() => {
+    const root = document.documentElement;
     try {
       if (state.settings?.accessibility?.highContrast) {
         root.setAttribute('data-theme', 'high-contrast');
-      } else if (state.settings?.theme === 'dark') {
-        root.setAttribute('data-theme', 'dark');
       } else {
-        root.removeAttribute('data-theme');
+        // Remove high-contrast and let useTheme reapply the correct theme
+        if (root.getAttribute('data-theme') === 'high-contrast') {
+          root.removeAttribute('data-theme');
+          // Trigger a re-render by dispatching a custom event that useTheme can listen to
+          // Or just let React's state update handle it - the useTheme effect will run
+          // because state.settings.accessibility.highContrast changed
+        }
       }
     } catch (err) {
-      console.warn('Error applying theme/high-contrast:', err);
+      console.warn('Error applying high-contrast:', err);
     }
+  }, [state.settings?.accessibility?.highContrast, state.settings?.theme]);
 
-    // VLibras control - show/hide the existing widget
-    const vlibrasWidget = document.querySelector("div[vw]");
-    if (vlibrasWidget) {
-      if (state.settings.accessibility.vlibras) {
-        console.log("Showing VLibras widget");
-        vlibrasWidget.classList.remove("vlibras-hidden");
-      } else {
-        console.log("Hiding VLibras widget");
-        vlibrasWidget.classList.add("vlibras-hidden");
+  // Separate effect for VLibras to ensure it updates correctly
+  useEffect(() => {
+    const updateVLibras = () => {
+      const vlibrasWidget = document.querySelector("div[vw]");
+      if (vlibrasWidget) {
+        const shouldShow = state.settings?.accessibility?.vlibras !== false;
+        if (shouldShow) {
+          vlibrasWidget.classList.remove("vlibras-hidden");
+          vlibrasWidget.style.display = 'block';
+          vlibrasWidget.style.visibility = 'visible';
+        } else {
+          vlibrasWidget.classList.add("vlibras-hidden");
+          vlibrasWidget.style.display = 'none';
+          vlibrasWidget.style.visibility = 'hidden';
+        }
       }
-    }
+    };
 
-    console.log("Accessibility settings:", state.settings.accessibility);
-  }, [state.settings]);
+    // Try immediately
+    updateVLibras();
+
+    // Also try after a short delay in case widget loads later
+    const timeout = setTimeout(updateVLibras, 100);
+    
+    return () => clearTimeout(timeout);
+  }, [state.settings?.accessibility?.vlibras]);
 
   const setFontSize = (size) => {
     actions.updateSettings({ fontSize: size });

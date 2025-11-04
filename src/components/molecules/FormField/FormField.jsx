@@ -139,28 +139,34 @@ const FormField = ({
             )}
           </div>
         ) : (
-          <Input
-            id={fieldId}
-            label={label}
-            labelId={labelId}
-            errorId={errorId}
-            helperId={helperId}
-            name={name}
-            type={type}
-            value={value}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder={placeholder}
-            required={required}
-            disabled={disabled}
-            error={displayError}
-            helperText={!displayError ? helperText : undefined}
-            size={size}
-            fullWidth={fullWidth}
-            leftIcon={leftIcon}
-            rightIcon={rightIcon}
-            {...props}
-          />
+          (() => {
+            // Remover props que não devem ser passadas para o Input via ...props
+            const { labelId: _, errorId: __, helperId: ___, ...inputProps } = props;
+            return (
+              <Input
+                id={fieldId}
+                label={label}
+                labelId={labelId}
+                errorId={errorId}
+                helperId={helperId}
+                name={name}
+                type={type}
+                value={value}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder={placeholder}
+                required={required}
+                disabled={disabled}
+                error={displayError}
+                helperText={!displayError ? helperText : undefined}
+                size={size}
+                fullWidth={fullWidth}
+                leftIcon={leftIcon}
+                rightIcon={rightIcon}
+                {...inputProps}
+              />
+            );
+          })()
         )}
     </div>
   );

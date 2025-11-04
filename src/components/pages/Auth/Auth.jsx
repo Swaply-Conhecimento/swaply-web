@@ -1,14 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../../contexts';
 import AuthTemplate from '../../templates/AuthTemplate';
 import AuthForm from '../../organisms/AuthForm';
 import './Auth.css';
 
-const Auth = ({ onLogin }) => {
+const Auth = ({ onLogin, initialMode }) => {
   const { actions } = useApp();
-  const [mode, setMode] = useState('login');
+  // Verificar se há um modo inicial no localStorage ou usar a prop
+  const getInitialMode = () => {
+    const savedMode = localStorage.getItem('authMode');
+    if (savedMode === 'login' || savedMode === 'register') {
+      localStorage.removeItem('authMode'); // Limpar após usar
+      return savedMode;
+    }
+    return initialMode || 'login';
+  };
+  
+  const [mode, setMode] = useState(getInitialMode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Garantir que a página comece no topo quando carregar ou mudar de modo
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [mode]);
+
+  // Garantir que a página comece no topo quando o componente montar
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, []);
 
   const handleSubmit = async (formData) => {
     setLoading(true);
@@ -67,16 +87,6 @@ const Auth = ({ onLogin }) => {
     setError('');
   };
 
-  const handleGoogleLogin = () => {
-    // Integração com Google OAuth
-    try {
-      const { authService } = require('../../../services/api');
-      authService.loginWithGoogle();
-    } catch (err) {
-      setError('Erro ao iniciar login com Google');
-    }
-  };
-
   return (
     <AuthTemplate backgroundVariant="gradient">
       <div className="auth-page">
@@ -84,7 +94,6 @@ const Auth = ({ onLogin }) => {
           mode={mode}
           onSubmit={handleSubmit}
           onModeChange={handleModeChange}
-          onGoogleLogin={handleGoogleLogin}
           loading={loading}
           error={error}
         />

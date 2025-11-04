@@ -360,7 +360,22 @@
 }
 
 [data-theme="dark"] .sidebar__toggle {
-  background-color: var(--color-card);
+  background-color: #FFFFFF;
   border-color: var(--color-sidebar);
   color: var(--color-primary-800);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .sidebar__toggle:hover {
+  background-color: var(--color-primary-800);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(84, 89, 172, 0.4);
+}
+
+[data-theme="dark"] .sidebar__brand-name {
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .sidebar__credits {
+  color: rgba(255, 255, 255, 0.9);
 }

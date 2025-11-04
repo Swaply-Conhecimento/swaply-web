@@ -51,3 +51,9 @@
     height: 3rem;
   }
 }
+
+/* Dark Theme Support - Remove qualquer filtro para manter cores originais */
+[data-theme="dark"] .logo {
+  /* Mantém as cores originais do logo */
+  filter: none;
+}

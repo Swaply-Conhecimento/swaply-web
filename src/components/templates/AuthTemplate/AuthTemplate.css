@@ -45,13 +45,12 @@
 }
 
 .auth-template__content {
-  flex: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   position: relative;
   z-index: 2;
-  padding: var(--spacing-4);
+  padding: var(--spacing-4) var(--spacing-4) var(--spacing-2);
 }
 
 .auth-template__footer {

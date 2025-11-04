@@ -219,6 +219,29 @@
   gap: var(--spacing-1);
 }
 
+/* Dark Theme Support */
+[data-theme="dark"] .card {
+  background-color: var(--color-card);
+  border-color: var(--color-neutral-200);
+}
+
+[data-theme="dark"] .card__title {
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .card__subtitle {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .card__content {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="dark"] .card__header,
+[data-theme="dark"] .card__footer {
+  border-color: var(--color-neutral-200);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .card--padding-large {

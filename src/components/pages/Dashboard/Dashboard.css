@@ -52,13 +52,28 @@
   font-weight: 700;
   margin: 0 0 var(--spacing-4) 0;
   line-height: 1.2;
+  white-space: nowrap;
+}
+
+.dashboard__welcome-title--no-break {
+  white-space: nowrap;
 }
 
 .dashboard__welcome-text {
   font-size: var(--font-size-lg);
   margin: 0;
-  opacity: 0.9;
-  line-height: 1.6;
+  opacity: 0.95;
+  line-height: 1.8;
+}
+
+.dashboard__welcome-text strong {
+  font-weight: 700;
+  font-size: var(--font-size-xl);
+  display: inline-block;
+  margin-top: var(--spacing-2);
+  color: #FFFFFF;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
 }
 
 /* Stats Cards */
@@ -327,9 +342,49 @@
   background: linear-gradient(135deg, rgba(178, 216, 206, 0.2) 0%, rgba(178, 216, 206, 0.1) 100%);
 }
 
+[data-theme="dark"] .dashboard__stat-value {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .dashboard__stat-label {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .dashboard__stat-card:hover .dashboard__stat-value {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .dashboard__stat-card:hover .dashboard__stat-label {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
 [data-theme="dark"] .dashboard__cta {
   background: linear-gradient(135deg, var(--color-neutral-50) 0%, rgba(178, 216, 206, 0.2) 100%);
   border-color: rgba(178, 216, 206, 0.3);
+}
+
+[data-theme="dark"] .dashboard__cta-title {
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .dashboard__cta-text {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="dark"] .course-card__title {
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .course-card__instructor {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .course-card__stat {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .course-card__price {
+  color: #FFFFFF;
 }
 
 /* High Contrast Mode */

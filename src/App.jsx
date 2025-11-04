@@ -20,7 +20,6 @@ import { AddCourseModal } from "./components/organisms";
 import { SvgColorBlindFilters } from "./components/molecules";
 import { ToastContainer } from "./components/molecules/Toast";
 import LoadingScreen from "./components/atoms/LoadingScreen";
-import SkipLink from "./components/atoms/SkipLink";
 import { useTheme } from "./hooks/useTheme";
 import { useAccessibility } from "./hooks/useAccessibility";
 import "./App.css";
@@ -120,9 +119,6 @@ const AppContent = () => {
       {/* SVG Filters for colorblind support - need to be available globally */}
       <SvgColorBlindFilters />
       
-      {/* Skip Link para navegação por teclado */}
-      <SkipLink href="#main-content" />
-
       {renderCurrentPage()}
 
       {/* Modals */}

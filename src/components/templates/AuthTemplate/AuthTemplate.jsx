@@ -14,9 +14,15 @@ const AuthTemplate = ({
         <div className="auth-template__background-pattern"></div>
       </div>
       
-      <div className="auth-template__content">
+      <main 
+        id="main-content"
+        role="main" 
+        aria-label="Conteúdo principal"
+        tabIndex={-1}
+        className="auth-template__content"
+      >
         {children}
-      </div>
+      </main>
       
       <div className="auth-template__footer">
         <p className="auth-template__footer-text">

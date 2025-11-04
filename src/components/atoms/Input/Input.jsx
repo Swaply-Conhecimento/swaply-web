@@ -19,6 +19,9 @@ const Input = forwardRef(({
   leftIcon,
   rightIcon,
   className = '',
+  labelId,
+  errorId,
+  helperId,
   ...props
 }, ref) => {
   const baseClass = 'input-field';
@@ -38,15 +41,29 @@ const Input = forwardRef(({
     className
   ].filter(Boolean).join(' ');
 
-  const inputId = props.id || `input-${Math.random().toString(36).substr(2, 9)}`;
-  const labelId = props.labelId || `${inputId}-label`;
-  const errorId = props.errorId || `${inputId}-error`;
-  const helperId = props.helperId || `${inputId}-helper`;
+  // Extrair id e outras props que não devem ir para o DOM
+  const { 
+    id: propsId, 
+    labelId: propsLabelId, 
+    errorId: propsErrorId, 
+    helperId: propsHelperId,
+    ...inputProps 
+  } = props;
+  
+  // Garantir que labelId, errorId, helperId não estejam em inputProps (caso venham via ...props)
+  delete inputProps.labelId;
+  delete inputProps.errorId;
+  delete inputProps.helperId;
+  
+  const inputId = propsId || `input-${Math.random().toString(36).substr(2, 9)}`;
+  const finalLabelId = labelId || propsLabelId || `${inputId}-label`;
+  const finalErrorId = errorId || propsErrorId || `${inputId}-error`;
+  const finalHelperId = helperId || propsHelperId || `${inputId}-helper`;
 
   return (
     <div className="input-wrapper">
       {label && (
-        <label id={labelId} htmlFor={inputId} className="input-label">
+        <label id={finalLabelId} htmlFor={inputId} className="input-label">
           {label}
           {required && <span className="input-required" aria-label="obrigatório">*</span>}
         </label>
@@ -71,11 +88,11 @@ const Input = forwardRef(({
           onFocus={onFocus}
           disabled={disabled}
           required={required}
-          aria-labelledby={label ? labelId : undefined}
-          aria-describedby={error ? errorId : (helperText ? helperId : undefined)}
+          aria-labelledby={label ? finalLabelId : undefined}
+          aria-describedby={error ? finalErrorId : (helperText ? finalHelperId : undefined)}
           aria-invalid={!!error}
           aria-required={required}
-          {...props}
+          {...inputProps}
         />
         
         {rightIcon && (
@@ -86,12 +103,12 @@ const Input = forwardRef(({
       </div>
       
       {error && (
-        <div id={errorId} className="input-message input-message--error" role="alert" aria-live="polite">
+        <div id={finalErrorId} className="input-message input-message--error" role="alert" aria-live="polite">
           {error}
         </div>
       )}
       {!error && helperText && (
-        <div id={helperId} className="input-message">
+        <div id={finalHelperId} className="input-message">
           {helperText}
         </div>
       )}

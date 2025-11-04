@@ -22,6 +22,7 @@ const DashboardTemplate = ({
         id="main-content"
         role="main" 
         aria-label="Conteúdo principal"
+        tabIndex={-1}
         className={`dashboard-template__main ${state.sidebarOpen ? 'dashboard-template__main--sidebar-open' : 'dashboard-template__main--sidebar-closed'}`}
       >
         <header className="dashboard-template__header" role="banner">
