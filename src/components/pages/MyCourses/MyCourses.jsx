@@ -114,7 +114,19 @@ const MyCourses = ({ initialTab = 'completed' }) => {
   };
 
   const handleCourseClick = (course) => {
-    actions.setSelectedCourse(course);
+    // Garantir que o curso tem ID
+    const courseId = course.id || course._id;
+    if (!courseId) {
+      console.error('❌ Erro: Curso sem ID no MyCourses', course);
+      return;
+    }
+    
+    const courseWithId = {
+      ...course,
+      id: courseId,
+      _id: courseId,
+    };
+    actions.setSelectedCourse(courseWithId);
     actions.setCurrentPage('course-details');
   };
 

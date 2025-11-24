@@ -68,21 +68,33 @@ const CourseGrid = ({
       </div>
 
       <div className="course-grid__container">
-        {displayedCourses.map((course, index) => (
-          <div key={course.id || index} className="course-grid__item">
-            <CourseCard
-              id={course.id}
-              title={course.title}
-              instructor={course.instructor}
-              category={course.category}
-              rating={course.rating}
-              students={course.students}
-              price={course.price}
-              image={course.image}
-              onClick={() => onCourseClick && onCourseClick(course)}
-            />
-          </div>
-        ))}
+        {displayedCourses.map((course, index) => {
+          // Garantir que o curso sempre tem um ID
+          const courseId = course.id || course._id || index;
+          return (
+            <div key={courseId} className="course-grid__item">
+              <CourseCard
+                id={courseId}
+                title={course.title}
+                instructor={course.instructor}
+                category={course.category}
+                rating={course.rating}
+                students={course.students}
+                price={course.price}
+                image={course.image}
+                onClick={() => {
+                  // Passar o curso completo com ID garantido
+                  const courseWithId = {
+                    ...course,
+                    id: courseId,
+                    _id: courseId,
+                  };
+                  onCourseClick && onCourseClick(courseWithId);
+                }}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {showAll && courses.length > displayedCourses.length && (

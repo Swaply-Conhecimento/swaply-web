@@ -98,9 +98,17 @@ const Profile = () => {
   };
 
   const handleViewCourse = (course) => {
+    // Garantir que o curso tem ID
+    const courseId = course.id || course._id;
+    if (!courseId) {
+      console.error('❌ Erro: Curso sem ID no Profile', course);
+      return;
+    }
+    
     // Simular dados do curso para navegação
     const courseData = {
-      id: course.id,
+      id: courseId,
+      _id: courseId,
       title: course.title,
       instructor: course.instructor || 'Você',
       category: course.category,

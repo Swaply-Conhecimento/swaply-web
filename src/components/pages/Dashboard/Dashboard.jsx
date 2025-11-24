@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useApp } from "../../../contexts";
 import { useCourses } from "../../../hooks";
+import { useUser } from "../../../hooks/useUser";
 import DashboardTemplate from "../../templates/DashboardTemplate";
 import CourseGrid from "../../organisms/CourseGrid";
 import Card from "../../molecules/Card";
@@ -11,6 +12,7 @@ const Dashboard = () => {
   const { state, actions } = useApp();
   const { getPopularCourses, getFeaturedCourses, getCourses, loading, error } =
     useCourses();
+  const { getTeachingCourses } = useUser();
   const isAuthenticated = state.isAuthenticated;
 
   const [popularCourses, setPopularCourses] = useState([]);
@@ -25,16 +27,39 @@ const Dashboard = () => {
         console.log("🔄 Iniciando carregamento de cursos...");
 
         // Adaptar formato da API para o formato esperado pelos componentes
-        const adaptCourse = (course) => ({
-          id: course._id,
-          title: course.title,
-          instructor: course.instructor?.name || "Instrutor",
-          category: course.category,
-          rating: course.rating || 0,
-          students: course.currentStudents || 0,
-          price: course.pricePerHour,
-          image: course.image,
-        });
+        const adaptCourse = (course) => {
+          // Garantir que temos um ID válido
+          const courseId = course._id || course.id;
+          if (!courseId) {
+            console.warn('⚠️ Curso sem ID:', course);
+            return null;
+          }
+
+          // O instructor pode vir como objeto populado ou apenas como ID
+          let instructorName = "Instrutor";
+          if (typeof course.instructor === 'object' && course.instructor !== null) {
+            instructorName = course.instructor.name || course.instructor.username || "Instrutor";
+          } else if (typeof course.instructor === 'string') {
+            // Se for apenas um ID, manter o ID mas não usar como nome
+            instructorName = "Instrutor";
+          }
+
+          return {
+            id: courseId,
+            _id: courseId, // Garantir que _id também está presente
+            title: course.title || 'Sem título',
+            instructor: instructorName,
+            category: course.category || '',
+            rating: course.rating || 0,
+            students: course.currentStudents || course.students || 0,
+            price: course.pricePerHour || course.price || 0,
+            image: course.image || '',
+            // Manter outros campos importantes para o CourseDetails
+            status: course.status,
+            level: course.level,
+            language: course.language || course.courseLanguage,
+          };
+        };
 
         let hasLoadedAnyCourses = false;
 
@@ -42,18 +67,28 @@ const Dashboard = () => {
         try {
           console.log("📊 Buscando cursos populares...");
           const popularResult = await getPopularCourses(6);
+          console.log("📊 Resposta completa de cursos populares:", popularResult);
           console.log(
             "✅ Cursos populares carregados:",
-            popularResult.courses.length
+            popularResult.courses?.length || 0,
+            popularResult.courses
           );
-          if (popularResult.courses.length > 0) {
-            setPopularCourses(popularResult.courses.map(adaptCourse));
-            hasLoadedAnyCourses = true;
+          if (popularResult.courses && popularResult.courses.length > 0) {
+            console.log("📊 Primeiro curso (exemplo):", popularResult.courses[0]);
+            const adapted = popularResult.courses.map(adaptCourse).filter(c => c !== null);
+            console.log("📊 Cursos adaptados:", adapted);
+            if (adapted.length > 0) {
+              setPopularCourses(adapted);
+              hasLoadedAnyCourses = true;
+            }
+          } else {
+            console.warn("⚠️ Nenhum curso popular retornado pela API");
           }
         } catch (popularError) {
-          console.warn(
-            "⚠️ Erro ao carregar cursos populares:",
-            popularError.message
+          console.error(
+            "❌ Erro ao carregar cursos populares:",
+            popularError.message,
+            popularError
           );
         }
 
@@ -61,43 +96,95 @@ const Dashboard = () => {
         try {
           console.log("⭐ Buscando cursos em destaque...");
           const featuredResult = await getFeaturedCourses(6);
+          console.log("⭐ Resposta completa de cursos em destaque:", featuredResult);
           console.log(
             "✅ Cursos em destaque carregados:",
-            featuredResult.courses.length
+            featuredResult.courses?.length || 0,
+            featuredResult.courses
           );
-          if (featuredResult.courses.length > 0) {
-            setFeaturedCourses(featuredResult.courses.map(adaptCourse));
-            hasLoadedAnyCourses = true;
+          if (featuredResult.courses && featuredResult.courses.length > 0) {
+            console.log("⭐ Primeiro curso (exemplo):", featuredResult.courses[0]);
+            const adapted = featuredResult.courses.map(adaptCourse).filter(c => c !== null);
+            console.log("⭐ Cursos adaptados:", adapted);
+            if (adapted.length > 0) {
+              setFeaturedCourses(adapted);
+              hasLoadedAnyCourses = true;
+            }
+          } else {
+            console.warn("⚠️ Nenhum curso em destaque retornado pela API");
           }
         } catch (featuredError) {
-          console.warn(
-            "⚠️ Erro ao carregar cursos em destaque:",
-            featuredError.message
+          console.error(
+            "❌ Erro ao carregar cursos em destaque:",
+            featuredError.message,
+            featuredError
           );
         }
 
-        // Se não conseguiu carregar nenhum curso específico, tentar carregar cursos gerais
-        if (!hasLoadedAnyCourses) {
-          console.log("🔄 Tentando fallback: carregar cursos gerais...");
+        // Se usuário está autenticado, tentar carregar seus próprios cursos (inclui "draft")
+        if (isAuthenticated) {
           try {
-            const generalResult = await getCourses({
+            console.log("👤 Buscando cursos do usuário autenticado...");
+            const teachingResult = await getTeachingCourses({ limit: 12 });
+            console.log("👤 Cursos do usuário:", teachingResult.courses?.length || 0, teachingResult.courses);
+            
+            if (teachingResult.courses && teachingResult.courses.length > 0) {
+              const adapted = teachingResult.courses.map(adaptCourse).filter(c => c !== null);
+              if (adapted.length > 0) {
+                console.log("✅ Usando cursos do usuário como principal");
+                setPopularCourses(adapted.slice(0, 6));
+                setFeaturedCourses(adapted.slice(6, 12));
+                hasLoadedAnyCourses = true;
+              }
+            }
+          } catch (teachingError) {
+            console.warn("⚠️ Erro ao carregar cursos do usuário:", teachingError.message);
+          }
+        }
+
+        // Sempre tentar carregar cursos gerais (mesmo que já tenha carregado outros)
+        // Isso garante que cursos recém-criados apareçam
+        // Tentar buscar cursos com status "active" primeiro, depois tentar sem filtro
+        console.log("🔄 Carregando cursos gerais (fallback/complemento)...");
+        try {
+          // Primeiro tentar buscar cursos "active"
+          let generalResult = await getCourses({
+            page: 1,
+            limit: 12,
+            status: 'active'
+          });
+
+          // Se não encontrou cursos "active", tentar sem filtro de status
+          if (!generalResult.courses || generalResult.courses.length === 0) {
+            console.log("🔄 Nenhum curso 'active' encontrado, tentando sem filtro de status...");
+            generalResult = await getCourses({
               page: 1,
               limit: 12,
-              status: "active",
+              // Sem filtro de status para incluir "draft" também
             });
-
-            if (generalResult.courses && generalResult.courses.length > 0) {
-              console.log(
-                "✅ Cursos gerais carregados:",
-                generalResult.courses.length
-              );
-              const adaptedCourses = generalResult.courses.map(adaptCourse);
-              setPopularCourses(adaptedCourses.slice(0, 6));
-              setFeaturedCourses(adaptedCourses.slice(6, 12));
-            }
-          } catch (fallbackError) {
-            console.error("❌ Fallback também falhou:", fallbackError.message);
           }
+
+          console.log("🔄 Resposta completa de cursos gerais:", generalResult);
+          console.log("🔄 Número de cursos retornados:", generalResult.courses?.length || 0);
+
+          if (generalResult.courses && generalResult.courses.length > 0) {
+            console.log("🔄 Primeiro curso (exemplo):", generalResult.courses[0]);
+            const adaptedCourses = generalResult.courses.map(adaptCourse).filter(c => c !== null);
+            console.log("🔄 Cursos adaptados:", adaptedCourses);
+            
+            if (adaptedCourses.length > 0) {
+              // Se não carregou nenhum curso antes, usar os gerais
+              if (!hasLoadedAnyCourses) {
+                console.log("✅ Usando cursos gerais como principal");
+                setPopularCourses(adaptedCourses.slice(0, 6));
+                setFeaturedCourses(adaptedCourses.slice(6, 12));
+              }
+            }
+          } else {
+            console.warn("⚠️ Nenhum curso geral retornado pela API");
+          }
+        } catch (fallbackError) {
+          console.error("❌ Erro ao carregar cursos gerais:", fallbackError.message, fallbackError);
         }
 
         console.log("✨ Carregamento de cursos concluído");
@@ -114,10 +201,39 @@ const Dashboard = () => {
     };
 
     loadCourses();
-  }, [getPopularCourses, getFeaturedCourses, getCourses]);
+  }, [getPopularCourses, getFeaturedCourses, getCourses, getTeachingCourses, isAuthenticated]);
 
   const handleCourseClick = (course) => {
-    actions.setSelectedCourse(course);
+    console.log('🖱️ Curso clicado (raw):', course);
+    
+    // Tentar extrair o ID de várias formas possíveis
+    const courseId = course.id || 
+                     course._id || 
+                     (course.instructor && typeof course.instructor === 'string' ? course.instructor : null) ||
+                     null;
+    
+    if (!courseId) {
+      console.error('❌ Erro: Curso sem ID válido', course);
+      console.error('❌ Estrutura completa do curso:', JSON.stringify(course, null, 2));
+      actions.showToast?.('Erro: Curso sem ID. Tente novamente.', 'error');
+      return;
+    }
+    
+    console.log('✅ ID do curso extraído:', courseId);
+    
+    // Passar o curso completo com ID garantido para o CourseDetails
+    const courseWithId = {
+      id: courseId,
+      _id: courseId,
+      ...course,
+      // Garantir que o ID não seja sobrescrito
+      id: courseId,
+      _id: courseId,
+    };
+    
+    console.log('📤 Enviando curso para CourseDetails:', courseWithId);
+    
+    actions.setSelectedCourse(courseWithId);
     actions.setCurrentPage("course-details");
   };
 

@@ -1,7 +1,10 @@
 import axios from 'axios';
 
-// Base URL da API - usa variável de ambiente ou fallback para produção
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://swaply-api.onrender.com/api';
+// Base URL da API - usa variável de ambiente ou fallback
+// Para desenvolvimento local, crie um arquivo .env.local com:
+// VITE_API_BASE_URL=http://localhost:5000/api
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (import.meta.env.DEV ? 'http://localhost:5000/api' : 'https://swaply-api.onrender.com/api');
 
 // Criar instância do axios
 const apiClient = axios.create({

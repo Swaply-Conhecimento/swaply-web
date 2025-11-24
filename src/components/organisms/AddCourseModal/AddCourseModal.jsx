@@ -98,45 +98,27 @@ const AddCourseModal = ({
     setError('');
     setSuccess(false);
 
-    // Validações básicas
-    if (!formData.title.trim()) {
-      setError('O título do curso é obrigatório');
+    // Validações conforme documentação da API (criaçãoCursos.md)
+    const titleTrimmed = formData.title.trim();
+    if (!titleTrimmed || titleTrimmed.length < 5) {
+      setError('O título deve ter no mínimo 5 caracteres.');
       return;
     }
-
-    if (!formData.description.trim()) {
-      setError('A descrição do curso é obrigatória');
-      return;
-    }
-
-    if (!formData.category.trim()) {
-      setError('A categoria é obrigatória');
-      return;
-    }
-
-    // Validar números
-    if (formData.pricePerHour < 1) {
-      setError('O preço por hora deve ser no mínimo 1 crédito');
-      return;
-    }
-
-    // Validações conforme documentação da API
-    if (!formData.title || formData.title.trim().length === 0) {
-      setError('O título é obrigatório.');
-      return;
-    }
-    if (formData.title.trim().length > 200) {
+    if (titleTrimmed.length > 200) {
       setError('O título deve ter no máximo 200 caracteres.');
       return;
     }
-    if (!formData.description || formData.description.trim().length === 0) {
-      setError('A descrição é obrigatória.');
+
+    const descriptionTrimmed = formData.description.trim();
+    if (!descriptionTrimmed || descriptionTrimmed.length < 20) {
+      setError('A descrição deve ter no mínimo 20 caracteres.');
       return;
     }
-    if (formData.description.trim().length > 2000) {
+    if (descriptionTrimmed.length > 2000) {
       setError('A descrição deve ter no máximo 2000 caracteres.');
       return;
     }
+
     if (!formData.category || formData.category.trim().length === 0) {
       setError('A categoria é obrigatória.');
       return;
@@ -151,42 +133,59 @@ const AddCourseModal = ({
     const pricePerHourNum = Number(formData.pricePerHour);
     const totalHoursNum = Number(formData.totalHours);
 
-    if (Number.isNaN(pricePerHourNum) || pricePerHourNum < 1) {
-      setError('O preço por hora deve ser um número maior ou igual a 1.');
+    if (Number.isNaN(pricePerHourNum) || pricePerHourNum < 1 || pricePerHourNum > 100) {
+      setError('O preço por hora deve ser um número entre 1 e 100 créditos.');
       return;
     }
-    if (Number.isNaN(totalHoursNum) || totalHoursNum < 1) {
-      setError('O total de horas deve ser no mínimo 1 hora');
+    if (Number.isNaN(totalHoursNum) || totalHoursNum < 1 || totalHoursNum > 100) {
+      setError('O total de horas deve ser entre 1 e 100 horas.');
       return;
     }
 
     try {
-      // ✅ Criar curso via API real
+      // ✅ Criar curso via API real - conforme documentação (criaçãoCursos.md)
       const courseData = {
-        title: formData.title.trim(),
-        description: formData.description.trim(),
+        title: titleTrimmed,
+        description: descriptionTrimmed,
         category: formData.category.trim(),
         level: formData.level,
         language: formData.language,
         pricePerHour: pricePerHourNum,
         totalHours: totalHoursNum,
-        // Campos opcionais conforme doc
-        curriculum: formData.curriculum.length > 0 ? formData.curriculum : [
-          {
-            id: 1,
-            title: 'Introdução',
-            duration: Math.min(totalHoursNum, 2),
-            lessons: ['Apresentação', 'Objetivos']
-          }
-        ],
-        schedule: formData.schedule.length > 0 ? formData.schedule : [
-          { day: 'Segunda', time: '09:00-11:00' }
-        ],
+        status: formData.status || 'draft',
       };
 
-      // Adicionar subcategoria apenas se preenchida
+      // Campos opcionais - adicionar apenas se preenchidos
       if (formData.subcategory && formData.subcategory.trim()) {
         courseData.subcategory = formData.subcategory.trim();
+      }
+
+      if (formData.maxStudents && formData.maxStudents > 0) {
+        courseData.maxStudents = Number(formData.maxStudents);
+      }
+
+      if (formData.features && formData.features.length > 0) {
+        courseData.features = formData.features;
+      }
+
+      if (formData.curriculum && formData.curriculum.length > 0) {
+        courseData.curriculum = formData.curriculum;
+      }
+
+      if (formData.schedule && formData.schedule.length > 0) {
+        courseData.schedule = formData.schedule;
+      }
+
+      if (formData.requirements && formData.requirements.length > 0) {
+        courseData.requirements = formData.requirements;
+      }
+
+      if (formData.objectives && formData.objectives.length > 0) {
+        courseData.objectives = formData.objectives;
+      }
+
+      if (formData.tags && formData.tags.length > 0) {
+        courseData.tags = formData.tags;
       }
 
       // Debug: Log do payload (apenas campos suportados pela API)
@@ -200,14 +199,20 @@ const AddCourseModal = ({
         // Recarregar dados do usuário para atualizar estatísticas
         await actions.refreshUser();
         
-        // Mostrar mensagem de sucesso
-        alert(`Curso "${formData.title}" criado com sucesso!\n\nVocê pode editá-lo depois em "Minhas Aulas".`);
+        // Mostrar mensagem de sucesso com Toast estilizado
+        actions.showToast(
+          `Curso "${formData.title}" criado com sucesso! Você pode editá-lo depois em "Minhas Aulas".`,
+          'success',
+          6000
+        );
         
         // Resetar formulário
         resetForm();
         
-        // Fechar modal
-        onClose();
+        // Fechar modal após um pequeno delay para o usuário ver o toast
+        setTimeout(() => {
+          onClose();
+        }, 500);
       }
     } catch (err) {
       console.error('❌ Erro ao criar curso:', err);

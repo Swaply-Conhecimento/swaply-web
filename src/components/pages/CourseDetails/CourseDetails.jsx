@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Star, 
   Users, 
@@ -10,119 +10,156 @@ import {
   Trophy,
   Calendar,
   ArrowLeft,
-  VideoCamera
+  VideoCamera,
+  Globe
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts';
+import { useCourses } from '../../../hooks/useCourses';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../molecules/Card';
 import Button from '../../atoms/Button';
+import LoadingScreen from '../../atoms/LoadingScreen';
 import './CourseDetails.css';
 
 const CourseDetails = () => {
   const { state, actions } = useApp();
+  const { getCourseById, enrollInCourse, loading: courseLoading, error: courseError } = useCourses();
+  
+  const [courseData, setCourseData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock data - em uma aplicação real, isso viria de uma API baseada no courseId
-  const courseData = {
-    id: 1,
-    title: 'Desenvolvimento Web Completo com React e Node.js',
-    instructor: {
-      name: 'Enzo Fernandes',
-      avatar: '/instructor-avatar.jpg',
-      rating: 4.3,
-      totalStudents: 2000,
-      bio: 'Especialista em cálculo e álgebra com 10 anos de experiência. Formado pela USP com mestrado em Matemática Aplicada.'
-    },
-    description: 'Aprenda desenvolvimento web completo em aulas ao vivo! Este curso abrangente cobre tanto frontend quanto backend, com aulas interativas via Zoom onde você pode tirar dúvidas em tempo real. Usando as tecnologias mais modernas e demandadas pelo mercado, você sairá preparado para criar aplicações web completas.',
-    rating: 4.3,
-    totalRatings: 1080,
-    totalStudents: 2000,
-    pricePerHour: 1, // 1 moeda = 1 hora
-    totalHours: 40,
-    category: 'Desenvolvimento',
-    level: 'Intermediário',
-    language: 'Português',
-    features: [
-      '🎥 Aulas ao vivo via Zoom',
-      '👨‍🏫 Suporte direto com o instrutor',
-      '💻 Projetos práticos hands-on',
-      '🏆 Certificado de conclusão',
-      '♾️ Acesso vitalício ao material',
-      '👥 Comunidade exclusiva de alunos',
-      '📱 Gravações disponíveis por 30 dias',
-      '💬 Chat ao vivo durante as aulas'
-    ],
-    curriculum: [
-      {
-        id: 1,
-        title: 'Introdução ao Desenvolvimento Web',
-        duration: 2,
-        lessons: [
-          'O que é desenvolvimento web',
-          'Configuração do ambiente',
-          'HTML e CSS básico'
-        ]
-      },
-      {
-        id: 2,
-        title: 'JavaScript Fundamentals',
-        duration: 4,
-        lessons: [
-          'Sintaxe básica do JavaScript',
-          'DOM Manipulation',
-          'Eventos e interatividade',
-          'ES6+ Features'
-        ]
-      },
-      {
-        id: 3,
-        title: 'React.js',
-        duration: 8,
-        lessons: [
-          'Introdução ao React',
-          'Components e Props',
-          'State e Lifecycle',
-          'Hooks',
-          'Context API',
-          'Roteamento',
-          'Projeto prático'
-        ]
-      },
-      {
-        id: 4,
-        title: 'Node.js e Backend',
-        duration: 6,
-        lessons: [
-          'Introdução ao Node.js',
-          'Express.js',
-          'APIs RESTful',
-          'Banco de dados',
-          'Autenticação',
-          'Deploy'
-        ]
+  // Obter ID do curso do selectedCourse
+  // Pode vir como id ou _id, e pode ser string ou objeto
+  const courseId = state.selectedCourse?.id || 
+                   state.selectedCourse?._id || 
+                   (typeof state.selectedCourse === 'string' ? state.selectedCourse : null);
+  
+  // Debug: Log para verificar o que está sendo recebido
+  useEffect(() => {
+    if (state.selectedCourse) {
+      console.log('📋 CourseDetails - selectedCourse recebido:', state.selectedCourse);
+      console.log('📋 CourseDetails - courseId extraído:', courseId);
+      console.log('📋 CourseDetails - Tipo do selectedCourse:', typeof state.selectedCourse);
+      console.log('📋 CourseDetails - Keys do selectedCourse:', Object.keys(state.selectedCourse || {}));
+      
+      // Se não tem ID, tentar encontrar em outros lugares
+      if (!courseId) {
+        console.warn('⚠️ CourseDetails - Nenhum ID encontrado! Tentando alternativas...');
+        // Se o instructor for um ID (string de 24 caracteres), pode ser que esteja confundido
+        const instructorValue = state.selectedCourse?.instructor;
+        if (instructorValue && typeof instructorValue === 'string' && instructorValue.length === 24) {
+          console.warn('⚠️ CourseDetails - Instructor parece ser um ID MongoDB:', instructorValue);
+          console.warn('⚠️ CourseDetails - Isso pode indicar que o curso não tem ID próprio');
+        }
       }
-    ],
-    schedule: [
-      { day: 'Segunda', time: '19:00-21:00' },
-      { day: 'Quarta', time: '19:00-21:00' },
-      { day: 'Sexta', time: '19:00-21:00' }
-    ]
-  };
+    }
+  }, [state.selectedCourse, courseId]);
 
-  const totalCost = courseData.pricePerHour * courseData.totalHours;
-  const canAfford = (state.user?.credits || 0) >= totalCost;
+  useEffect(() => {
+    const fetchCourse = async () => {
+      if (!courseId) {
+        setError('Nenhum curso selecionado');
+        setLoading(false);
+        return;
+      }
 
-  const handlePurchaseCourse = () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const result = await getCourseById(courseId);
+        
+        if (result.success && result.course) {
+          // Mapear dados da API para o formato esperado
+          // Conforme documentação: criaçãoCursos.md linhas 776-858
+          const course = result.course;
+          
+          setCourseData({
+            id: course._id || course.id,
+            title: course.title,
+            description: course.description || '',
+            instructor: {
+              _id: course.instructor?._id || course.instructor?.id,
+              name: course.instructor?.name || 'Instrutor',
+              avatar: course.instructor?.avatar || '',
+              rating: course.instructor?.rating || 0,
+              // A API retorna instructor.stats, não instructor.totalStudents
+              totalStudents: course.instructor?.stats?.coursesTeaching || 
+                            course.instructor?.totalStudents || 
+                            course.currentStudents || 0,
+              bio: course.instructor?.bio || '',
+              stats: course.instructor?.stats || {}
+            },
+            rating: course.rating || 0,
+            totalRatings: course.totalRatings || 0,
+            // A API retorna currentStudents, não totalStudents
+            totalStudents: course.currentStudents || 0,
+            pricePerHour: course.pricePerHour || 0,
+            totalHours: course.totalHours || 0,
+            // Usar totalPrice calculado pela API se disponível
+            totalPrice: course.totalPrice || (course.pricePerHour * course.totalHours),
+            category: course.category || '',
+            subcategory: course.subcategory || '',
+            level: course.level || 'Iniciante',
+            // A API mapeia courseLanguage de volta para language
+            language: course.language || course.courseLanguage || 'Português',
+            image: course.image || '',
+            features: course.features || [],
+            curriculum: course.curriculum || [],
+            schedule: course.schedule || [],
+            requirements: course.requirements || [],
+            objectives: course.objectives || [],
+            tags: course.tags || [],
+            status: course.status || 'draft',
+            maxStudents: course.maxStudents || 50,
+            // Usar spotsAvailable calculado pela API se disponível
+            spotsAvailable: course.spotsAvailable || (course.maxStudents - (course.currentStudents || 0)),
+            isLive: course.isLive !== undefined ? course.isLive : true,
+            // Campos adicionais da API (se autenticado)
+            isEnrolled: course.isEnrolled || false,
+            isFavorite: course.isFavorite || false,
+            // Lista de estudantes matriculados
+            enrolledStudents: course.enrolledStudents || []
+          });
+        } else {
+          setError('Curso não encontrado');
+        }
+      } catch (err) {
+        console.error('Erro ao carregar curso:', err);
+        setError(err.message || 'Erro ao carregar detalhes do curso');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourse();
+  }, [courseId, getCourseById]);
+
+  const handlePurchaseCourse = async () => {
+    if (!courseData) return;
+    
+    // Usar totalPrice da API se disponível, senão calcular
+    const totalCost = courseData.totalPrice || (courseData.pricePerHour * courseData.totalHours);
+    const canAfford = (state.user?.credits || 0) >= totalCost;
+    
     if (canAfford) {
-      actions.updateCredits(-totalCost);
-      console.log(`Curso comprado! ${totalCost} moedas debitadas.`);
-      // Aqui você redirecionaria para a página de confirmação ou aula
+      try {
+        await enrollInCourse(courseData.id);
+        await actions.refreshUser(); // Atualizar dados do usuário após matrícula
+        actions.showToast('Curso comprado com sucesso!', 'success');
+        // Redirecionar para página de confirmação ou aula
+      } catch (err) {
+        console.error('Erro ao comprar curso:', err);
+        actions.showToast(err.message || 'Erro ao comprar curso. Tente novamente.', 'error');
+      }
     } else {
-      console.log('Moedas insuficientes!');
-      // Aqui você mostraria uma modal ou redirecionaria para comprar moedas
+      actions.showToast('Créditos insuficientes!', 'error');
     }
   };
 
   const handlePurchaseHour = (hours = 1) => {
+    if (!courseData) return;
+    
     const cost = courseData.pricePerHour * hours;
     if ((state.user?.credits || 0) >= cost) {
       // Definir o curso selecionado e navegar para página de agendamento
@@ -134,13 +171,51 @@ const CourseDetails = () => {
       });
       actions.setCurrentPage('schedule-class');
     } else {
-      console.log('Moedas insuficientes!');
+      actions.showToast('Créditos insuficientes!', 'error');
     }
   };
 
   const handleGoBack = () => {
     actions.setCurrentPage('dashboard');
   };
+
+  // Loading state
+  if (loading || courseLoading) {
+    return (
+      <DashboardTemplate>
+        <LoadingScreen />
+      </DashboardTemplate>
+    );
+  }
+
+  // Error state
+  if (error || courseError || !courseData) {
+    return (
+      <DashboardTemplate>
+        <div className="course-details">
+          <div className="course-details__header">
+            <Button variant="ghost" onClick={handleGoBack} className="course-details__back">
+              <ArrowLeft size={20} />
+              Voltar aos cursos
+            </Button>
+          </div>
+          <Card padding="large">
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <h2>Erro ao carregar curso</h2>
+              <p>{error || courseError || 'Curso não encontrado'}</p>
+              <Button variant="primary" onClick={handleGoBack} style={{ marginTop: '1rem' }}>
+                Voltar ao Dashboard
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </DashboardTemplate>
+    );
+  }
+
+  // Usar totalPrice da API se disponível, senão calcular
+  const totalCost = courseData.totalPrice || (courseData.pricePerHour * courseData.totalHours);
+  const canAfford = (state.user?.credits || 0) >= totalCost;
 
   return (
     <DashboardTemplate>
@@ -155,6 +230,17 @@ const CourseDetails = () => {
 
         {/* Hero Section */}
         <Card className="course-details__hero" padding="large">
+          {courseData.image && (
+            <div className="course-details__hero-image">
+              <img 
+                src={courseData.image} 
+                alt={courseData.title}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
           <div className="course-details__hero-content">
             <div className="course-details__hero-left">
               <div className="course-details__category">{courseData.category}</div>
@@ -162,18 +248,47 @@ const CourseDetails = () => {
               <p className="course-details__description">{courseData.description}</p>
               
               <div className="course-details__meta">
-                <div className="course-details__meta-item">
-                  <Star size={20} weight="fill" />
-                  <span>{courseData.rating} ({courseData.totalRatings} avaliações)</span>
-                </div>
+                {courseData.rating > 0 && (
+                  <div className="course-details__meta-item">
+                    <Star size={20} weight="fill" />
+                    <span>{courseData.rating.toFixed(1)} ({courseData.totalRatings} avaliações)</span>
+                  </div>
+                )}
                 <div className="course-details__meta-item">
                   <Users size={20} />
-                  <span>{courseData.totalStudents} alunos</span>
+                  <span>{courseData.totalStudents} aluno{courseData.totalStudents !== 1 ? 's' : ''}</span>
+                  {courseData.spotsAvailable !== undefined && courseData.spotsAvailable > 0 && (
+                    <span className="course-details__spots"> ({courseData.spotsAvailable} vagas)</span>
+                  )}
                 </div>
                 <div className="course-details__meta-item">
                   <Clock size={20} />
-                  <span>{courseData.totalHours} horas</span>
+                  <span>{courseData.totalHours} hora{courseData.totalHours !== 1 ? 's' : ''}</span>
                 </div>
+                {courseData.language && (
+                  <div className="course-details__meta-item">
+                    <Globe size={20} />
+                    <span>{courseData.language}</span>
+                  </div>
+                )}
+                {courseData.level && (
+                  <div className="course-details__meta-item">
+                    <Trophy size={20} />
+                    <span>{courseData.level}</span>
+                  </div>
+                )}
+                {courseData.isEnrolled && (
+                  <div className="course-details__meta-item course-details__meta-item--enrolled">
+                    <Play size={20} weight="fill" />
+                    <span>Você está matriculado</span>
+                  </div>
+                )}
+                {courseData.isFavorite && (
+                  <div className="course-details__meta-item course-details__meta-item--favorite">
+                    <Star size={20} weight="fill" />
+                    <span>Nos seus favoritos</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -240,7 +355,7 @@ const CourseDetails = () => {
             <div className="course-details__instructor-content">
               <div className="course-details__instructor-avatar">
                 <img 
-                  src={courseData.instructor.avatar}
+                  src={courseData.instructor.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(courseData.instructor.name)}&background=52357B&color=fff&size=80`}
                   alt={courseData.instructor.name}
                   onError={(e) => {
                     e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(courseData.instructor.name)}&background=52357B&color=fff&size=80`;
@@ -249,65 +364,81 @@ const CourseDetails = () => {
               </div>
               <div className="course-details__instructor-info">
                 <h3 className="course-details__instructor-name">{courseData.instructor.name}</h3>
-                <p className="course-details__instructor-bio">{courseData.instructor.bio}</p>
+                {courseData.instructor.bio && (
+                  <p className="course-details__instructor-bio">{courseData.instructor.bio}</p>
+                )}
                 <div className="course-details__instructor-stats">
-                  <div className="course-details__instructor-stat">
-                    <Star size={16} weight="fill" />
-                    <span>{courseData.instructor.rating}</span>
-                  </div>
-                  <div className="course-details__instructor-stat">
-                    <Users size={16} />
-                    <span>{courseData.instructor.totalStudents} alunos</span>
-                  </div>
+                  {courseData.instructor.rating > 0 && (
+                    <div className="course-details__instructor-stat">
+                      <Star size={16} weight="fill" />
+                      <span>{courseData.instructor.rating.toFixed(1)}</span>
+                    </div>
+                  )}
+                  {courseData.instructor.totalStudents > 0 && (
+                    <div className="course-details__instructor-stat">
+                      <Users size={16} />
+                      <span>{courseData.instructor.totalStudents} aluno{courseData.instructor.totalStudents !== 1 ? 's' : ''}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </Card>
 
           {/* Curriculum */}
-          <Card className="course-details__curriculum" padding="large">
-            <h2 className="course-details__section-title">
-              <BookOpen size={24} />
-              Conteúdo do Curso
-            </h2>
-            <div className="course-details__curriculum-list">
-              {courseData.curriculum.map((module) => (
-                <div key={module.id} className="course-details__module">
-                  <div className="course-details__module-header">
-                    <h3 className="course-details__module-title">{module.title}</h3>
-                    <div className="course-details__module-duration">
-                      <Clock size={16} />
-                      <span>{module.duration}h</span>
+          {courseData.curriculum && courseData.curriculum.length > 0 && (
+            <Card className="course-details__curriculum" padding="large">
+              <h2 className="course-details__section-title">
+                <BookOpen size={24} />
+                Conteúdo do Curso
+              </h2>
+              <div className="course-details__curriculum-list">
+                {courseData.curriculum.map((module, index) => (
+                  <div key={module.id || module._id || index} className="course-details__module">
+                    <div className="course-details__module-header">
+                      <h3 className="course-details__module-title">{module.title || module.name}</h3>
+                      {module.duration && (
+                        <div className="course-details__module-duration">
+                          <Clock size={16} />
+                          <span>{module.duration}h</span>
+                        </div>
+                      )}
                     </div>
+                    {module.lessons && module.lessons.length > 0 && (
+                      <ul className="course-details__lesson-list">
+                        {module.lessons.map((lesson, lessonIndex) => (
+                          <li key={lessonIndex} className="course-details__lesson">
+                            <Play size={14} />
+                            <span>{typeof lesson === 'string' ? lesson : lesson.title || lesson.name}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
-                  <ul className="course-details__lesson-list">
-                    {module.lessons.map((lesson, index) => (
-                      <li key={index} className="course-details__lesson">
-                        <Play size={14} />
-                        <span>{lesson}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </Card>
+                ))}
+              </div>
+            </Card>
+          )}
 
           {/* Schedule */}
-          <Card className="course-details__schedule" padding="large">
-            <h2 className="course-details__section-title">
-              <Calendar size={24} />
-              Horários Disponíveis
-            </h2>
-            <div className="course-details__schedule-list">
-              {courseData.schedule.map((slot, index) => (
-                <div key={index} className="course-details__schedule-item">
-                  <div className="course-details__schedule-day">{slot.day}</div>
-                  <div className="course-details__schedule-time">{slot.time}</div>
-                </div>
-              ))}
-            </div>
-          </Card>
+          {courseData.schedule && courseData.schedule.length > 0 && (
+            <Card className="course-details__schedule" padding="large">
+              <h2 className="course-details__section-title">
+                <Calendar size={24} />
+                Horários Disponíveis
+              </h2>
+              <div className="course-details__schedule-list">
+                {courseData.schedule.map((slot, index) => (
+                  <div key={index} className="course-details__schedule-item">
+                    <div className="course-details__schedule-day">{slot.day || slot}</div>
+                    {slot.time && (
+                      <div className="course-details__schedule-time">{slot.time}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
 
           {/* Live Classes Info */}
           <Card className="course-details__live-info" padding="large">
@@ -341,20 +472,58 @@ const CourseDetails = () => {
           </Card>
 
           {/* Features */}
-          <Card className="course-details__features" padding="large">
-            <h2 className="course-details__section-title">
-              <Trophy size={24} />
-              O que você vai receber
-            </h2>
-            <ul className="course-details__features-list">
-              {courseData.features.map((feature, index) => (
-                <li key={index} className="course-details__feature">
-                  <div className="course-details__feature-icon">✓</div>
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
+          {courseData.features && courseData.features.length > 0 && (
+            <Card className="course-details__features" padding="large">
+              <h2 className="course-details__section-title">
+                <Trophy size={24} />
+                O que você vai receber
+              </h2>
+              <ul className="course-details__features-list">
+                {courseData.features.map((feature, index) => (
+                  <li key={index} className="course-details__feature">
+                    <div className="course-details__feature-icon">✓</div>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
+          {/* Requirements */}
+          {courseData.requirements && courseData.requirements.length > 0 && (
+            <Card className="course-details__requirements" padding="large">
+              <h2 className="course-details__section-title">
+                <BookOpen size={24} />
+                Pré-requisitos
+              </h2>
+              <ul className="course-details__features-list">
+                {courseData.requirements.map((requirement, index) => (
+                  <li key={index} className="course-details__feature">
+                    <div className="course-details__feature-icon">•</div>
+                    <span>{requirement}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
+          {/* Objectives */}
+          {courseData.objectives && courseData.objectives.length > 0 && (
+            <Card className="course-details__objectives" padding="large">
+              <h2 className="course-details__section-title">
+                <Trophy size={24} />
+                Objetivos do Curso
+              </h2>
+              <ul className="course-details__features-list">
+                {courseData.objectives.map((objective, index) => (
+                  <li key={index} className="course-details__feature">
+                    <div className="course-details__feature-icon">✓</div>
+                    <span>{objective}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
         </div>
       </div>
     </DashboardTemplate>
