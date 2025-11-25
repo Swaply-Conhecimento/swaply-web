@@ -190,10 +190,38 @@ const courseService = {
   /**
    * PUT /courses/:id
    * Atualizar curso
+   * Suporta tanto JSON quanto FormData (quando há imagem)
    */
-  updateCourse: async (courseId, courseData) => {
+  updateCourse: async (courseId, courseData, imageFile = null) => {
     try {
-      const { data } = await apiClient.put(`/courses/${courseId}`, courseData);
+      let dataToSend = courseData;
+      let headers = {};
+
+      // Se houver imagem, usar FormData
+      if (imageFile) {
+        const formData = new FormData();
+        
+        // Adicionar campos do curso
+        Object.keys(courseData).forEach(key => {
+          const value = courseData[key];
+          // Arrays devem ser enviados como JSON string
+          if (Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, value);
+          }
+        });
+        
+        // Adicionar imagem
+        formData.append('image', imageFile);
+        
+        dataToSend = formData;
+        headers = {
+          'Content-Type': 'multipart/form-data',
+        };
+      }
+
+      const { data } = await apiClient.put(`/courses/${courseId}`, dataToSend, { headers });
       return {
         success: true,
         course: data.data,

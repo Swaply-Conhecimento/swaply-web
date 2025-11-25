@@ -134,11 +134,11 @@ export const useCourses = () => {
   }, []);
 
   // Atualizar curso
-  const updateCourse = useCallback(async (courseId, courseData) => {
+  const updateCourse = useCallback(async (courseId, courseData, imageFile = null) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await courseService.updateCourse(courseId, courseData);
+      const result = await courseService.updateCourse(courseId, courseData, imageFile);
       return result;
     } catch (err) {
       setError(err.message);

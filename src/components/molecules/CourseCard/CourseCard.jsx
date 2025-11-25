@@ -17,10 +17,22 @@ const CourseCard = ({
   image,
   onClick,
   className = '',
+  instructorId,
   ...props
 }) => {
   const { state, actions } = useApp();
   const isFavorite = state.user?.favorites?.includes(id) || false;
+
+  // Verificar se o curso pertence ao usuário atual
+  // instructor pode ser string (nome) ou objeto com _id
+  const isMyCourse = state.user && state.user._id && (
+    (instructorId && instructorId === state.user._id) ||
+    (typeof instructor === 'object' && instructor !== null && (
+      (instructor._id && instructor._id === state.user._id) ||
+      (instructor.id && instructor.id === state.user._id)
+    )) ||
+    (typeof instructor === 'string' && instructor === state.user._id)
+  );
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation(); // Evita trigger do onClick do card
@@ -58,30 +70,46 @@ const CourseCard = ({
       
       <div className="course-card__content">
         <h3 className="course-card__title">{title}</h3>
-        <p className="course-card__instructor">{instructor}</p>
+        <p className="course-card__instructor">
+          {typeof instructor === 'object' && instructor !== null 
+            ? (instructor.name || instructor.username || 'Instrutor')
+            : instructor}
+        </p>
         
-        <div className="course-card__stats">
-          {rating && (
-            <div className="course-card__stat">
-              <span className="course-card__icon">⭐</span>
-              <span>{rating}</span>
-            </div>
-          )}
-          {students && (
-            <div className="course-card__stat">
-              <span className="course-card__icon">👥</span>
-              <span>{students} alunos</span>
-            </div>
-          )}
-        </div>
+        {(rating > 0 || students > 0) && (
+          <div className="course-card__stats">
+            {rating > 0 && (
+              <div className="course-card__stat">
+                <span className="course-card__icon">⭐</span>
+                <span>{rating}</span>
+              </div>
+            )}
+            {students > 0 && (
+              <div className="course-card__stat">
+                <span className="course-card__icon">👥</span>
+                <span>{students} alunos</span>
+              </div>
+            )}
+          </div>
+        )}
         
-        {price && (
+        {price && !isMyCourse && (
           <div className="course-card__footer">
             <div className="course-card__price">
               {price} crédito{price !== 1 ? 's' : ''}
             </div>
             <Button variant="primary" size="small">
               Comprar Aula
+            </Button>
+          </div>
+        )}
+        {isMyCourse && (
+          <div className="course-card__footer">
+            <div className="course-card__price">
+              Seu curso
+            </div>
+            <Button variant="outline" size="small" disabled>
+              Meu Curso
             </Button>
           </div>
         )}

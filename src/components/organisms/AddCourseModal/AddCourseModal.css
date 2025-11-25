@@ -221,6 +221,77 @@
   background: rgba(255, 255, 255, 0.05); 
 }
 
+/* Dark Theme - Ícones e Textos */
+[data-theme="dark"] .add-course-section__title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .add-course-section__title svg,
+[data-theme="dark"] .add-course-section__title * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .add-course-row .form-field .input-label {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .add-course-form textarea {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .add-course-form textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+[data-theme="dark"] .add-course-category-tag {
+  background: rgba(178, 216, 206, 0.2);
+  color: #FFFFFF !important;
+  border-color: rgba(178, 216, 206, 0.3);
+}
+
+[data-theme="dark"] .add-course-category-tag svg,
+[data-theme="dark"] .add-course-category-tag * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .add-course-category-remove {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .add-course-category-remove:hover {
+  background: rgba(178, 216, 206, 0.3);
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .add-course-category-remove svg,
+[data-theme="dark"] .add-course-category-remove * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .add-course-modal svg,
+[data-theme="dark"] .add-course-modal [class*="icon"],
+[data-theme="dark"] .add-course-modal [class*="Icon"] {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+/* Botões "+ Adicionar" no modo escuro */
+[data-theme="dark"] .add-course-category-input .btn,
+[data-theme="dark"] .add-course-category-input button {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .add-course-category-input .btn svg,
+[data-theme="dark"] .add-course-category-input button svg,
+[data-theme="dark"] .add-course-category-input .btn *,
+[data-theme="dark"] .add-course-category-input button * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
 /* Textarea Support */
 .add-course-form textarea {
   min-height: 100px;

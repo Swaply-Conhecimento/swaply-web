@@ -92,7 +92,11 @@ const authService = {
         user: data.data.user,
       };
     } catch (error) {
-      clearAuthData();
+      // Não remover token automaticamente aqui - deixar o AppContext decidir
+      // Só remover se for erro 401 explícito
+      if (error.response?.status === 401) {
+        clearAuthData();
+      }
       throw new Error(getErrorMessage(error));
     }
   },

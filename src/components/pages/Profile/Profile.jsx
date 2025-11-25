@@ -120,6 +120,39 @@ const Profile = () => {
     actions.setCurrentPage('course-details');
   };
 
+  const handleEditCourse = (course) => {
+    // Garantir que o curso tem ID
+    const courseId = course.id || course._id;
+    if (!courseId) {
+      console.error('❌ Erro: Curso sem ID no Profile', course);
+      return;
+    }
+    
+    // Preparar dados do curso para edição
+    const courseData = {
+      id: courseId,
+      _id: courseId,
+      title: course.title,
+      description: course.description || '',
+      category: course.category || '',
+      subcategory: course.subcategory || '',
+      level: course.level || 'Iniciante',
+      language: course.language || course.courseLanguage || 'Português',
+      pricePerHour: course.pricePerHour || 10,
+      totalHours: course.totalHours || 10,
+      maxStudents: course.maxStudents || 30,
+      tags: course.tags || [],
+      features: course.features || [],
+      requirements: course.requirements || [],
+      objectives: course.objectives || [],
+      status: course.status || 'draft',
+      instructor: course.instructor || 'Você'
+    };
+    
+    actions.setSelectedCourse(courseData);
+    actions.openModal('editCourse');
+  };
+
   return (
     <DashboardTemplate>
       <div className="profile">
@@ -316,7 +349,8 @@ const Profile = () => {
                           <Button 
                             variant="ghost" 
                             size="small"
-                            onClick={() => handleViewCourse(course)}
+                            onClick={() => handleEditCourse(course)}
+                            title="Editar curso"
                           >
                             <PencilSimple size={18} />
                           </Button>

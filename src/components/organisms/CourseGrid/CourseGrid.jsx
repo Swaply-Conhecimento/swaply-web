@@ -82,6 +82,7 @@ const CourseGrid = ({
                 students={course.students}
                 price={course.price}
                 image={course.image}
+                instructorId={course.instructorId}
                 onClick={() => {
                   // Passar o curso completo com ID garantido
                   const courseWithId = {

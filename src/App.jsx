@@ -16,7 +16,7 @@ import {
   ResetPassword,
   Terms,
 } from "./components/pages";
-import { AddCourseModal } from "./components/organisms";
+import { AddCourseModal, EditCourseModal } from "./components/organisms";
 import { SvgColorBlindFilters } from "./components/molecules";
 import { ToastContainer } from "./components/molecules/Toast";
 import LoadingScreen from "./components/atoms/LoadingScreen";
@@ -53,12 +53,16 @@ const AppContent = () => {
   ];
 
   // Verificar se usuário está tentando acessar rota protegida sem autenticação
+  // Só executar depois que o loading terminar para não interferir na restauração do token
   React.useEffect(() => {
+    // Aguardar o loading terminar antes de verificar autenticação
+    if (state.isLoading) return;
+    
     if (!state.isAuthenticated && protectedPages.includes(state.currentPage)) {
       // Redirecionar para login se tentar acessar área protegida
       actions.setCurrentPage('auth');
     }
-  }, [state.isAuthenticated, state.currentPage]);
+  }, [state.isAuthenticated, state.currentPage, state.isLoading]);
 
   // Se ainda está carregando, mostrar tela de loading
   if (state.isLoading) {
@@ -125,6 +129,11 @@ const AppContent = () => {
       <AddCourseModal
         isOpen={state.modals.addCourse}
         onClose={() => actions.closeModal("addCourse")}
+      />
+      <EditCourseModal
+        isOpen={state.modals.editCourse}
+        onClose={() => actions.closeModal("editCourse")}
+        course={state.selectedCourse}
       />
       
       {/* Toast Notifications */}

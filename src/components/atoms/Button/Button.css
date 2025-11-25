@@ -217,6 +217,20 @@
   background-color: rgba(255, 255, 255, 0.2);
 }
 
+/* Garantir que todos os botões ghost e outline tenham texto branco no modo escuro */
+[data-theme="dark"] .btn--ghost,
+[data-theme="dark"] .btn--outline {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .btn--ghost svg,
+[data-theme="dark"] .btn--outline svg,
+[data-theme="dark"] .btn--ghost *,
+[data-theme="dark"] .btn--outline * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .btn--large {

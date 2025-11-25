@@ -1,0 +1,450 @@
+/* Edit Course Modal Styles - Reusing AddCourseModal styles */
+.edit-course-modal {
+  /* Modal specific styles if needed */
+}
+
+.edit-course-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+/* Sections */
+.edit-course-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.edit-course-section__title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-primary-900);
+  margin: 0;
+  padding-bottom: var(--spacing-3);
+  border-bottom: 2px solid var(--color-primary-100);
+}
+
+.edit-course-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+/* Row Layout */
+.edit-course-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-4);
+  align-items: start;
+}
+
+/* Garantir alinhamento correto dos FormFields dentro das rows */
+.edit-course-row .form-field {
+  margin: 0 !important;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: stretch;
+}
+
+.edit-course-row .form-field .input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.edit-course-row .form-field .input-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-neutral-700);
+  margin: 0 0 var(--spacing-2) 0;
+  padding: 0;
+  line-height: 1.4;
+  display: block;
+  width: 100%;
+}
+
+.edit-course-row .form-field .input-field,
+.edit-course-row .form-field select {
+  width: 100%;
+  min-height: 2.5rem;
+  margin: 0;
+  padding: var(--spacing-3) var(--spacing-4);
+  box-sizing: border-box;
+}
+
+.edit-course-row .form-field .input-container {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Error Message */
+.edit-course-error {
+  background: var(--color-error-light, #fee);
+  border: 1px solid var(--color-error, #c00);
+  color: var(--color-error, #c00);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+/* Categories */
+.edit-course-categories {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.edit-course-category-input {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: flex-end;
+}
+
+.edit-course-category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.edit-course-category-tag {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  background: var(--color-primary-100);
+  color: var(--color-primary-900);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  border: 1px solid var(--color-primary-200);
+}
+
+.edit-course-category-remove {
+  background: none;
+  border: none;
+  color: var(--color-primary-700);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+}
+
+.edit-course-category-remove:hover {
+  background: var(--color-primary-200);
+  color: var(--color-primary-900);
+}
+
+/* Form Actions */
+.edit-course-actions {
+  display: flex;
+  gap: var(--spacing-4);
+  justify-content: flex-end;
+  padding-top: var(--spacing-6);
+  border-top: 1px solid var(--color-neutral-200);
+}
+
+/* Dark theme: ensure action buttons have white text for contrast */
+[data-theme="dark"] .edit-course-actions .btn { 
+  color: #FFFFFF; 
+}
+[data-theme="dark"] .edit-course-actions .btn.btn--outline { 
+  border-color: #FFFFFF; 
+  background: rgba(255, 255, 255, 0.05); 
+}
+
+/* Textarea Support */
+.edit-course-form textarea {
+  min-height: 100px;
+  resize: vertical;
+  font-family: var(--font-family-sans);
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 2px solid var(--color-neutral-200);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  color: var(--color-neutral-800);
+  background-color: var(--color-card);
+  transition: all var(--transition-fast);
+  outline: none;
+  width: 100%;
+}
+
+.edit-course-form textarea:focus {
+  border-color: var(--color-primary-800);
+  box-shadow: 0 0 0 3px rgba(84, 89, 172, 0.1);
+}
+
+.edit-course-form textarea::placeholder {
+  color: var(--color-neutral-400);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .edit-course-form {
+    gap: var(--spacing-6);
+  }
+  
+  .edit-course-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .edit-course-category-input {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .edit-course-actions {
+    flex-direction: column;
+  }
+}
+
+/* Loading State */
+.edit-course-form--loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* Validation */
+.edit-course-field--error {
+  border-color: var(--color-error);
+}
+
+.edit-course-error-message {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-1);
+}
+
+/* File Upload Area */
+.edit-course-upload {
+  border: 2px dashed var(--color-neutral-300);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-4);
+  background: var(--color-neutral-50);
+  transition: all var(--transition-fast);
+}
+
+.edit-course-upload:hover {
+  border-color: var(--color-primary-800);
+  background: var(--color-primary-50);
+}
+
+.edit-course-upload-area {
+  display: block;
+  cursor: pointer;
+  text-align: center;
+}
+
+.edit-course-upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-6);
+}
+
+.edit-course-upload-icon {
+  color: var(--color-neutral-400);
+  transition: color var(--transition-fast);
+}
+
+.edit-course-upload:hover .edit-course-upload-icon {
+  color: var(--color-primary-800);
+}
+
+.edit-course-upload-text {
+  font-size: var(--font-size-base);
+  color: var(--color-neutral-600);
+  margin: 0;
+  font-weight: 500;
+}
+
+.edit-course-upload-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-500);
+  margin: 0;
+}
+
+.edit-course-upload-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.edit-course-upload-image {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-neutral-200);
+}
+
+.edit-course-upload-actions {
+  display: flex;
+  gap: var(--spacing-3);
+  justify-content: center;
+}
+
+.edit-course-upload-change {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  background: var(--color-primary-100);
+  color: var(--color-primary-900);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  border: 1px solid var(--color-primary-200);
+}
+
+.edit-course-upload-change:hover {
+  background: var(--color-primary-200);
+  border-color: var(--color-primary-300);
+}
+
+@media (max-width: 768px) {
+  .edit-course-upload-actions {
+    flex-direction: column;
+  }
+}
+
+/* Dark Theme Styles */
+[data-theme="dark"] .edit-course-section__title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .edit-course-section__title svg,
+[data-theme="dark"] .edit-course-section__title * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .edit-course-row .form-field .input-label {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .edit-course-form textarea {
+  color: #FFFFFF !important;
+  background-color: var(--color-card);
+  border-color: var(--color-neutral-200);
+}
+
+[data-theme="dark"] .edit-course-form textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+[data-theme="dark"] .edit-course-category-tag {
+  background: rgba(178, 216, 206, 0.2);
+  color: #FFFFFF !important;
+  border-color: rgba(178, 216, 206, 0.3);
+}
+
+[data-theme="dark"] .edit-course-category-tag svg,
+[data-theme="dark"] .edit-course-category-tag * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .edit-course-category-remove {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .edit-course-category-remove:hover {
+  background: rgba(178, 216, 206, 0.3);
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .edit-course-category-remove svg,
+[data-theme="dark"] .edit-course-category-remove * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .edit-course-upload {
+  background: var(--color-card);
+  border-color: var(--color-neutral-200);
+}
+
+[data-theme="dark"] .edit-course-upload-icon {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .edit-course-upload:hover .edit-course-upload-icon {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .edit-course-upload-text {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .edit-course-upload-hint {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-theme="dark"] .edit-course-upload-change {
+  background: rgba(178, 216, 206, 0.2);
+  color: #FFFFFF !important;
+  border-color: rgba(178, 216, 206, 0.3);
+}
+
+[data-theme="dark"] .edit-course-upload-change svg,
+[data-theme="dark"] .edit-course-upload-change * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .edit-course-upload-change:hover {
+  background: rgba(178, 216, 206, 0.3);
+  border-color: rgba(178, 216, 206, 0.4);
+}
+
+/* Ícones em geral no modo escuro */
+[data-theme="dark"] .edit-course-modal svg,
+[data-theme="dark"] .edit-course-modal [class*="icon"],
+[data-theme="dark"] .edit-course-modal [class*="Icon"] {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+/* Textos com cores escuras no modo escuro */
+[data-theme="dark"] .edit-course-modal {
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .edit-course-modal * {
+  color: inherit;
+}
+
+/* Botões "+ Adicionar" no modo escuro */
+[data-theme="dark"] .edit-course-category-input .btn,
+[data-theme="dark"] .edit-course-category-input button {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .edit-course-category-input .btn svg,
+[data-theme="dark"] .edit-course-category-input button svg,
+[data-theme="dark"] .edit-course-category-input .btn *,
+[data-theme="dark"] .edit-course-category-input button * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+

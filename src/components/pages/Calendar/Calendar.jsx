@@ -55,9 +55,8 @@ const Calendar = () => {
   // Usar dados reais do calendário ou aulas do contexto como fallback
   const upcomingClasses = calendarData?.events || state.scheduledClasses || [];
 
-  const availableSlots = [
-    '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'
-  ];
+  // Horários disponíveis serão carregados da API quando necessário
+  const availableSlots = [];
 
   // Calendar logic
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
@@ -77,7 +76,12 @@ const Calendar = () => {
   };
 
   const handleDateClick = (day) => {
-    setSelectedDate(day);
+    // Só seleciona se houver aula agendada nesse dia
+    if (hasClassOnDate(day)) {
+      setSelectedDate(day);
+    } else {
+      setSelectedDate(null);
+    }
   };
 
   const getClassesForDate = (day) => {
@@ -97,26 +101,40 @@ const Calendar = () => {
 
   const renderCalendarDays = () => {
     const days = [];
+    const today = new Date();
+    const isCurrentMonth = today.getMonth() === currentDate.getMonth() && 
+                          today.getFullYear() === currentDate.getFullYear();
     
     // Empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(<div key={`empty-${i}`} className="calendar__day calendar__day--empty"></div>);
+      days.push(<div key={`empty-before-${i}`} className="calendar__day calendar__day--empty"></div>);
     }
     
     // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const hasClass = hasClassOnDate(day);
       const isSelected = selectedDate === day;
+      const isToday = isCurrentMonth && day === today.getDate();
       
       days.push(
         <button
           key={day}
-          className={`calendar__day ${hasClass ? 'calendar__day--has-class' : ''} ${isSelected ? 'calendar__day--selected' : ''}`}
+          className={`calendar__day ${hasClass ? 'calendar__day--has-class' : ''} ${isSelected ? 'calendar__day--selected' : ''} ${isToday ? 'calendar__day--today' : ''}`}
           onClick={() => handleDateClick(day)}
         >
           {day}
         </button>
       );
+    }
+    
+    // Empty cells for days after the last day of the month
+    // Calcular quantos dias faltam para completar a grade (42 células = 6 semanas)
+    const totalCells = 42; // 7 dias × 6 semanas
+    const filledCells = firstDayOfMonth + daysInMonth;
+    const emptyAfter = totalCells - filledCells;
+    
+    for (let i = 0; i < emptyAfter; i++) {
+      days.push(<div key={`empty-after-${i}`} className="calendar__day calendar__day--empty"></div>);
     }
     
     return days;
@@ -134,7 +152,9 @@ const Calendar = () => {
                 Minha Agenda
               </h1>
               <p className="calendar-page__subtitle">
-                Configure seus horários como instrutor
+                {viewMode === 'instructor' 
+                  ? 'Configure seus horários como instrutor' 
+                  : 'Visualize suas aulas agendadas'}
               </p>
             </div>
             
@@ -194,23 +214,33 @@ const Calendar = () => {
 
           {/* Side Panel */}
           <div className="calendar-page__side-panel">
-            {/* Available Hours */}
-            <Card className="calendar-page__hours-card" padding="medium">
-              <h3 className="calendar-page__card-title">
-                <Clock size={20} />
-                Horários Disponíveis
-              </h3>
-              <div className="calendar-page__time-slots">
-                {availableSlots.map(time => (
-                  <button key={time} className="calendar-page__time-slot">
-                    {time}
-                  </button>
-                ))}
-              </div>
-              <Button variant="primary" size="small" fullWidth>
-                Salvar Horários
-              </Button>
-            </Card>
+            {/* Available Hours - Só mostra para instrutor */}
+            {viewMode === 'instructor' && (
+              <Card className="calendar-page__hours-card" padding="medium">
+                <h3 className="calendar-page__card-title">
+                  <Clock size={20} />
+                  Horários Disponíveis
+                </h3>
+                {availableSlots.length > 0 ? (
+                  <>
+                    <div className="calendar-page__time-slots">
+                      {availableSlots.map(time => (
+                        <button key={time} className="calendar-page__time-slot">
+                          {time}
+                        </button>
+                      ))}
+                    </div>
+                    <Button variant="primary" size="small" fullWidth>
+                      Salvar Horários
+                    </Button>
+                  </>
+                ) : (
+                  <p style={{ color: 'var(--color-neutral-600)', fontSize: 'var(--font-size-sm)' }}>
+                    Nenhum horário disponível configurado
+                  </p>
+                )}
+              </Card>
+            )}
 
             {/* Upcoming Classes */}
             <Card className="calendar-page__upcoming-card" padding="medium">
@@ -219,70 +249,98 @@ const Calendar = () => {
                 Próximas Aulas
               </h3>
               <div className="calendar-page__upcoming-list">
-                {upcomingClasses.slice(0, 5).map((cls, index) => (
-                  <div key={index} className="calendar-page__upcoming-item">
-                    <div className="calendar-page__upcoming-info">
-                      <div className="calendar-page__upcoming-course">{cls.course}</div>
-                      <div className="calendar-page__upcoming-meta">
-                        {cls.type === 'student' ? (
-                          <span>Prof. {cls.instructor}</span>
-                        ) : (
-                          <span>Aluno: {cls.student}</span>
-                        )}
+                {upcomingClasses.length > 0 ? (
+                  upcomingClasses.slice(0, 5).map((cls, index) => {
+                    const eventDate = new Date(cls.date);
+                    return (
+                      <div key={cls.id || index} className="calendar-page__upcoming-item">
+                        <div className="calendar-page__upcoming-info">
+                          {cls.course && (
+                            <div className="calendar-page__upcoming-course">{cls.course}</div>
+                          )}
+                          <div className="calendar-page__upcoming-meta">
+                            {viewMode === 'student' && cls.instructor && (
+                              <span>Prof. {cls.instructor}</span>
+                            )}
+                            {viewMode === 'instructor' && cls.student && (
+                              <span>Aluno: {cls.student}</span>
+                            )}
+                          </div>
+                          <div className="calendar-page__upcoming-time">
+                            {eventDate.toLocaleDateString('pt-BR')} {cls.time && `às ${cls.time}`}
+                          </div>
+                          {cls.zoomLink && (
+                            <button 
+                              className="calendar-page__zoom-btn"
+                              onClick={() => window.open(cls.zoomLink, '_blank')}
+                            >
+                              🎥 Entrar na Aula
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div className="calendar-page__upcoming-time">
-                        {cls.date} às {cls.time}
-                      </div>
-                      {cls.zoomLink && (
-                        <button 
-                          className="calendar-page__zoom-btn"
-                          onClick={() => window.open(cls.zoomLink, '_blank')}
-                        >
-                          🎥 Entrar na Aula
-                        </button>
-                      )}
-                    </div>
-                    <Button variant="ghost" size="small">
-                      confirmar
-                    </Button>
-                  </div>
-                ))}
+                    );
+                  })
+                ) : (
+                  <p style={{ color: 'var(--color-neutral-600)', fontSize: 'var(--font-size-sm)', textAlign: 'center', padding: 'var(--spacing-4)' }}>
+                    Nenhuma aula agendada
+                  </p>
+                )}
               </div>
             </Card>
 
-            {/* Schedule Summary */}
-            {selectedDate && (
-              <Card className="calendar-page__summary-card" padding="medium">
-                <h3 className="calendar-page__card-title">
-                  Resumo do Agendamento
-                </h3>
-                <div className="calendar-page__summary-content">
-                  <div className="calendar-page__summary-row">
-                    <span>Instrutor:</span>
-                    <span>Prof. João Silva</span>
+            {/* Schedule Summary - Só aparece quando há agendamento selecionado */}
+            {selectedDate && (() => {
+              const classes = getClassesForDate(selectedDate);
+              if (classes.length === 0) return null;
+              
+              const selectedClass = classes[0]; // Pega o primeiro agendamento do dia
+              const eventDate = new Date(selectedClass.date);
+              
+              return (
+                <Card className="calendar-page__summary-card" padding="medium">
+                  <h3 className="calendar-page__card-title">
+                    Resumo do Agendamento
+                  </h3>
+                  <div className="calendar-page__summary-content">
+                    {selectedClass.course && (
+                      <div className="calendar-page__summary-row">
+                        <span>Curso:</span>
+                        <span>{selectedClass.course}</span>
+                      </div>
+                    )}
+                    {selectedClass.instructor && (
+                      <div className="calendar-page__summary-row">
+                        <span>Instrutor:</span>
+                        <span>{selectedClass.instructor}</span>
+                      </div>
+                    )}
+                    {selectedClass.student && (
+                      <div className="calendar-page__summary-row">
+                        <span>Aluno:</span>
+                        <span>{selectedClass.student}</span>
+                      </div>
+                    )}
+                    <div className="calendar-page__summary-row">
+                      <span>Data:</span>
+                      <span>{eventDate.toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    {selectedClass.time && (
+                      <div className="calendar-page__summary-row">
+                        <span>Horário:</span>
+                        <span>{selectedClass.time}</span>
+                      </div>
+                    )}
+                    {selectedClass.duration && (
+                      <div className="calendar-page__summary-row">
+                        <span>Duração:</span>
+                        <span>{selectedClass.duration}h</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="calendar-page__summary-row">
-                    <span>Matéria:</span>
-                    <span>Matemática</span>
-                  </div>
-                  <div className="calendar-page__summary-row">
-                    <span>Data:</span>
-                    <span>25/01/2024</span>
-                  </div>
-                  <div className="calendar-page__summary-row">
-                    <span>Horário:</span>
-                    <span>09:00</span>
-                  </div>
-                  <div className="calendar-page__summary-row">
-                    <span>Valor:</span>
-                    <span>1 crédito</span>
-                  </div>
-                </div>
-                <Button variant="primary" size="medium" fullWidth>
-                  Confirmar Agendamento
-                </Button>
-              </Card>
-            )}
+                </Card>
+              );
+            })()}
           </div>
         </div>
       </div>

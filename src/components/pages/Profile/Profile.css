@@ -517,6 +517,59 @@
   border-color: var(--color-primary-200);
 }
 
+/* Dark Theme - Textos e Ícones */
+[data-theme="dark"] .profile__section-title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile__section-title svg,
+[data-theme="dark"] .profile__section-title * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile__name {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile__username {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .profile__bio {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="dark"] .profile__stat-label,
+[data-theme="dark"] .profile__stat-value {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile__course-title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile__course-category {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-theme="dark"] .profile__course-stats {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .profile__course-stats svg,
+[data-theme="dark"] .profile__course-stats * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile svg,
+[data-theme="dark"] .profile [class*="icon"],
+[data-theme="dark"] .profile [class*="Icon"] {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
 /* High Contrast Mode */
 @media (prefers-contrast: high) {
   .profile__stat-card,

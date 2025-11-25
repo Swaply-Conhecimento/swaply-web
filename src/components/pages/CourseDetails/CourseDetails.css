@@ -10,6 +10,10 @@
 /* Header */
 .course-details__header {
   margin-bottom: var(--spacing-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-4);
 }
 
 .course-details__back {
@@ -19,6 +23,12 @@
 
 .course-details__back:hover {
   color: var(--color-primary-800);
+}
+
+.course-details__edit {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
 }
 
 /* Hero Section */
@@ -601,6 +611,110 @@
 [data-theme="dark"] .course-details__insufficient-funds {
   background: rgba(239, 68, 68, 0.1);
   border-color: var(--color-error);
+}
+
+/* Dark Theme - Textos e Ícones */
+[data-theme="dark"] .course-details__category {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details__title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details__description {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="dark"] .course-details__meta-item {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="dark"] .course-details__meta-item svg,
+[data-theme="dark"] .course-details__meta-item * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details__section-title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details__section-title svg,
+[data-theme="dark"] .course-details__section-title * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details__instructor-name {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details__instructor-bio {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .course-details__instructor-stat {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="dark"] .course-details__instructor-stat svg,
+[data-theme="dark"] .course-details__instructor-stat * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details__module-title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details__lesson {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="dark"] .course-details__lesson svg,
+[data-theme="dark"] .course-details__lesson * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details__schedule-day,
+[data-theme="dark"] .course-details__schedule-time {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details__feature {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="dark"] .course-details__price-value,
+[data-theme="dark"] .course-details__price-label,
+[data-theme="dark"] .course-details__price-detail {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details__price svg,
+[data-theme="dark"] .course-details__price * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details svg,
+[data-theme="dark"] .course-details [class*="icon"],
+[data-theme="dark"] .course-details [class*="Icon"] {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+/* Botão Voltar no modo escuro */
+[data-theme="dark"] .course-details__back {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .course-details__back svg,
+[data-theme="dark"] .course-details__back * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
 }
 
 /* High Contrast Mode */

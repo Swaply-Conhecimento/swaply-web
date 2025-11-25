@@ -1,51 +1,60 @@
 import React, { createContext, useReducer, useEffect } from 'react';
 import { authService, userService } from '../services/api';
 
-// Initial State
-const initialState = {
-  // Autenticação
-  isAuthenticated: false,
-  isLoading: true,
-  token: null,
-  refreshToken: null,
+// Função para obter estado inicial do localStorage
+const getInitialState = () => {
+  const token = localStorage.getItem('token');
+  const refreshToken = localStorage.getItem('refreshToken');
+  
+  return {
+    // Autenticação - restaurar do localStorage
+    isAuthenticated: !!token,
+    isLoading: true,
+    token: token,
+    refreshToken: refreshToken,
 
-  // Usuário
-  currentPage: 'dashboard',
-  user: null,
+    // Usuário
+    currentPage: 'dashboard',
+    user: null,
 
-  // Settings
-  settings: {
-    theme: 'light',
-    fontSize: 'medium',
-    accessibility: {
-      fontSizeControl: true,
-      screenReader: false,
-      vlibras: true,
-      highContrast: false,
+    // Settings
+    settings: {
+      theme: 'light',
+      fontSize: 'medium',
+      accessibility: {
+        fontSizeControl: true,
+        screenReader: false,
+        vlibras: true,
+        highContrast: false,
+      },
+      notifications: {
+        classNotifications: true,
+        interestNotifications: true,
+        newCoursesNotifications: true
+      }
     },
-    notifications: {
-      classNotifications: true,
-      interestNotifications: true,
-      newCoursesNotifications: true
-    }
-  },
 
-  // Modals
-  modals: {
-    editProfile: false,
-    addCourse: false,
-    courseDetails: false,
-    confirmDelete: false
-  },
+    // Modals
+    modals: {
+      editProfile: false,
+      addCourse: false,
+      editCourse: false,
+      courseDetails: false,
+      confirmDelete: false
+    },
 
-  // UI State
-  selectedCourse: null,
-  sidebarOpen: true,
-  scheduledClasses: [],
-  notifications: [],
-  unreadNotificationsCount: 0,
-  toasts: [],
+    // UI State
+    selectedCourse: null,
+    sidebarOpen: true,
+    scheduledClasses: [],
+    notifications: [],
+    unreadNotificationsCount: 0,
+    toasts: [],
+  };
 };
+
+// Initial State - carregar do localStorage
+const initialState = getInitialState();
 
 // Action Types
 const actionTypes = {
@@ -111,11 +120,16 @@ const appReducer = (state, action) => {
       };
     
     case actionTypes.LOGOUT:
+      // Limpar localStorage no logout
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       return {
-        ...initialState,
+        ...getInitialState(),
         isLoading: false,
         isAuthenticated: false,
         currentPage: 'auth',
+        token: null,
+        refreshToken: null,
       };
     
     case actionTypes.SET_USER:
@@ -352,13 +366,43 @@ export const AppProvider = ({ children }) => {
       }
 
       try {
-        // Adicionar timeout para evitar travamento
-        const verifyPromise = authService.verifyToken();
-        const timeoutPromise = new Promise((_, reject) => {
-          timeoutId = setTimeout(() => reject(new Error('Timeout na verificação do token')), 10000); // 10 segundos
-        });
-
-        const { user } = await Promise.race([verifyPromise, timeoutPromise]);
+        // Verificar token sem timeout muito restritivo
+        // Se houver timeout, tentar refresh token antes de deslogar
+        let user;
+        try {
+          const verifyResult = await authService.verifyToken();
+          user = verifyResult.user;
+        } catch (verifyError) {
+          // Se a verificação falhar, tentar refresh token
+          console.log('🔄 Token pode ter expirado, tentando refresh...');
+          const refreshToken = localStorage.getItem('refreshToken');
+          
+          if (refreshToken) {
+            try {
+              const refreshResult = await authService.refreshToken(refreshToken);
+              // Se refresh funcionou, tentar verificar novamente
+              const verifyResult = await authService.verifyToken();
+              user = verifyResult.user;
+              
+              // Atualizar token no estado
+              if (isMounted) {
+                dispatch({
+                  type: actionTypes.SET_AUTH,
+                  payload: {
+                    isAuthenticated: true,
+                    token: refreshResult.token,
+                    refreshToken: refreshResult.refreshToken,
+                  },
+                });
+              }
+            } catch (refreshError) {
+              // Se refresh também falhou, então realmente deslogar
+              throw verifyError;
+            }
+          } else {
+            throw verifyError;
+          }
+        }
         
         if (!isMounted) return;
         
@@ -401,19 +445,45 @@ export const AppProvider = ({ children }) => {
           });
         }
       } catch (error) {
-        console.error('Token inválido ou erro na verificação:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        if (isMounted) {
-          dispatch({ type: actionTypes.SET_LOADING, payload: false });
-          dispatch({
-            type: actionTypes.SET_AUTH,
-            payload: {
-              isAuthenticated: false,
-              token: null,
-              refreshToken: null,
-            },
-          });
+        console.error('Erro na verificação do token:', error);
+        
+        // Só remover token se for erro 401 (não autorizado) ou se refresh também falhou
+        // Não remover por timeout ou erros de rede
+        const isUnauthorized = error.response?.status === 401 || 
+                              error.message?.includes('401') ||
+                              error.message?.includes('não autorizado') ||
+                              error.message?.includes('token inválido');
+        
+        if (isUnauthorized) {
+          console.log('🔒 Token inválido, removendo do localStorage');
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          if (isMounted) {
+            dispatch({ type: actionTypes.SET_LOADING, payload: false });
+            dispatch({
+              type: actionTypes.SET_AUTH,
+              payload: {
+                isAuthenticated: false,
+                token: null,
+                refreshToken: null,
+              },
+            });
+          }
+        } else {
+          // Para outros erros (rede, timeout, etc), manter o token mas marcar como não autenticado temporariamente
+          console.warn('⚠️ Erro de rede/timeout, mantendo token mas marcando como não autenticado');
+          if (isMounted) {
+            dispatch({ type: actionTypes.SET_LOADING, payload: false });
+            // Manter token no localStorage mas marcar como não autenticado
+            dispatch({
+              type: actionTypes.SET_AUTH,
+              payload: {
+                isAuthenticated: false,
+                token: localStorage.getItem('token'),
+                refreshToken: localStorage.getItem('refreshToken'),
+              },
+            });
+          }
         }
       } finally {
         // Garantir que isLoading seja sempre false ao final

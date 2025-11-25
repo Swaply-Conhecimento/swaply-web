@@ -11,7 +11,8 @@ import {
   Calendar,
   ArrowLeft,
   VideoCamera,
-  Globe
+  Globe,
+  PencilSimple
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts';
 import { useCourses } from '../../../hooks/useCourses';
@@ -217,6 +218,20 @@ const CourseDetails = () => {
   const totalCost = courseData.totalPrice || (courseData.pricePerHour * courseData.totalHours);
   const canAfford = (state.user?.credits || 0) >= totalCost;
 
+  // Verificar se o usuário é o dono do curso
+  const isCourseOwner = state.user && courseData && courseData.instructor && (
+    (courseData.instructor._id && courseData.instructor._id === state.user._id) ||
+    (courseData.instructor.id && courseData.instructor.id === state.user._id) ||
+    (typeof courseData.instructor === 'string' && courseData.instructor === state.user._id)
+  );
+
+  const handleEditCourse = () => {
+    if (courseData) {
+      actions.setSelectedCourse(courseData);
+      actions.openModal('editCourse');
+    }
+  };
+
   return (
     <DashboardTemplate>
       <div className="course-details">
@@ -226,6 +241,16 @@ const CourseDetails = () => {
             <ArrowLeft size={20} />
             Voltar aos cursos
           </Button>
+          {isCourseOwner && (
+            <Button 
+              variant="primary" 
+              onClick={handleEditCourse}
+              className="course-details__edit"
+            >
+              <PencilSimple size={20} />
+              Editar Curso
+            </Button>
+          )}
         </div>
 
         {/* Hero Section */}
@@ -293,53 +318,78 @@ const CourseDetails = () => {
             </div>
 
             <div className="course-details__hero-right">
-              <Card className="course-details__purchase-card" padding="large">
-                <div className="course-details__price">
-                <div className="course-details__price-main">
-                  <Coins size={24} weight="fill" />
-                  <span className="course-details__price-value">{totalCost}</span>
-                  <span className="course-details__price-label">créditos</span>
-                </div>
-                  <div className="course-details__price-detail">
-                    {courseData.pricePerHour} crédito por hora
+              {!isCourseOwner ? (
+                <Card className="course-details__purchase-card" padding="large">
+                  <div className="course-details__price">
+                  <div className="course-details__price-main">
+                    <Coins size={24} weight="fill" />
+                    <span className="course-details__price-value">{totalCost}</span>
+                    <span className="course-details__price-label">créditos</span>
                   </div>
-                </div>
+                    <div className="course-details__price-detail">
+                      {courseData.pricePerHour} crédito por hora
+                    </div>
+                  </div>
 
-                <div className="course-details__purchase-options">
-                  <Button 
-                    variant="primary" 
-                    size="large" 
-                    fullWidth
-                    onClick={handlePurchaseCourse}
-                    disabled={!canAfford}
-                  >
-                    <Coins size={20} weight="fill" />
-                    Comprar Curso Completo - {totalCost} Créditos
-                  </Button>
-                  
-                  <div className="course-details__divider">ou</div>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="large" 
-                    fullWidth
-                    onClick={() => handlePurchaseHour(1)}
-                    disabled={(state.user?.credits || 0) < courseData.pricePerHour}
-                  >
-                    <Play size={20} />
-                    Comprar 1 Hora
-                  </Button>
-                </div>
-
-                {!canAfford && (
-                  <div className="course-details__insufficient-funds">
-                    <p>Você precisa de {totalCost - (state.user?.credits || 0)} moedas a mais</p>
-                    <Button variant="secondary" size="small" fullWidth>
-                      Ganhar Moedas Ensinando
+                  <div className="course-details__purchase-options">
+                    <Button 
+                      variant="primary" 
+                      size="large" 
+                      fullWidth
+                      onClick={handlePurchaseCourse}
+                      disabled={!canAfford}
+                    >
+                      <Coins size={20} weight="fill" />
+                      Comprar Curso Completo - {totalCost} Créditos
+                    </Button>
+                    
+                    <div className="course-details__divider">ou</div>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="large" 
+                      fullWidth
+                      onClick={() => handlePurchaseHour(1)}
+                      disabled={(state.user?.credits || 0) < courseData.pricePerHour}
+                    >
+                      <Play size={20} />
+                      Comprar 1 Hora
                     </Button>
                   </div>
-                )}
-              </Card>
+
+                  {!canAfford && (
+                    <div className="course-details__insufficient-funds">
+                      <p>Você precisa de {totalCost - (state.user?.credits || 0)} moedas a mais</p>
+                      <Button variant="secondary" size="small" fullWidth>
+                        Ganhar Moedas Ensinando
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              ) : (
+                <Card className="course-details__purchase-card" padding="large">
+                  <div className="course-details__price">
+                    <div className="course-details__price-main">
+                      <BookOpen size={24} weight="fill" />
+                      <span className="course-details__price-label">Seu Curso</span>
+                    </div>
+                    <div className="course-details__price-detail">
+                      Você é o instrutor deste curso
+                    </div>
+                  </div>
+                  <div className="course-details__purchase-options">
+                    <Button 
+                      variant="primary" 
+                      size="large" 
+                      fullWidth
+                      onClick={handleEditCourse}
+                    >
+                      <PencilSimple size={20} />
+                      Editar Curso
+                    </Button>
+                  </div>
+                </Card>
+              )}
             </div>
           </div>
         </Card>
