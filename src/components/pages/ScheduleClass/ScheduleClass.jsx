@@ -75,10 +75,20 @@ const ScheduleClass = () => {
     try {
       const year = currentMonth.getFullYear();
       const month = currentMonth.getMonth();
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
       
-      const startDate = firstDay.toISOString().split('T')[0];
+      // Buscar a partir de hoje (não do início do mês) até o final do próximo mês
+      // Isso garante que slots com antecedência suficiente sejam incluídos
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const firstDay = new Date(year, month, 1);
+      // Se o mês atual já começou, usar hoje como início
+      const startDateObj = today > firstDay ? today : firstDay;
+      
+      // Buscar até o final do próximo mês para garantir slots disponíveis
+      const lastDay = new Date(year, month + 2, 0); // Final do próximo mês
+      
+      const startDate = startDateObj.toISOString().split('T')[0];
       const endDate = lastDay.toISOString().split('T')[0];
 
       // Tentar primeiro com a rota pública (recomendada para estudantes)
@@ -262,8 +272,9 @@ const ScheduleClass = () => {
       const isSelected = selectedDate && date.getTime() === selectedDate.getTime();
       
       // Verificar se há slots disponíveis reais para esta data
+      // IMPORTANTE: Verificar slots independente do mês (pode haver slots em dezembro quando visualizando novembro)
       const dateStr = date.toISOString().split('T')[0];
-      const hasAvailableSlots = isCurrentMonth && !isPast && monthSlots[dateStr] && monthSlots[dateStr].length > 0;
+      const hasAvailableSlots = !isPast && monthSlots[dateStr] && monthSlots[dateStr].length > 0;
       
       // Debug apenas para o primeiro dia do mês
       if (i === 0) {
@@ -476,7 +487,7 @@ const ScheduleClass = () => {
                     day.isToday ? 'schedule-class__day--today' : ''
                   }`}
                   onClick={() => handleDateSelect(day)}
-                  disabled={day.isPast || !day.hasAvailableSlots || !day.isCurrentMonth}
+                  disabled={day.isPast || !day.hasAvailableSlots}
                 >
                   {day.day}
                 </button>
