@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { 
   Star, 
   Users, 
@@ -12,46 +12,125 @@ import {
   ArrowLeft,
   VideoCamera,
   Globe,
-  PencilSimple
-} from '@phosphor-icons/react';
-import { useApp } from '../../../contexts';
-import { useCourses } from '../../../hooks/useCourses';
-import DashboardTemplate from '../../templates/DashboardTemplate';
-import Card from '../../molecules/Card';
-import Button from '../../atoms/Button';
-import LoadingScreen from '../../atoms/LoadingScreen';
-import './CourseDetails.css';
+  PencilSimple,
+  CaretDown,
+  CaretUp,
+} from "@phosphor-icons/react";
+import { useApp } from "../../../contexts";
+import { useCourses } from "../../../hooks/useCourses";
+import { useAvailability, useEnrollments } from "../../../hooks";
+import DashboardTemplate from "../../templates/DashboardTemplate";
+import Card from "../../molecules/Card";
+import Button from "../../atoms/Button";
+import LoadingScreen from "../../atoms/LoadingScreen";
+import { CourseReviews } from "../../organisms";
+import "./CourseDetails.css";
+
+// Componente para Feature com dropdown
+const FeatureItem = ({ title, description, hasDescription }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!hasDescription) {
+    return (
+      <li className="course-details__feature">
+        <div className="course-details__feature-icon">✓</div>
+        <span>{title}</span>
+      </li>
+    );
+  }
+
+  return (
+    <li className="course-details__feature course-details__feature--expandable">
+      <div 
+        className="course-details__feature-header"
+        onClick={() => setIsExpanded(!isExpanded)}
+        style={{ cursor: 'pointer' }}
+      >
+        <div className="course-details__feature-content">
+          <div className="course-details__feature-icon">✓</div>
+          <span className="course-details__feature-title">{title}</span>
+        </div>
+        <div className="course-details__feature-toggle">
+          {isExpanded ? <CaretUp size={20} /> : <CaretDown size={20} />}
+        </div>
+      </div>
+      {isExpanded && (
+        <div className="course-details__feature-description">
+          {description.split('\n').map((line, idx) => (
+            <p key={idx} style={{ margin: '0.5rem 0', lineHeight: '1.6' }}>
+              {line.trim() || '\u00A0'}
+            </p>
+          ))}
+        </div>
+      )}
+    </li>
+  );
+};
 
 const CourseDetails = () => {
   const { state, actions } = useApp();
-  const { getCourseById, enrollInCourse, loading: courseLoading, error: courseError } = useCourses();
+  const {
+    getCourseById,
+    loading: courseLoading,
+    error: courseError,
+  } = useCourses();
+  const { getAvailableSlots } = useAvailability();
+  const {
+    checkEnrollmentStatus,
+    enrollInFullCourse,
+    loading: enrollmentLoading,
+  } = useEnrollments();
   
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [enrollmentStatus, setEnrollmentStatus] = useState(null);
 
   // Obter ID do curso do selectedCourse
   // Pode vir como id ou _id, e pode ser string ou objeto
-  const courseId = state.selectedCourse?.id || 
+  const courseId =
+    state.selectedCourse?.id ||
                    state.selectedCourse?._id || 
-                   (typeof state.selectedCourse === 'string' ? state.selectedCourse : null);
+    (typeof state.selectedCourse === "string" ? state.selectedCourse : null);
   
   // Debug: Log para verificar o que está sendo recebido
   useEffect(() => {
     if (state.selectedCourse) {
-      console.log('📋 CourseDetails - selectedCourse recebido:', state.selectedCourse);
-      console.log('📋 CourseDetails - courseId extraído:', courseId);
-      console.log('📋 CourseDetails - Tipo do selectedCourse:', typeof state.selectedCourse);
-      console.log('📋 CourseDetails - Keys do selectedCourse:', Object.keys(state.selectedCourse || {}));
+      console.log(
+        "📋 CourseDetails - selectedCourse recebido:",
+        state.selectedCourse
+      );
+      console.log("📋 CourseDetails - courseId extraído:", courseId);
+      console.log(
+        "📋 CourseDetails - Tipo do selectedCourse:",
+        typeof state.selectedCourse
+      );
+      console.log(
+        "📋 CourseDetails - Keys do selectedCourse:",
+        Object.keys(state.selectedCourse || {})
+      );
       
       // Se não tem ID, tentar encontrar em outros lugares
       if (!courseId) {
-        console.warn('⚠️ CourseDetails - Nenhum ID encontrado! Tentando alternativas...');
+        console.warn(
+          "⚠️ CourseDetails - Nenhum ID encontrado! Tentando alternativas..."
+        );
         // Se o instructor for um ID (string de 24 caracteres), pode ser que esteja confundido
         const instructorValue = state.selectedCourse?.instructor;
-        if (instructorValue && typeof instructorValue === 'string' && instructorValue.length === 24) {
-          console.warn('⚠️ CourseDetails - Instructor parece ser um ID MongoDB:', instructorValue);
-          console.warn('⚠️ CourseDetails - Isso pode indicar que o curso não tem ID próprio');
+        if (
+          instructorValue &&
+          typeof instructorValue === "string" &&
+          instructorValue.length === 24
+        ) {
+          console.warn(
+            "⚠️ CourseDetails - Instructor parece ser um ID MongoDB:",
+            instructorValue
+          );
+          console.warn(
+            "⚠️ CourseDetails - Isso pode indicar que o curso não tem ID próprio"
+          );
         }
       }
     }
@@ -60,7 +139,7 @@ const CourseDetails = () => {
   useEffect(() => {
     const fetchCourse = async () => {
       if (!courseId) {
-        setError('Nenhum curso selecionado');
+        setError("Nenhum curso selecionado");
         setLoading(false);
         return;
       }
@@ -78,18 +157,20 @@ const CourseDetails = () => {
           setCourseData({
             id: course._id || course.id,
             title: course.title,
-            description: course.description || '',
+            description: course.description || "",
             instructor: {
               _id: course.instructor?._id || course.instructor?.id,
-              name: course.instructor?.name || 'Instrutor',
-              avatar: course.instructor?.avatar || '',
+              name: course.instructor?.name || "Instrutor",
+              avatar: course.instructor?.avatar || "",
               rating: course.instructor?.rating || 0,
               // A API retorna instructor.stats, não instructor.totalStudents
-              totalStudents: course.instructor?.stats?.coursesTeaching || 
+              totalStudents:
+                course.instructor?.stats?.coursesTeaching ||
                             course.instructor?.totalStudents || 
-                            course.currentStudents || 0,
-              bio: course.instructor?.bio || '',
-              stats: course.instructor?.stats || {}
+                course.currentStudents ||
+                0,
+              bio: course.instructor?.bio || "",
+              stats: course.instructor?.stats || {},
             },
             rating: course.rating || 0,
             totalRatings: course.totalRatings || 0,
@@ -98,36 +179,46 @@ const CourseDetails = () => {
             pricePerHour: course.pricePerHour || 0,
             totalHours: course.totalHours || 0,
             // Usar totalPrice calculado pela API se disponível
-            totalPrice: course.totalPrice || (course.pricePerHour * course.totalHours),
-            category: course.category || '',
-            subcategory: course.subcategory || '',
-            level: course.level || 'Iniciante',
+            totalPrice:
+              course.totalPrice || course.pricePerHour * course.totalHours,
+            category: course.category || "",
+            subcategory: course.subcategory || "",
+            level: course.level || "Iniciante",
             // A API mapeia courseLanguage de volta para language
-            language: course.language || course.courseLanguage || 'Português',
-            image: course.image || '',
+            language: course.language || course.courseLanguage || "Português",
+            image: course.image || "",
             features: course.features || [],
             curriculum: course.curriculum || [],
             schedule: course.schedule || [],
             requirements: course.requirements || [],
             objectives: course.objectives || [],
             tags: course.tags || [],
-            status: course.status || 'draft',
+            status: course.status || "draft",
             maxStudents: course.maxStudents || 50,
             // Usar spotsAvailable calculado pela API se disponível
-            spotsAvailable: course.spotsAvailable || (course.maxStudents - (course.currentStudents || 0)),
+            spotsAvailable:
+              course.spotsAvailable ||
+              course.maxStudents - (course.currentStudents || 0),
             isLive: course.isLive !== undefined ? course.isLive : true,
             // Campos adicionais da API (se autenticado)
             isEnrolled: course.isEnrolled || false,
             isFavorite: course.isFavorite || false,
             // Lista de estudantes matriculados
-            enrolledStudents: course.enrolledStudents || []
+            enrolledStudents: course.enrolledStudents || [],
+            // Disponibilidade do curso
+            availability: course.availability || null,
+            // Preços separados (novo sistema)
+            pricing: course.pricing || {
+              singleClass: course.pricePerHour || 0,
+              fullCourse: (course.pricePerHour || 0) * (course.totalHours || 1),
+            },
           });
         } else {
-          setError('Curso não encontrado');
+          setError("Curso não encontrado");
         }
       } catch (err) {
-        console.error('Erro ao carregar curso:', err);
-        setError(err.message || 'Erro ao carregar detalhes do curso');
+        console.error("Erro ao carregar curso:", err);
+        setError(err.message || "Erro ao carregar detalhes do curso");
       } finally {
         setLoading(false);
       }
@@ -136,48 +227,153 @@ const CourseDetails = () => {
     fetchCourse();
   }, [courseId, getCourseById]);
 
-  const handlePurchaseCourse = async () => {
+  // Verificar status de matrícula quando o curso for carregado
+  useEffect(() => {
+    const checkEnrollment = async () => {
+      if (!courseData || !state.user) return;
+
+      try {
+        const result = await checkEnrollmentStatus(courseData.id);
+        if (result.success) {
+          setEnrollmentStatus(result);
+        }
+      } catch (err) {
+        console.error("Erro ao verificar matrícula:", err);
+      }
+    };
+
+    checkEnrollment();
+  }, [courseData, state.user, checkEnrollmentStatus]);
+
+  // Carregar slots disponíveis quando o curso for carregado
+  useEffect(() => {
+    const loadAvailableSlots = async () => {
+      if (!courseData || !courseData.instructor?._id) return;
+
+      setLoadingSlots(true);
+      try {
+        // Buscar próximos 30 dias
+        const startDate = new Date().toISOString().split("T")[0];
+        const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0];
+
+        const result = await getAvailableSlots({
+          instructorId: courseData.instructor._id,
+          courseId: courseData.id,
+          startDate,
+          endDate,
+        });
+
+        if (result.success && result.slots) {
+          // Agrupar slots por data e mostrar próximos horários
+          const slotsByDate = {};
+          result.slots.forEach((slot) => {
+            const dateStr = slot.date;
+            if (!slotsByDate[dateStr]) {
+              slotsByDate[dateStr] = [];
+            }
+            slotsByDate[dateStr].push(slot);
+          });
+
+          // Pegar os próximos 10 slots disponíveis
+          const upcomingSlots = result.slots
+            .filter((slot) => {
+              const slotDate = new Date(slot.start);
+              return slotDate >= new Date();
+            })
+            .sort((a, b) => new Date(a.start) - new Date(b.start))
+            .slice(0, 10);
+
+          setAvailableSlots(upcomingSlots);
+        } else {
+          setAvailableSlots([]);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar horários disponíveis:", err);
+        setAvailableSlots([]);
+      } finally {
+        setLoadingSlots(false);
+      }
+    };
+
+    loadAvailableSlots();
+  }, [courseData, getAvailableSlots]);
+
+  // Comprar curso completo
+  const handlePurchaseFullCourse = async () => {
     if (!courseData) return;
     
-    // Usar totalPrice da API se disponível, senão calcular
-    const totalCost = courseData.totalPrice || (courseData.pricePerHour * courseData.totalHours);
-    const canAfford = (state.user?.credits || 0) >= totalCost;
+    const fullCoursePrice =
+      courseData.pricing?.fullCourse ||
+      courseData.pricePerHour * courseData.totalHours;
+    const canAfford = (state.user?.credits || 0) >= fullCoursePrice;
     
-    if (canAfford) {
+    if (!canAfford) {
+      actions.showToast(
+        `Créditos insuficientes! Você precisa de ${fullCoursePrice} créditos.`,
+        "error"
+      );
+      return;
+    }
+
       try {
-        await enrollInCourse(courseData.id);
+      const result = await enrollInFullCourse(courseData.id);
+      if (result.success) {
         await actions.refreshUser(); // Atualizar dados do usuário após matrícula
-        actions.showToast('Curso comprado com sucesso!', 'success');
-        // Redirecionar para página de confirmação ou aula
-      } catch (err) {
-        console.error('Erro ao comprar curso:', err);
-        actions.showToast(err.message || 'Erro ao comprar curso. Tente novamente.', 'error');
+        setEnrollmentStatus({
+          enrolled: true,
+          enrollmentType: "full_course",
+          enrollment: result.enrollment,
+        });
+        actions.showToast(
+          result.message || "Curso comprado com sucesso!",
+          "success"
+        );
+      } else {
+        actions.showToast(
+          result.error || "Erro ao comprar curso. Tente novamente.",
+          "error"
+        );
       }
-    } else {
-      actions.showToast('Créditos insuficientes!', 'error');
+      } catch (err) {
+      console.error("Erro ao comprar curso:", err);
+      actions.showToast(
+        err.message || "Erro ao comprar curso. Tente novamente.",
+        "error"
+      );
     }
   };
 
-  const handlePurchaseHour = (hours = 1) => {
+  // Navegar para comprar aula avulsa
+  const handlePurchaseSingleClass = () => {
     if (!courseData) return;
     
-    const cost = courseData.pricePerHour * hours;
-    if ((state.user?.credits || 0) >= cost) {
-      // Definir o curso selecionado e navegar para página de agendamento
+    const singleClassPrice =
+      courseData.pricing?.singleClass || courseData.pricePerHour;
+    if ((state.user?.credits || 0) < singleClassPrice) {
+      actions.showToast(
+        `Créditos insuficientes! Você precisa de ${singleClassPrice} créditos.`,
+        "error"
+      );
+      return;
+    }
+
+    // Definir o curso selecionado e navegar para página de agendamento (aula avulsa)
       actions.setSelectedCourse({
         id: courseData.id,
+      _id: courseData.id,
         title: courseData.title,
-        instructor: courseData.instructor.name,
-        price: courseData.pricePerHour
+      instructor: courseData.instructor, // Passar objeto completo do instrutor
+      instructorId: courseData.instructor._id || courseData.instructor.id,
+      pricing: courseData.pricing,
+      price: singleClassPrice,
       });
-      actions.setCurrentPage('schedule-class');
-    } else {
-      actions.showToast('Créditos insuficientes!', 'error');
-    }
+    actions.setCurrentPage("schedule-class");
   };
 
   const handleGoBack = () => {
-    actions.setCurrentPage('dashboard');
+    actions.setCurrentPage("dashboard");
   };
 
   // Loading state
@@ -195,16 +391,24 @@ const CourseDetails = () => {
       <DashboardTemplate>
         <div className="course-details">
           <div className="course-details__header">
-            <Button variant="ghost" onClick={handleGoBack} className="course-details__back">
+            <Button
+              variant="ghost"
+              onClick={handleGoBack}
+              className="course-details__back"
+            >
               <ArrowLeft size={20} />
               Voltar aos cursos
             </Button>
           </div>
           <Card padding="large">
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <div style={{ textAlign: "center", padding: "2rem" }}>
               <h2>Erro ao carregar curso</h2>
-              <p>{error || courseError || 'Curso não encontrado'}</p>
-              <Button variant="primary" onClick={handleGoBack} style={{ marginTop: '1rem' }}>
+              <p>{error || courseError || "Curso não encontrado"}</p>
+              <Button
+                variant="primary"
+                onClick={handleGoBack}
+                style={{ marginTop: "1rem" }}
+              >
                 Voltar ao Dashboard
               </Button>
             </div>
@@ -214,21 +418,32 @@ const CourseDetails = () => {
     );
   }
 
-  // Usar totalPrice da API se disponível, senão calcular
-  const totalCost = courseData.totalPrice || (courseData.pricePerHour * courseData.totalHours);
-  const canAfford = (state.user?.credits || 0) >= totalCost;
+  // Preços do curso
+  const fullCoursePrice =
+    courseData?.pricing?.fullCourse ||
+    courseData?.pricePerHour * courseData?.totalHours ||
+    0;
+  const singleClassPrice =
+    courseData?.pricing?.singleClass || courseData?.pricePerHour || 0;
+  const canAffordFullCourse = (state.user?.credits || 0) >= fullCoursePrice;
+  const canAffordSingleClass = (state.user?.credits || 0) >= singleClassPrice;
 
   // Verificar se o usuário é o dono do curso
-  const isCourseOwner = state.user && courseData && courseData.instructor && (
-    (courseData.instructor._id && courseData.instructor._id === state.user._id) ||
-    (courseData.instructor.id && courseData.instructor.id === state.user._id) ||
-    (typeof courseData.instructor === 'string' && courseData.instructor === state.user._id)
-  );
+  const isCourseOwner =
+    state.user &&
+    courseData &&
+    courseData.instructor &&
+    ((courseData.instructor._id &&
+      courseData.instructor._id === state.user._id) ||
+      (courseData.instructor.id &&
+        courseData.instructor.id === state.user._id) ||
+      (typeof courseData.instructor === "string" &&
+        courseData.instructor === state.user._id));
 
   const handleEditCourse = () => {
     if (courseData) {
       actions.setSelectedCourse(courseData);
-      actions.openModal('editCourse');
+      actions.openModal("editCourse");
     }
   };
 
@@ -237,13 +452,17 @@ const CourseDetails = () => {
       <div className="course-details">
         {/* Header */}
         <div className="course-details__header">
-          <Button variant="ghost" onClick={handleGoBack} className="course-details__back">
+          <Button
+            variant="ghost"
+            onClick={handleGoBack}
+            className="course-details__back"
+          >
             <ArrowLeft size={20} />
             Voltar aos cursos
           </Button>
           {isCourseOwner && (
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               onClick={handleEditCourse}
               className="course-details__edit"
             >
@@ -261,34 +480,51 @@ const CourseDetails = () => {
                 src={courseData.image} 
                 alt={courseData.title}
                 onError={(e) => {
-                  e.target.style.display = 'none';
+                  e.target.style.display = "none";
                 }}
               />
             </div>
           )}
           <div className="course-details__hero-content">
             <div className="course-details__hero-left">
-              <div className="course-details__category">{courseData.category}</div>
+              <div className="course-details__category">
+                {courseData.category}
+              </div>
               <h1 className="course-details__title">{courseData.title}</h1>
-              <p className="course-details__description">{courseData.description}</p>
+              <p className="course-details__description">
+                {courseData.description}
+              </p>
               
               <div className="course-details__meta">
                 {courseData.rating > 0 && (
                   <div className="course-details__meta-item">
                     <Star size={20} weight="fill" />
-                    <span>{courseData.rating.toFixed(1)} ({courseData.totalRatings} avaliações)</span>
+                    <span>
+                      {courseData.rating.toFixed(1)} ({courseData.totalRatings}{" "}
+                      avaliações)
+                    </span>
                   </div>
                 )}
                 <div className="course-details__meta-item">
                   <Users size={20} />
-                  <span>{courseData.totalStudents} aluno{courseData.totalStudents !== 1 ? 's' : ''}</span>
-                  {courseData.spotsAvailable !== undefined && courseData.spotsAvailable > 0 && (
-                    <span className="course-details__spots"> ({courseData.spotsAvailable} vagas)</span>
+                  <span>
+                    {courseData.totalStudents} aluno
+                    {courseData.totalStudents !== 1 ? "s" : ""}
+                  </span>
+                  {courseData.spotsAvailable !== undefined &&
+                    courseData.spotsAvailable > 0 && (
+                      <span className="course-details__spots">
+                        {" "}
+                        ({courseData.spotsAvailable} vagas)
+                      </span>
                   )}
                 </div>
                 <div className="course-details__meta-item">
                   <Clock size={20} />
-                  <span>{courseData.totalHours} hora{courseData.totalHours !== 1 ? 's' : ''}</span>
+                  <span>
+                    {courseData.totalHours} hora
+                    {courseData.totalHours !== 1 ? "s" : ""}
+                  </span>
                 </div>
                 {courseData.language && (
                   <div className="course-details__meta-item">
@@ -316,83 +552,157 @@ const CourseDetails = () => {
                 )}
               </div>
             </div>
-
-            <div className="course-details__hero-right">
-              {!isCourseOwner ? (
-                <Card className="course-details__purchase-card" padding="large">
-                  <div className="course-details__price">
-                  <div className="course-details__price-main">
-                    <Coins size={24} weight="fill" />
-                    <span className="course-details__price-value">{totalCost}</span>
-                    <span className="course-details__price-label">créditos</span>
-                  </div>
-                    <div className="course-details__price-detail">
-                      {courseData.pricePerHour} crédito por hora
-                    </div>
-                  </div>
-
-                  <div className="course-details__purchase-options">
-                    <Button 
-                      variant="primary" 
-                      size="large" 
-                      fullWidth
-                      onClick={handlePurchaseCourse}
-                      disabled={!canAfford}
-                    >
-                      <Coins size={20} weight="fill" />
-                      Comprar Curso Completo - {totalCost} Créditos
-                    </Button>
-                    
-                    <div className="course-details__divider">ou</div>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="large" 
-                      fullWidth
-                      onClick={() => handlePurchaseHour(1)}
-                      disabled={(state.user?.credits || 0) < courseData.pricePerHour}
-                    >
-                      <Play size={20} />
-                      Comprar 1 Hora
-                    </Button>
-                  </div>
-
-                  {!canAfford && (
-                    <div className="course-details__insufficient-funds">
-                      <p>Você precisa de {totalCost - (state.user?.credits || 0)} moedas a mais</p>
-                      <Button variant="secondary" size="small" fullWidth>
-                        Ganhar Moedas Ensinando
-                      </Button>
-                    </div>
-                  )}
-                </Card>
-              ) : (
-                <Card className="course-details__purchase-card" padding="large">
-                  <div className="course-details__price">
-                    <div className="course-details__price-main">
-                      <BookOpen size={24} weight="fill" />
-                      <span className="course-details__price-label">Seu Curso</span>
-                    </div>
-                    <div className="course-details__price-detail">
-                      Você é o instrutor deste curso
-                    </div>
-                  </div>
-                  <div className="course-details__purchase-options">
-                    <Button 
-                      variant="primary" 
-                      size="large" 
-                      fullWidth
-                      onClick={handleEditCourse}
-                    >
-                      <PencilSimple size={20} />
-                      Editar Curso
-                    </Button>
-                  </div>
-                </Card>
-              )}
-            </div>
           </div>
         </Card>
+
+        {/* Purchase Options - Apenas se não for o dono do curso, abaixo do hero */}
+        {!isCourseOwner && (
+          <Card className="course-details__purchase-card course-details__purchase-card--horizontal" padding="large">
+            {enrollmentStatus?.enrolled ? (
+              // Já matriculado
+              enrollmentStatus.enrollmentType === "full_course" ? (
+                <>
+                <div className="course-details__price">
+                <div className="course-details__price-main">
+                      <BookOpen size={24} weight="fill" />
+                      <span className="course-details__price-label">
+                        Você está matriculado
+                      </span>
+                </div>
+                  <div className="course-details__price-detail">
+                      Acesso ilimitado para agendar aulas
+                  </div>
+                </div>
+                <div className="course-details__purchase-options">
+                  <Button 
+                    variant="primary" 
+                    size="large" 
+                      onClick={() => {
+                        actions.setSelectedCourse({
+                          id: courseData.id,
+                          _id: courseData.id,
+                          title: courseData.title,
+                          instructor: courseData.instructor, // Passar objeto completo do instrutor
+                          instructorId: courseData.instructor._id || courseData.instructor.id,
+                          pricing: courseData.pricing,
+                        });
+                        actions.setCurrentPage("schedule-class");
+                      }}
+                  >
+                      <Calendar size={20} />
+                      Agendar Aula
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="course-details__price">
+                    <div className="course-details__price-main">
+                      <Play size={24} weight="fill" />
+                      <span className="course-details__price-label">
+                        Aula Avulsa Comprada
+                      </span>
+                    </div>
+                    <div className="course-details__price-detail">
+                      Você comprou uma aula avulsa neste curso
+                    </div>
+                  </div>
+                  <div className="course-details__purchase-options">
+                    <Button
+                      variant="outline"
+                      size="large"
+                      onClick={() => actions.setCurrentPage("my-courses")}
+                    >
+                      Ver Minha Aula
+                  </Button>
+                  </div>
+                </>
+              )
+            ) : (
+              // Não matriculado - Mostrar opções de compra horizontal
+              <>
+                <div className="course-details__purchase-options-horizontal">
+                  {/* Opção: Aula Avulsa */}
+                  <div className="course-details__purchase-option">
+                    <div className="course-details__purchase-option-header">
+                      <h3 className="course-details__purchase-option-title">
+                        Aula Avulsa
+                      </h3>
+                      <p className="course-details__purchase-option-desc">
+                        Compre uma aula específica
+                      </p>
+                      <p className="course-details__purchase-option-price">
+                        {singleClassPrice} créditos
+                      </p>
+                    </div>
+                  <Button 
+                    variant="outline" 
+                    size="large" 
+                    fullWidth
+                      onClick={handlePurchaseSingleClass}
+                      disabled={!canAffordSingleClass || enrollmentLoading}
+                  >
+                    <Play size={20} />
+                      Escolher Horário
+                  </Button>
+                </div>
+
+                  <div className="course-details__divider-vertical">
+                    <span>ou</span>
+                  </div>
+
+                  {/* Opção: Curso Completo */}
+                  <div className="course-details__purchase-option course-details__purchase-option--highlighted">
+                    <div className="course-details__purchase-option-badge">
+                      Melhor Valor
+                    </div>
+                    <div className="course-details__purchase-option-header">
+                      <h3 className="course-details__purchase-option-title">
+                        Curso Completo
+                      </h3>
+                      <p className="course-details__purchase-option-desc">
+                        Acesso ilimitado para agendar aulas
+                      </p>
+                      <p className="course-details__purchase-option-price">
+                        {fullCoursePrice} créditos
+                      </p>
+                    </div>
+                    <Button
+                      variant="primary"
+                      size="large"
+                      fullWidth
+                      onClick={handlePurchaseFullCourse}
+                      disabled={!canAffordFullCourse || enrollmentLoading}
+                      loading={enrollmentLoading}
+                    >
+                      <Coins size={20} weight="fill" />
+                      Comprar Curso Completo
+                    </Button>
+                  </div>
+                </div>
+
+                {(!canAffordFullCourse || !canAffordSingleClass) && (
+                  <div className="course-details__insufficient-funds">
+                    <p>
+                      {!canAffordFullCourse && !canAffordSingleClass
+                        ? `Você precisa de mais créditos. Curso completo: ${
+                            fullCoursePrice - (state.user?.credits || 0)
+                          } créditos a mais.`
+                        : !canAffordFullCourse
+                        ? `Você precisa de ${
+                            fullCoursePrice - (state.user?.credits || 0)
+                          } créditos a mais para o curso completo.`
+                        : ""}
+                    </p>
+                    <Button variant="secondary" size="small" fullWidth>
+                      Ganhar Créditos Ensinando
+                    </Button>
+                  </div>
+                )}
+              </>
+                )}
+              </Card>
+        )}
 
         {/* Course Content */}
         <div className="course-details__content">
@@ -405,17 +715,28 @@ const CourseDetails = () => {
             <div className="course-details__instructor-content">
               <div className="course-details__instructor-avatar">
                 <img 
-                  src={courseData.instructor.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(courseData.instructor.name)}&background=52357B&color=fff&size=80`}
+                  src={
+                    courseData.instructor.avatar ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      courseData.instructor.name
+                    )}&background=52357B&color=fff&size=80`
+                  }
                   alt={courseData.instructor.name}
                   onError={(e) => {
-                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(courseData.instructor.name)}&background=52357B&color=fff&size=80`;
+                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      courseData.instructor.name
+                    )}&background=52357B&color=fff&size=80`;
                   }}
                 />
               </div>
               <div className="course-details__instructor-info">
-                <h3 className="course-details__instructor-name">{courseData.instructor.name}</h3>
+                <h3 className="course-details__instructor-name">
+                  {courseData.instructor.name}
+                </h3>
                 {courseData.instructor.bio && (
-                  <p className="course-details__instructor-bio">{courseData.instructor.bio}</p>
+                  <p className="course-details__instructor-bio">
+                    {courseData.instructor.bio}
+                  </p>
                 )}
                 <div className="course-details__instructor-stats">
                   {courseData.instructor.rating > 0 && (
@@ -427,7 +748,10 @@ const CourseDetails = () => {
                   {courseData.instructor.totalStudents > 0 && (
                     <div className="course-details__instructor-stat">
                       <Users size={16} />
-                      <span>{courseData.instructor.totalStudents} aluno{courseData.instructor.totalStudents !== 1 ? 's' : ''}</span>
+                      <span>
+                        {courseData.instructor.totalStudents} aluno
+                        {courseData.instructor.totalStudents !== 1 ? "s" : ""}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -444,9 +768,14 @@ const CourseDetails = () => {
               </h2>
               <div className="course-details__curriculum-list">
                 {courseData.curriculum.map((module, index) => (
-                  <div key={module.id || module._id || index} className="course-details__module">
+                  <div
+                    key={module.id || module._id || index}
+                    className="course-details__module"
+                  >
                     <div className="course-details__module-header">
-                      <h3 className="course-details__module-title">{module.title || module.name}</h3>
+                      <h3 className="course-details__module-title">
+                        {module.title || module.name}
+                      </h3>
                       {module.duration && (
                         <div className="course-details__module-duration">
                           <Clock size={16} />
@@ -457,9 +786,16 @@ const CourseDetails = () => {
                     {module.lessons && module.lessons.length > 0 && (
                       <ul className="course-details__lesson-list">
                         {module.lessons.map((lesson, lessonIndex) => (
-                          <li key={lessonIndex} className="course-details__lesson">
+                          <li
+                            key={lessonIndex}
+                            className="course-details__lesson"
+                          >
                             <Play size={14} />
-                            <span>{typeof lesson === 'string' ? lesson : lesson.title || lesson.name}</span>
+                            <span>
+                              {typeof lesson === "string"
+                                ? lesson
+                                : lesson.title || lesson.name}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -470,25 +806,56 @@ const CourseDetails = () => {
             </Card>
           )}
 
-          {/* Schedule */}
-          {courseData.schedule && courseData.schedule.length > 0 && (
+          {/* Available Slots - Horários Disponíveis Reais */}
             <Card className="course-details__schedule" padding="large">
               <h2 className="course-details__section-title">
                 <Calendar size={24} />
                 Horários Disponíveis
               </h2>
-              <div className="course-details__schedule-list">
-                {courseData.schedule.map((slot, index) => (
-                  <div key={index} className="course-details__schedule-item">
-                    <div className="course-details__schedule-day">{slot.day || slot}</div>
-                    {slot.time && (
-                      <div className="course-details__schedule-time">{slot.time}</div>
-                    )}
-                  </div>
-                ))}
+            {loadingSlots ? (
+              <div style={{ textAlign: "center", padding: "2rem" }}>
+                <p>Carregando horários disponíveis...</p>
               </div>
+            ) : availableSlots.length > 0 ? (
+              <div className="course-details__schedule-list">
+                {availableSlots.map((slot, index) => {
+                  const slotDate = new Date(slot.start);
+                  return (
+                  <div key={index} className="course-details__schedule-item">
+                      <div className="course-details__schedule-day">
+                        {slotDate.toLocaleDateString("pt-BR", {
+                          weekday: "long",
+                          day: "2-digit",
+                          month: "long",
+                        })}
+                      </div>
+                      <div className="course-details__schedule-time">
+                        {slot.time} ({slot.duration}h)
+                      </div>
+                    </div>
+                  );
+                })}
+                  </div>
+            ) : (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "2rem",
+                  color: "var(--color-neutral-600)",
+                }}
+              >
+                <p>Nenhum horário disponível no momento.</p>
+                <p
+                  style={{
+                    fontSize: "var(--font-size-sm)",
+                    marginTop: "0.5rem",
+                  }}
+                >
+                  Entre em contato com o instrutor para mais informações.
+                </p>
+              </div>
+            )}
             </Card>
-          )}
 
           {/* Live Classes Info */}
           <Card className="course-details__live-info" padding="large">
@@ -525,16 +892,23 @@ const CourseDetails = () => {
           {courseData.features && courseData.features.length > 0 && (
             <Card className="course-details__features" padding="large">
               <h2 className="course-details__section-title">
-                <Trophy size={24} />
-                O que você vai receber
+                <Trophy size={24} />O que você vai receber
               </h2>
               <ul className="course-details__features-list">
-                {courseData.features.map((feature, index) => (
-                  <li key={index} className="course-details__feature">
-                    <div className="course-details__feature-icon">✓</div>
-                    <span>{feature}</span>
-                  </li>
-                ))}
+                {courseData.features.map((feature, index) => {
+                  const featureTitle = typeof feature === 'string' ? feature : feature.title || feature.name || '';
+                  const featureDescription = typeof feature === 'object' ? feature.description : null;
+                  const hasDescription = featureDescription && featureDescription.trim().length > 0;
+                  
+                  return (
+                    <FeatureItem 
+                      key={index} 
+                      title={featureTitle} 
+                      description={featureDescription}
+                      hasDescription={hasDescription}
+                    />
+                  );
+                })}
               </ul>
             </Card>
           )}
@@ -573,6 +947,38 @@ const CourseDetails = () => {
                 ))}
               </ul>
             </Card>
+          )}
+
+          {/* Reviews Section - Apenas se não for o dono do curso */}
+          {!(
+            courseData.instructor &&
+            ((courseData.instructor._id &&
+              courseData.instructor._id === state.user?._id) ||
+              (courseData.instructor.id &&
+                courseData.instructor.id === state.user?._id) ||
+              (typeof courseData.instructor === "string" &&
+                courseData.instructor === state.user?._id))
+          ) && (
+            <CourseReviews
+              courseId={courseData._id || courseData.id}
+              onReviewSubmit={async (review) => {
+                // Atualizar dados do curso após nova avaliação
+                if (!courseId) return;
+                try {
+                  const result = await getCourseById(courseId);
+                  if (result.success && result.course) {
+                    const course = result.course;
+                    setCourseData((prev) => ({
+                      ...prev,
+                      rating: course.rating || prev.rating,
+                      totalRatings: course.totalRatings || prev.totalRatings,
+                    }));
+                  }
+                } catch (err) {
+                  console.error("Erro ao recarregar curso:", err);
+                }
+              }}
+            />
           )}
         </div>
       </div>

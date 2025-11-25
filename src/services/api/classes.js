@@ -7,6 +7,7 @@ const classService = {
   /**
    * POST /classes/schedule
    * Agendar nova aula
+   * ⚠️ ROTA CORRETA: POST /api/classes/schedule (conforme backend)
    */
   scheduleClass: async (scheduleData) => {
     try {
@@ -24,6 +25,7 @@ const classService = {
   /**
    * GET /classes/scheduled
    * Listar aulas agendadas do usuário
+   * ⚠️ ROTA CORRETA: GET /api/classes/scheduled (conforme backend)
    */
   getScheduledClasses: async (params = {}) => {
     try {
@@ -92,6 +94,7 @@ const classService = {
   /**
    * DELETE /classes/:id/cancel
    * Cancelar aula
+   * ⚠️ ROTA CORRETA: DELETE /api/classes/:id/cancel (conforme backend)
    */
   cancelClass: async (classId, reason = null) => {
     try {
@@ -101,8 +104,8 @@ const classService = {
       return {
         success: true,
         message: data.message,
-        refunded: data.data.refunded,
-        creditsRefunded: data.data.creditsRefunded,
+        refunded: data.data.refunded || data.data.refundAmount > 0,
+        creditsRefunded: data.data.refundAmount || data.data.creditsRefunded,
       };
     } catch (error) {
       throw new Error(getErrorMessage(error));
@@ -166,15 +169,20 @@ const classService = {
   },
 
   /**
-   * GET /classes/:id/join
-   * Obter link para entrar na aula
+   * GET /classes/:id/access
+   * Obter link de acesso à sala virtual (Jitsi)
+   * ⚠️ Campos corretos: jitsiLink, isInstructor, isStudent (não accessUrl, role)
    */
-  getJoinLink: async (classId) => {
+  getClassAccess: async (classId) => {
     try {
-      const { data } = await apiClient.get(`/classes/${classId}/join`);
+      const { data } = await apiClient.get(`/classes/${classId}/access`);
       return {
         success: true,
-        ...data.data,
+        roomName: data.data.roomName,
+        jitsiLink: data.data.jitsiLink,  // ⚠️ Campo correto
+        isInstructor: data.data.isInstructor,  // ⚠️ Campo correto
+        isStudent: data.data.isStudent,  // ⚠️ Campo correto
+        classDetails: data.data.classDetails,  // ⚠️ Campo correto
       };
     } catch (error) {
       throw new Error(getErrorMessage(error));
@@ -182,18 +190,18 @@ const classService = {
   },
 
   /**
-   * GET /courses/:id/availability
-   * Verificar disponibilidade de horários
+   * GET /classes/course/:courseId/availability
+   * Verificar disponibilidade de horários do curso
+   * Conforme documentação: GET /classes/course/:courseId/availability?startDate=2025-11-26&endDate=2025-11-30
    */
-  getAvailability: async (courseId, startDate, endDate) => {
+  getCourseAvailability: async (courseId, startDate, endDate) => {
     try {
-      const { data } = await apiClient.get(`/courses/${courseId}/availability`, {
+      const { data } = await apiClient.get(`/classes/course/${courseId}/availability`, {
         params: { startDate, endDate },
       });
       return {
         success: true,
-        availability: data.data.availability,
-        instructorSchedule: data.data.instructorSchedule,
+        availability: data.data,
       };
     } catch (error) {
       throw new Error(getErrorMessage(error));

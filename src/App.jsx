@@ -15,6 +15,7 @@ import {
   ForgotPassword,
   ResetPassword,
   Terms,
+  AvailabilitySettings,
 } from "./components/pages";
 import { AddCourseModal, EditCourseModal } from "./components/organisms";
 import { SvgColorBlindFilters } from "./components/molecules";
@@ -113,6 +114,8 @@ const AppContent = () => {
         return <ResetPassword />;
       case "terms":
         return <Terms />;
+      case "availability-settings":
+        return <AvailabilitySettings />;
       default:
         return <Dashboard />;
     }

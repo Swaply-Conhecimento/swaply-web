@@ -1,0 +1,24 @@
+/* Join Class Button Styles */
+.join-class-button {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  align-items: flex-start;
+}
+
+.join-class-button__error {
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+  margin-top: var(--spacing-1);
+}
+
+[data-theme="dark"] .join-class-button__error {
+  color: #EF4444 !important;
+}
+
+/* Dark Theme - Ícones */
+[data-theme="dark"] .join-class-button svg {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+

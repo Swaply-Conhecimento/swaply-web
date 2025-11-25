@@ -159,7 +159,9 @@ const MyCourses = ({ initialTab = 'completed' }) => {
             <p className="my-courses__course-category">{course.category}</p>
             <p className="my-courses__course-instructor">
               <User size={16} />
-              {course.instructor}
+              {typeof course.instructor === 'object' && course.instructor !== null 
+                ? (course.instructor.name || course.instructor.username || 'Instrutor')
+                : course.instructor || 'Instrutor'}
             </p>
 
             <div className="my-courses__course-stats">

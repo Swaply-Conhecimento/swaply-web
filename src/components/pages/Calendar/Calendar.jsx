@@ -11,6 +11,8 @@ import {
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts';
 import { useScheduling } from '../../../hooks/useScheduling';
+import { useClasses } from '../../../hooks';
+import JoinClassButton from '../../molecules/JoinClassButton';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../molecules/Card';
 import Button from '../../atoms/Button';
@@ -20,15 +22,41 @@ import './Calendar.css';
 const Calendar = () => {
   const { state } = useApp();
   const { getUserCalendar, loading } = useScheduling();
+  const { getUpcomingClasses } = useClasses();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState('student'); // 'student' ou 'instructor'
   const [selectedDate, setSelectedDate] = useState(null);
   const [calendarData, setCalendarData] = useState(null);
+  const [upcomingClassesList, setUpcomingClassesList] = useState([]);
+  const [loadingUpcoming, setLoadingUpcoming] = useState(false);
 
   // Carregar dados do calendário ao mudar o mês
   useEffect(() => {
     loadCalendarData();
   }, [currentDate]);
+
+  const loadUpcomingClasses = async () => {
+    setLoadingUpcoming(true);
+    try {
+      const result = await getUpcomingClasses(5);
+      if (result.success) {
+        setUpcomingClassesList(result.classes || []);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar próximas aulas:', err);
+      setUpcomingClassesList([]);
+    } finally {
+      setLoadingUpcoming(false);
+    }
+  };
+
+  // Carregar próximas aulas
+  useEffect(() => {
+    if (viewMode === 'instructor' || viewMode === 'student') {
+      loadUpcomingClasses();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode]);
 
   const loadCalendarData = async () => {
     try {
@@ -53,7 +81,9 @@ const Calendar = () => {
   };
 
   // Usar dados reais do calendário ou aulas do contexto como fallback
-  const upcomingClasses = calendarData?.events || state.scheduledClasses || [];
+  const upcomingClasses = upcomingClassesList.length > 0 
+    ? upcomingClassesList 
+    : (calendarData?.events || state.scheduledClasses || []);
 
   // Horários disponíveis serão carregados da API quando necessário
   const availableSlots = [];
@@ -251,31 +281,34 @@ const Calendar = () => {
               <div className="calendar-page__upcoming-list">
                 {upcomingClasses.length > 0 ? (
                   upcomingClasses.slice(0, 5).map((cls, index) => {
-                    const eventDate = new Date(cls.date);
+                    const eventDate = cls.date ? new Date(cls.date) : null;
+                    const courseTitle = cls.courseId?.title || cls.course?.title || cls.courseTitle || cls.title || 'Aula';
+                    const instructorName = cls.instructorId?.name || cls.instructor?.name || cls.instructorName || '';
+                    const studentName = cls.studentId?.name || cls.student?.name || cls.studentName || '';
+                    
                     return (
-                      <div key={cls.id || index} className="calendar-page__upcoming-item">
+                      <div key={cls._id || cls.id || index} className="calendar-page__upcoming-item">
                         <div className="calendar-page__upcoming-info">
-                          {cls.course && (
-                            <div className="calendar-page__upcoming-course">{cls.course}</div>
-                          )}
+                          <div className="calendar-page__upcoming-course">{courseTitle}</div>
                           <div className="calendar-page__upcoming-meta">
-                            {viewMode === 'student' && cls.instructor && (
-                              <span>Prof. {cls.instructor}</span>
+                            {viewMode === 'student' && instructorName && (
+                              <span>Prof. {instructorName}</span>
                             )}
-                            {viewMode === 'instructor' && cls.student && (
-                              <span>Aluno: {cls.student}</span>
+                            {viewMode === 'instructor' && studentName && (
+                              <span>Aluno: {studentName}</span>
                             )}
                           </div>
                           <div className="calendar-page__upcoming-time">
-                            {eventDate.toLocaleDateString('pt-BR')} {cls.time && `às ${cls.time}`}
+                            {eventDate ? eventDate.toLocaleDateString('pt-BR') : 'Data não definida'}
+                            {cls.time && ` às ${cls.time}`}
                           </div>
-                          {cls.zoomLink && (
-                            <button 
-                              className="calendar-page__zoom-btn"
-                              onClick={() => window.open(cls.zoomLink, '_blank')}
-                            >
-                              🎥 Entrar na Aula
-                            </button>
+                          {cls._id && (
+                            <div className="calendar-page__upcoming-actions">
+                              <JoinClassButton 
+                                classId={cls._id}
+                                disabled={!cls.canJoin}
+                              />
+                            </div>
                           )}
                         </div>
                       </div>
@@ -312,7 +345,9 @@ const Calendar = () => {
                     {selectedClass.instructor && (
                       <div className="calendar-page__summary-row">
                         <span>Instrutor:</span>
-                        <span>{selectedClass.instructor}</span>
+                        <span>{typeof selectedClass.instructor === 'object' && selectedClass.instructor !== null 
+                          ? (selectedClass.instructor.name || selectedClass.instructor.username || 'Instrutor')
+                          : selectedClass.instructor}</span>
                       </div>
                     )}
                     {selectedClass.student && (
@@ -335,6 +370,14 @@ const Calendar = () => {
                       <div className="calendar-page__summary-row">
                         <span>Duração:</span>
                         <span>{selectedClass.duration}h</span>
+                      </div>
+                    )}
+                    {selectedClass._id && (
+                      <div className="calendar-page__summary-actions">
+                        <JoinClassButton 
+                          classId={selectedClass._id}
+                          disabled={!selectedClass.canJoin}
+                        />
                       </div>
                     )}
                   </div>

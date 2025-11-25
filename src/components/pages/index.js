@@ -12,3 +12,4 @@ export { default as Notifications } from './Notifications';
 export { default as ForgotPassword } from './ForgotPassword';
 export { default as ResetPassword } from './ResetPassword';
 export { default as Terms } from './Terms';
+export { default as AvailabilitySettings } from './AvailabilitySettings';

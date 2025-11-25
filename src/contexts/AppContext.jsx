@@ -9,48 +9,48 @@ const getInitialState = () => {
   return {
     // Autenticação - restaurar do localStorage
     isAuthenticated: !!token,
-    isLoading: true,
+  isLoading: true,
     token: token,
     refreshToken: refreshToken,
 
-    // Usuário
-    currentPage: 'dashboard',
-    user: null,
+  // Usuário
+  currentPage: 'dashboard',
+  user: null,
 
-    // Settings
-    settings: {
-      theme: 'light',
-      fontSize: 'medium',
-      accessibility: {
-        fontSizeControl: true,
-        screenReader: false,
-        vlibras: true,
-        highContrast: false,
-      },
-      notifications: {
-        classNotifications: true,
-        interestNotifications: true,
-        newCoursesNotifications: true
-      }
+  // Settings
+  settings: {
+    theme: 'light',
+    fontSize: 'medium',
+    accessibility: {
+      fontSizeControl: true,
+      screenReader: false,
+      vlibras: true,
+      highContrast: false,
     },
+    notifications: {
+      classNotifications: true,
+      interestNotifications: true,
+      newCoursesNotifications: true
+    }
+  },
 
-    // Modals
-    modals: {
-      editProfile: false,
-      addCourse: false,
+  // Modals
+  modals: {
+    editProfile: false,
+    addCourse: false,
       editCourse: false,
-      courseDetails: false,
-      confirmDelete: false
-    },
+    courseDetails: false,
+    confirmDelete: false
+  },
 
-    // UI State
-    selectedCourse: null,
-    sidebarOpen: true,
-    scheduledClasses: [],
-    notifications: [],
-    unreadNotificationsCount: 0,
-    toasts: [],
-  };
+  // UI State
+  selectedCourse: null,
+  sidebarOpen: true,
+  scheduledClasses: [],
+  notifications: [],
+  unreadNotificationsCount: 0,
+  toasts: [],
+};
 };
 
 // Initial State - carregar do localStorage
@@ -456,18 +456,18 @@ export const AppProvider = ({ children }) => {
         
         if (isUnauthorized) {
           console.log('🔒 Token inválido, removendo do localStorage');
-          localStorage.removeItem('token');
-          localStorage.removeItem('refreshToken');
-          if (isMounted) {
-            dispatch({ type: actionTypes.SET_LOADING, payload: false });
-            dispatch({
-              type: actionTypes.SET_AUTH,
-              payload: {
-                isAuthenticated: false,
-                token: null,
-                refreshToken: null,
-              },
-            });
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        if (isMounted) {
+          dispatch({ type: actionTypes.SET_LOADING, payload: false });
+          dispatch({
+            type: actionTypes.SET_AUTH,
+            payload: {
+              isAuthenticated: false,
+              token: null,
+              refreshToken: null,
+            },
+          });
           }
         } else {
           // Para outros erros (rede, timeout, etc), manter o token mas marcar como não autenticado temporariamente

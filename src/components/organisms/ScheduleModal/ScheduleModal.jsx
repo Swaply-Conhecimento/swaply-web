@@ -12,6 +12,8 @@ import {
   Check
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts';
+import { useScheduling } from '../../../hooks/useScheduling';
+import { useAvailability } from '../../../hooks';
 import Modal from '../../atoms/Modal';
 import Button from '../../atoms/Button';
 import Card from '../../molecules/Card';
@@ -19,10 +21,15 @@ import './ScheduleModal.css';
 
 const ScheduleModal = ({ isOpen, onClose, course }) => {
   const { state, actions } = useApp();
+  const { scheduleClass, loading } = useScheduling();
+  const { getCourseAvailabilitySlots, getAvailableSlots } = useAvailability();
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [step, setStep] = useState(1); // 1: Selecionar Data, 2: Selecionar Horário, 3: Confirmação
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
+  const [monthSlots, setMonthSlots] = useState({}); // Slots agrupados por data do mês atual
 
   // Resetar estado quando modal abre
   useEffect(() => {
@@ -31,15 +38,148 @@ const ScheduleModal = ({ isOpen, onClose, course }) => {
       setSelectedTime(null);
       setStep(1);
       setCurrentMonth(new Date());
+      setAvailableSlots([]);
+      setMonthSlots({});
     }
   }, [isOpen]);
 
-  // Dados de horários disponíveis (simulados)
-  const availableTimes = [
-    '08:00', '09:00', '10:00', '11:00', 
-    '14:00', '15:00', '16:00', '17:00', 
-    '19:00', '20:00', '21:00'
-  ];
+  // Carregar disponibilidade do mês quando o mês muda ou o curso muda
+  useEffect(() => {
+    if (isOpen && course && currentMonth) {
+      loadMonthAvailability();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMonth, course, isOpen]);
+
+  // Carregar disponibilidade quando uma data é selecionada
+  useEffect(() => {
+    if (selectedDate && course) {
+      loadAvailability();
+    }
+  }, [selectedDate, course]);
+
+  // Carregar disponibilidade do mês inteiro
+  const loadMonthAvailability = async () => {
+    if (!course || !currentMonth) return;
+
+    try {
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      
+      const startDate = firstDay.toISOString().split('T')[0];
+      const endDate = lastDay.toISOString().split('T')[0];
+
+      // Tentar primeiro com a rota pública (recomendada para estudantes)
+      // Se o curso tiver instructorId, usar getAvailableSlots
+      const instructorId = course.instructor?._id || course.instructor?.id || course.instructorId;
+      
+      let result;
+      if (instructorId) {
+        // Usar rota pública GET /api/availability/slots (recomendada)
+        result = await getAvailableSlots({
+          instructorId: instructorId,
+          courseId: course._id || course.id,
+          startDate,
+          endDate
+        });
+      } else {
+        // Fallback: usar rota específica do curso
+        result = await getCourseAvailabilitySlots(
+          course._id || course.id,
+          startDate,
+          endDate
+        );
+      }
+
+      if (result.success && result.slots) {
+        // Agrupar slots por data
+        const slotsByDate = {};
+        result.slots.forEach(slot => {
+          const dateStr = slot.date;
+          if (!slotsByDate[dateStr]) {
+            slotsByDate[dateStr] = [];
+          }
+          slotsByDate[dateStr].push(slot);
+        });
+        
+        setMonthSlots(slotsByDate);
+      } else {
+        setMonthSlots({});
+      }
+    } catch (err) {
+      console.error('Erro ao carregar disponibilidade do mês:', err);
+      setMonthSlots({});
+    }
+  };
+
+  const loadAvailability = async () => {
+    if (!course || !selectedDate) return;
+
+    setLoadingAvailability(true);
+    try {
+      const selectedDateStr = selectedDate.toISOString().split('T')[0];
+      
+      // Usar os slots já carregados do mês, se disponíveis
+      if (monthSlots[selectedDateStr]) {
+        const times = monthSlots[selectedDateStr]
+          .map(slot => slot.time)
+          .filter((time, index, self) => self.indexOf(time) === index) // Remover duplicatas
+          .sort();
+        
+        setAvailableSlots(times);
+        setLoadingAvailability(false);
+        return;
+      }
+
+      // Se não estiver no cache, buscar apenas para esta data
+      const startDate = new Date(selectedDate);
+      startDate.setHours(0, 0, 0, 0);
+      
+      const endDate = new Date(selectedDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      // Tentar primeiro com a rota pública (recomendada para estudantes)
+      const instructorId = course.instructor?._id || course.instructor?.id || course.instructorId;
+      
+      let result;
+      if (instructorId) {
+        // Usar rota pública GET /api/availability/slots (recomendada)
+        result = await getAvailableSlots({
+          instructorId: instructorId,
+          courseId: course._id || course.id,
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0]
+        });
+      } else {
+        // Fallback: usar rota específica do curso
+        result = await getCourseAvailabilitySlots(
+          course._id || course.id,
+          startDate.toISOString().split('T')[0],
+          endDate.toISOString().split('T')[0]
+        );
+      }
+
+      if (result.success && result.slots) {
+        // Filtrar slots para a data selecionada e extrair horários
+        const slotsForDate = result.slots.filter(slot => slot.date === selectedDateStr);
+        const times = slotsForDate
+          .map(slot => slot.time)
+          .filter((time, index, self) => self.indexOf(time) === index) // Remover duplicatas
+          .sort();
+        
+        setAvailableSlots(times);
+      } else {
+        setAvailableSlots([]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar disponibilidade:', err);
+      setAvailableSlots([]);
+    } finally {
+      setLoadingAvailability(false);
+    }
+  };
 
   // Gerar dias do calendário
   const generateCalendarDays = () => {
@@ -63,9 +203,9 @@ const ScheduleModal = ({ isOpen, onClose, course }) => {
       const isToday = date.getTime() === today.getTime();
       const isSelected = selectedDate && date.getTime() === selectedDate.getTime();
       
-      // Simular alguns dias com horários disponíveis
-      const hasAvailableSlots = isCurrentMonth && !isPast && 
-        (date.getDay() !== 0 && date.getDay() !== 6); // Não domingos e sábados
+      // Verificar se há slots disponíveis reais para esta data
+      const dateStr = date.toISOString().split('T')[0];
+      const hasAvailableSlots = isCurrentMonth && !isPast && monthSlots[dateStr] && monthSlots[dateStr].length > 0;
 
       days.push({
         date,
@@ -102,33 +242,49 @@ const ScheduleModal = ({ isOpen, onClose, course }) => {
     setStep(3);
   };
 
-  const handleConfirmSchedule = () => {
+  const handleConfirmSchedule = async () => {
     if (!selectedDate || !selectedTime || !course) return;
 
-    // Simular agendamento
-    const scheduledClass = {
-      id: Date.now(),
-      courseId: course.id,
-      courseTitle: course.title,
-      instructor: course.instructor,
-      date: selectedDate,
-      time: selectedTime,
-      duration: 1, // 1 hora
-      zoomLink: `https://zoom.us/j/${Math.random().toString().substr(2, 9)}`,
-      status: 'scheduled'
-    };
+    try {
+      // Formatar data para o formato esperado pela API (YYYY-MM-DD)
+      const formattedDate = selectedDate.toISOString().split('T')[0];
 
-    // Deduzir crédito
-    actions.updateCredits(-1);
+      // Chamar API real para agendar aula
+      const result = await scheduleClass({
+        courseId: course._id || course.id,
+        date: formattedDate,
+        time: selectedTime,
+        duration: 1,
+      });
 
-    // Adicionar à agenda
-    actions.addScheduledClass(scheduledClass);
-
-    // Fechar modal
-    onClose();
-    
-    // Opcional: Mostrar notificação de sucesso
-    alert(`Aula agendada com sucesso!\nData: ${selectedDate.toLocaleDateString('pt-BR')}\nHorário: ${selectedTime}\nLink do Zoom será enviado por email.`);
+      if (result.success) {
+        // Adicionar aula agendada ao estado
+        actions.addScheduledClass(result.class || result.data);
+        
+        // Recarregar perfil do usuário para atualizar créditos
+        await actions.refreshUser();
+        
+        // Fechar modal
+        onClose();
+        
+        // Mostrar notificação de sucesso
+        actions.showNotification({
+          type: 'success',
+          message: `Aula agendada com sucesso! Data: ${selectedDate.toLocaleDateString('pt-BR')} às ${selectedTime}`
+        });
+      } else {
+        actions.showNotification({
+          type: 'error',
+          message: result.error || 'Erro ao agendar aula'
+        });
+      }
+    } catch (err) {
+      console.error('Erro ao agendar aula:', err);
+      actions.showNotification({
+        type: 'error',
+        message: err.message || 'Erro ao agendar aula. Tente novamente.'
+      });
+    }
   };
 
   const handleBackStep = () => {
@@ -238,18 +394,31 @@ const ScheduleModal = ({ isOpen, onClose, course }) => {
       <h3 className="schedule-modal__time-title">Selecione o horário:</h3>
       
       <div className="schedule-modal__time-grid">
-        {availableTimes.map((time) => (
-          <button
-            key={time}
-            className={`schedule-modal__time-slot ${
-              selectedTime === time ? 'schedule-modal__time-slot--selected' : ''
-            }`}
-            onClick={() => handleTimeSelect(time)}
-          >
-            <Clock size={16} />
-            {time}
-          </button>
-        ))}
+        {loadingAvailability ? (
+          <div className="schedule-modal__loading">
+            <p>Carregando horários disponíveis...</p>
+          </div>
+        ) : availableSlots.length === 0 ? (
+          <div className="schedule-modal__no-slots">
+            <p>Nenhum horário disponível para esta data.</p>
+            <Button variant="outline" onClick={() => setStep(1)}>
+              Escolher outra data
+            </Button>
+          </div>
+        ) : (
+          availableSlots.map((time) => (
+            <button
+              key={time}
+              className={`schedule-modal__time-slot ${
+                selectedTime === time ? 'schedule-modal__time-slot--selected' : ''
+              }`}
+              onClick={() => handleTimeSelect(time)}
+            >
+              <Clock size={16} />
+              {time}
+            </button>
+          ))
+        )}
       </div>
     </div>
   );

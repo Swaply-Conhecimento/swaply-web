@@ -12,6 +12,10 @@ export { useReviews } from './useReviews';
 export { useTheme } from './useTheme';
 export { useAccessibility } from './useAccessibility';
 export { useScheduling } from './useScheduling';
+export { default as useClasses } from './useClasses';
+export { default as useCredits } from './useCredits';
+export { default as useAvailability } from './useAvailability';
+export { default as useEnrollments } from './useEnrollments';
 
 
 
