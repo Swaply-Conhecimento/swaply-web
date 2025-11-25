@@ -119,11 +119,11 @@ export const useCourses = () => {
   }, []);
 
   // Criar curso
-  const createCourse = useCallback(async (courseData) => {
+  const createCourse = useCallback(async (courseData, imageFile = null) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await courseService.createCourse(courseData);
+      const result = await courseService.createCourse(courseData, imageFile);
       return result;
     } catch (err) {
       setError(err.message);
@@ -169,6 +169,21 @@ export const useCourses = () => {
     setError(null);
     try {
       const result = await courseService.uploadCourseImage(courseId, file);
+      return result;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Deletar imagem
+  const deleteCourseImage = useCallback(async (courseId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await courseService.deleteCourseImage(courseId);
       return result;
     } catch (err) {
       setError(err.message);
@@ -260,6 +275,7 @@ export const useCourses = () => {
     updateCourse,
     deleteCourse,
     uploadCourseImage,
+    deleteCourseImage,
     enrollInCourse,
     unenrollFromCourse,
     getCourseReviews,

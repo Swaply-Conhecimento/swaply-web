@@ -12,7 +12,6 @@ import {
 import { useApp } from '../../../contexts';
 import { useScheduling } from '../../../hooks/useScheduling';
 import { useClasses } from '../../../hooks';
-import JoinClassButton from '../../molecules/JoinClassButton';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../molecules/Card';
 import Button from '../../atoms/Button';
@@ -30,10 +29,11 @@ const Calendar = () => {
   const [upcomingClassesList, setUpcomingClassesList] = useState([]);
   const [loadingUpcoming, setLoadingUpcoming] = useState(false);
 
-  // Carregar dados do calendário ao mudar o mês
+  // Carregar dados do calendário ao mudar o mês ou viewMode
   useEffect(() => {
     loadCalendarData();
-  }, [currentDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate, viewMode, state.user?._id]);
 
   const loadUpcomingClasses = async () => {
     setLoadingUpcoming(true);
@@ -64,16 +64,48 @@ const Calendar = () => {
       const year = currentDate.getFullYear();
       
       const result = await getUserCalendar(month, year, 'month');
-      setCalendarData(result);
+      
+      // Filtrar aulas baseado no viewMode (aluno vs instrutor)
+      if (result && result.events && state.user?._id) {
+        const filteredEvents = result.events.filter(event => {
+          if (viewMode === 'instructor') {
+            // Mostrar apenas aulas onde o usuário é o instrutor
+            const instructorId = event.instructorId?._id || event.instructorId || event.instructor?._id || event.instructor;
+            return instructorId === state.user._id || instructorId === state.user.id;
+          } else {
+            // Mostrar apenas aulas onde o usuário é o aluno
+            const studentId = event.studentId?._id || event.studentId || event.student?._id || event.student;
+            return studentId === state.user._id || studentId === state.user.id;
+          }
+        });
+        
+        setCalendarData({
+          ...result,
+          events: filteredEvents
+        });
+      } else {
+        setCalendarData(result);
+      }
     } catch (err) {
       console.error('Erro ao carregar calendário:', err);
       // Se houver erro, usar aulas do contexto como fallback
+      const fallbackEvents = (state.scheduledClasses || []).filter(event => {
+        if (!state.user?._id) return true;
+        if (viewMode === 'instructor') {
+          const instructorId = event.instructorId?._id || event.instructorId || event.instructor?._id || event.instructor;
+          return instructorId === state.user._id || instructorId === state.user.id;
+        } else {
+          const studentId = event.studentId?._id || event.studentId || event.student?._id || event.student;
+          return studentId === state.user._id || studentId === state.user.id;
+        }
+      });
+      
       setCalendarData({
-        events: state.scheduledClasses || [],
+        events: fallbackEvents,
         summary: {
-          totalClasses: state.scheduledClasses?.length || 0,
+          totalClasses: fallbackEvents.length,
           completedClasses: 0,
-          upcomingClasses: state.scheduledClasses?.length || 0,
+          upcomingClasses: fallbackEvents.length,
           cancelledClasses: 0
         }
       });
@@ -81,9 +113,23 @@ const Calendar = () => {
   };
 
   // Usar dados reais do calendário ou aulas do contexto como fallback
-  const upcomingClasses = upcomingClassesList.length > 0 
+  // Filtrar baseado no viewMode
+  const allUpcomingClasses = upcomingClassesList.length > 0 
     ? upcomingClassesList 
     : (calendarData?.events || state.scheduledClasses || []);
+  
+  // Filtrar aulas baseado no viewMode
+  const upcomingClasses = allUpcomingClasses.filter(cls => {
+    if (!state.user?._id) return true;
+    
+    if (viewMode === 'instructor') {
+      const instructorId = cls.instructorId?._id || cls.instructorId || cls.instructor?._id || cls.instructor;
+      return instructorId === state.user._id || instructorId === state.user.id;
+    } else {
+      const studentId = cls.studentId?._id || cls.studentId || cls.student?._id || cls.student;
+      return studentId === state.user._id || studentId === state.user.id;
+    }
+  });
 
   // Horários disponíveis serão carregados da API quando necessário
   const availableSlots = [];
@@ -106,22 +152,32 @@ const Calendar = () => {
   };
 
   const handleDateClick = (day) => {
-    // Só seleciona se houver aula agendada nesse dia
-    if (hasClassOnDate(day)) {
+    const classes = getClassesForDate(day);
+    // Seleciona o dia se houver aulas, ou deseleciona se já estava selecionado
+    if (classes.length > 0) {
       setSelectedDate(day);
-    } else {
+    } else if (selectedDate === day) {
       setSelectedDate(null);
     }
   };
 
   const getClassesForDate = (day) => {
-    if (!calendarData?.events) return [];
+    if (!calendarData?.events || !Array.isArray(calendarData.events)) return [];
     
     return calendarData.events.filter(event => {
+      if (!event.date) return false;
+      
+      // Normalizar a data do evento
       const eventDate = new Date(event.date);
-      return eventDate.getDate() === day && 
-             eventDate.getMonth() === currentDate.getMonth() &&
-             eventDate.getFullYear() === currentDate.getFullYear();
+      if (isNaN(eventDate.getTime())) return false;
+      
+      // Criar data de referência para o dia selecionado
+      const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      
+      // Comparar apenas dia, mês e ano (ignorar hora)
+      return eventDate.getDate() === targetDate.getDate() && 
+             eventDate.getMonth() === targetDate.getMonth() &&
+             eventDate.getFullYear() === targetDate.getFullYear();
     });
   };
 
@@ -302,14 +358,6 @@ const Calendar = () => {
                             {eventDate ? eventDate.toLocaleDateString('pt-BR') : 'Data não definida'}
                             {cls.time && ` às ${cls.time}`}
                           </div>
-                          {cls._id && (
-                            <div className="calendar-page__upcoming-actions">
-                              <JoinClassButton 
-                                classId={cls._id}
-                                disabled={!cls.canJoin}
-                              />
-                            </div>
-                          )}
                         </div>
                       </div>
                     );
@@ -327,59 +375,57 @@ const Calendar = () => {
               const classes = getClassesForDate(selectedDate);
               if (classes.length === 0) return null;
               
-              const selectedClass = classes[0]; // Pega o primeiro agendamento do dia
-              const eventDate = new Date(selectedClass.date);
-              
               return (
                 <Card className="calendar-page__summary-card" padding="medium">
                   <h3 className="calendar-page__card-title">
-                    Resumo do Agendamento
+                    Aulas do Dia {selectedDate}
                   </h3>
                   <div className="calendar-page__summary-content">
-                    {selectedClass.course && (
-                      <div className="calendar-page__summary-row">
-                        <span>Curso:</span>
-                        <span>{selectedClass.course}</span>
-                      </div>
-                    )}
-                    {selectedClass.instructor && (
-                      <div className="calendar-page__summary-row">
-                        <span>Instrutor:</span>
-                        <span>{typeof selectedClass.instructor === 'object' && selectedClass.instructor !== null 
-                          ? (selectedClass.instructor.name || selectedClass.instructor.username || 'Instrutor')
-                          : selectedClass.instructor}</span>
-                      </div>
-                    )}
-                    {selectedClass.student && (
-                      <div className="calendar-page__summary-row">
-                        <span>Aluno:</span>
-                        <span>{selectedClass.student}</span>
-                      </div>
-                    )}
-                    <div className="calendar-page__summary-row">
-                      <span>Data:</span>
-                      <span>{eventDate.toLocaleDateString('pt-BR')}</span>
-                    </div>
-                    {selectedClass.time && (
-                      <div className="calendar-page__summary-row">
-                        <span>Horário:</span>
-                        <span>{selectedClass.time}</span>
-                      </div>
-                    )}
-                    {selectedClass.duration && (
-                      <div className="calendar-page__summary-row">
-                        <span>Duração:</span>
-                        <span>{selectedClass.duration}h</span>
-                      </div>
-                    )}
-                    {selectedClass._id && (
-                      <div className="calendar-page__summary-actions">
-                        <JoinClassButton 
-                          classId={selectedClass._id}
-                          disabled={!selectedClass.canJoin}
-                        />
-                      </div>
-                    )}
+                    {classes.map((selectedClass, index) => {
+                      const eventDate = selectedClass.date ? new Date(selectedClass.date) : null;
+                      const courseTitle = selectedClass.courseId?.title || selectedClass.course?.title || selectedClass.courseTitle || selectedClass.course || 'Aula';
+                      const instructorName = selectedClass.instructorId?.name || selectedClass.instructor?.name || selectedClass.instructorName || (typeof selectedClass.instructor === 'string' ? selectedClass.instructor : '');
+                      const studentName = selectedClass.studentId?.name || selectedClass.student?.name || selectedClass.studentName || (typeof selectedClass.student === 'string' ? selectedClass.student : '');
+                      
+                      return (
+                        <div key={selectedClass._id || selectedClass.id || index} className="calendar-page__summary-item" style={{ marginBottom: index < classes.length - 1 ? 'var(--spacing-4)' : 0, paddingBottom: index < classes.length - 1 ? 'var(--spacing-4)' : 0, borderBottom: index < classes.length - 1 ? '1px solid var(--color-neutral-200)' : 'none' }}>
+                          <div className="calendar-page__summary-row">
+                            <span>Curso:</span>
+                            <span>{courseTitle}</span>
+                          </div>
+                          {viewMode === 'student' && instructorName && (
+                            <div className="calendar-page__summary-row">
+                              <span>Instrutor:</span>
+                              <span>{instructorName}</span>
+                            </div>
+                          )}
+                          {viewMode === 'instructor' && studentName && (
+                            <div className="calendar-page__summary-row">
+                              <span>Aluno:</span>
+                              <span>{studentName}</span>
+                            </div>
+                          )}
+                          {eventDate && (
+                            <div className="calendar-page__summary-row">
+                              <span>Data:</span>
+                              <span>{eventDate.toLocaleDateString('pt-BR')}</span>
+                            </div>
+                          )}
+                          {selectedClass.time && (
+                            <div className="calendar-page__summary-row">
+                              <span>Horário:</span>
+                              <span>{selectedClass.time}</span>
+                            </div>
+                          )}
+                          {selectedClass.duration && (
+                            <div className="calendar-page__summary-row">
+                              <span>Duração:</span>
+                              <span>{selectedClass.duration}h</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </Card>
               );

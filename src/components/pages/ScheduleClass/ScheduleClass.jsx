@@ -1,29 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  ArrowLeft, 
-  Calendar, 
-  Clock, 
+import React, { useState, useEffect } from "react";
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
   User,
   VideoCamera,
   CaretLeft,
   CaretRight,
   Coins,
   Check,
-  BookOpen
-} from '@phosphor-icons/react';
-import { useApp } from '../../../contexts';
-import { useScheduling } from '../../../hooks/useScheduling';
-import { useAvailability, useEnrollments } from '../../../hooks';
-import DashboardTemplate from '../../templates/DashboardTemplate';
-import Card from '../../molecules/Card';
-import Button from '../../atoms/Button';
-import './ScheduleClass.css';
+  BookOpen,
+} from "@phosphor-icons/react";
+import { useApp } from "../../../contexts";
+import { useScheduling } from "../../../hooks/useScheduling";
+import { useAvailability, useEnrollments } from "../../../hooks";
+import DashboardTemplate from "../../templates/DashboardTemplate";
+import Card from "../../molecules/Card";
+import Button from "../../atoms/Button";
+import "./ScheduleClass.css";
 
 const ScheduleClass = () => {
   const { state, actions } = useApp();
   const { scheduleClass, loading, error } = useScheduling();
   const { getCourseAvailabilitySlots, getAvailableSlots } = useAvailability();
-  const { checkEnrollmentStatus, enrollInSingleClass, loading: enrollmentLoading } = useEnrollments();
+  const {
+    checkEnrollmentStatus,
+    enrollInSingleClass,
+    loading: enrollmentLoading,
+  } = useEnrollments();
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -60,7 +64,7 @@ const ScheduleClass = () => {
           setEnrollmentStatus(result);
         }
       } catch (err) {
-        console.error('Erro ao verificar matrícula:', err);
+        console.error("Erro ao verificar matrícula:", err);
         setEnrollmentStatus({ enrolled: false });
       }
     };
@@ -75,32 +79,35 @@ const ScheduleClass = () => {
     try {
       const year = currentMonth.getFullYear();
       const month = currentMonth.getMonth();
-      
+
       // Buscar a partir de hoje (não do início do mês) até o final do próximo mês
       // Isso garante que slots com antecedência suficiente sejam incluídos
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const firstDay = new Date(year, month, 1);
       // Se o mês atual já começou, usar hoje como início
       const startDateObj = today > firstDay ? today : firstDay;
-      
+
       // Buscar até o final do próximo mês para garantir slots disponíveis
       const lastDay = new Date(year, month + 2, 0); // Final do próximo mês
-      
-      const startDate = startDateObj.toISOString().split('T')[0];
-      const endDate = lastDay.toISOString().split('T')[0];
+
+      const startDate = startDateObj.toISOString().split("T")[0];
+      const endDate = lastDay.toISOString().split("T")[0];
 
       // Tentar primeiro com a rota pública (recomendada para estudantes)
       // Se o curso tiver instructorId, usar getAvailableSlots
       // Verificar múltiplas formas de obter o instructorId
       // Prioridade: instructorObject > instructor (objeto) > instructorId direto
-      const instructorId = 
-        (course.instructorObject && (course.instructorObject._id || course.instructorObject.id)) ||
-        (typeof course.instructor === 'object' && course.instructor !== null && (course.instructor._id || course.instructor.id)) ||
+      const instructorId =
+        (course.instructorObject &&
+          (course.instructorObject._id || course.instructorObject.id)) ||
+        (typeof course.instructor === "object" &&
+          course.instructor !== null &&
+          (course.instructor._id || course.instructor.id)) ||
         course.instructorId;
-      
-      console.log('📅 ScheduleClass - Buscando slots:', {
+
+      console.log("📅 ScheduleClass - Buscando slots:", {
         instructorId,
         courseId: course._id || course.id,
         startDate,
@@ -108,9 +115,9 @@ const ScheduleClass = () => {
         courseInstructor: course.instructor,
         courseInstructorObject: course.instructorObject,
         courseInstructorId: course.instructorId,
-        courseKeys: Object.keys(course)
+        courseKeys: Object.keys(course),
       });
-      
+
       let result;
       if (instructorId) {
         // Usar rota pública GET /api/availability/slots (recomendada)
@@ -118,46 +125,66 @@ const ScheduleClass = () => {
           instructorId: instructorId,
           courseId: course._id || course.id,
           startDate,
-          endDate
+          endDate,
         });
-        console.log('📅 ScheduleClass - Resultado getAvailableSlots:', result);
-        console.log('📅 ScheduleClass - Número de slots retornados:', result.slots?.length || 0);
+        console.log("📅 ScheduleClass - Resultado getAvailableSlots:", result);
+        console.log(
+          "📅 ScheduleClass - Número de slots retornados:",
+          result.slots?.length || 0
+        );
       } else {
-        console.warn('📅 ScheduleClass - Nenhum instructorId encontrado, usando fallback');
+        console.warn(
+          "📅 ScheduleClass - Nenhum instructorId encontrado, usando fallback"
+        );
         // Fallback: usar rota específica do curso
         result = await getCourseAvailabilitySlots(
           course._id || course.id,
           startDate,
           endDate
         );
-        console.log('📅 ScheduleClass - Resultado getCourseAvailabilitySlots:', result);
+        console.log(
+          "📅 ScheduleClass - Resultado getCourseAvailabilitySlots:",
+          result
+        );
       }
 
       if (result.success && result.slots && result.slots.length > 0) {
         // Agrupar slots por data
         const slotsByDate = {};
-        result.slots.forEach(slot => {
+        result.slots.forEach((slot) => {
           const dateStr = slot.date;
           if (!slotsByDate[dateStr]) {
             slotsByDate[dateStr] = [];
           }
           slotsByDate[dateStr].push(slot);
         });
-        
-        console.log('📅 ScheduleClass - Slots agrupados por data:', slotsByDate);
-        console.log('📅 ScheduleClass - Total de datas com slots:', Object.keys(slotsByDate).length);
-        console.log('📅 ScheduleClass - Primeiras 5 datas com slots:', Object.keys(slotsByDate).slice(0, 5));
+
+        console.log(
+          "📅 ScheduleClass - Slots agrupados por data:",
+          slotsByDate
+        );
+        console.log(
+          "📅 ScheduleClass - Total de datas com slots:",
+          Object.keys(slotsByDate).length
+        );
+        console.log(
+          "📅 ScheduleClass - Primeiras 5 datas com slots:",
+          Object.keys(slotsByDate).slice(0, 5)
+        );
         setMonthSlots(slotsByDate);
       } else {
-        console.log('📅 ScheduleClass - Nenhum slot retornado ou resultado sem sucesso', {
-          success: result.success,
-          slotsCount: result.slots?.length || 0,
-          result: result
-        });
+        console.log(
+          "📅 ScheduleClass - Nenhum slot retornado ou resultado sem sucesso",
+          {
+            success: result.success,
+            slotsCount: result.slots?.length || 0,
+            result: result,
+          }
+        );
         setMonthSlots({});
       }
     } catch (err) {
-      console.error('Erro ao carregar disponibilidade do mês:', err);
+      console.error("Erro ao carregar disponibilidade do mês:", err);
       setMonthSlots({});
     }
   };
@@ -181,15 +208,15 @@ const ScheduleClass = () => {
 
     setLoadingAvailability(true);
     try {
-      const selectedDateStr = selectedDate.toISOString().split('T')[0];
-      
+      const selectedDateStr = selectedDate.toISOString().split("T")[0];
+
       // Usar os slots já carregados do mês, se disponíveis
       if (monthSlots[selectedDateStr]) {
         const times = monthSlots[selectedDateStr]
-          .map(slot => slot.time)
+          .map((slot) => slot.time)
           .filter((time, index, self) => self.indexOf(time) === index) // Remover duplicatas
           .sort();
-        
+
         setAvailableSlots(times);
         setLoadingAvailability(false);
         return;
@@ -198,51 +225,56 @@ const ScheduleClass = () => {
       // Se não estiver no cache, buscar apenas para esta data
       const startDate = new Date(selectedDate);
       startDate.setHours(0, 0, 0, 0);
-      
+
       const endDate = new Date(selectedDate);
       endDate.setHours(23, 59, 59, 999);
 
       // Tentar primeiro com a rota pública (recomendada para estudantes)
       // Verificar múltiplas formas de obter o instructorId
-      const instructorId = 
-        (course.instructorObject && (course.instructorObject._id || course.instructorObject.id)) ||
-        (typeof course.instructor === 'object' && course.instructor !== null && (course.instructor._id || course.instructor.id)) ||
+      const instructorId =
+        (course.instructorObject &&
+          (course.instructorObject._id || course.instructorObject.id)) ||
+        (typeof course.instructor === "object" &&
+          course.instructor !== null &&
+          (course.instructor._id || course.instructor.id)) ||
         course.instructorId;
-      
+
       let result;
       if (instructorId) {
         // Usar rota pública GET /api/availability/slots (recomendada)
         result = await getAvailableSlots({
           instructorId: instructorId,
           courseId: course._id || course.id,
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: endDate.toISOString().split('T')[0]
+          startDate: startDate.toISOString().split("T")[0],
+          endDate: endDate.toISOString().split("T")[0],
         });
       } else {
         // Fallback: usar rota específica do curso
         result = await getCourseAvailabilitySlots(
           course._id || course.id,
-          startDate.toISOString().split('T')[0],
-          endDate.toISOString().split('T')[0]
+          startDate.toISOString().split("T")[0],
+          endDate.toISOString().split("T")[0]
         );
       }
 
       if (result.success && result.slots) {
         setAvailability(result);
-        
+
         // Filtrar slots para a data selecionada e extrair horários
-        const slotsForDate = result.slots.filter(slot => slot.date === selectedDateStr);
+        const slotsForDate = result.slots.filter(
+          (slot) => slot.date === selectedDateStr
+        );
         const times = slotsForDate
-          .map(slot => slot.time)
+          .map((slot) => slot.time)
           .filter((time, index, self) => self.indexOf(time) === index) // Remover duplicatas
           .sort();
-        
+
         setAvailableSlots(times);
       } else {
         setAvailableSlots([]);
       }
     } catch (err) {
-      console.error('Erro ao carregar disponibilidade:', err);
+      console.error("Erro ao carregar disponibilidade:", err);
       setAvailableSlots([]);
     } finally {
       setLoadingAvailability(false);
@@ -265,27 +297,29 @@ const ScheduleClass = () => {
     for (let i = 0; i < 42; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
-      
+
       const isCurrentMonth = date.getMonth() === month;
       const isPast = date < today;
       const isToday = date.getTime() === today.getTime();
-      const isSelected = selectedDate && date.getTime() === selectedDate.getTime();
-      
+      const isSelected =
+        selectedDate && date.getTime() === selectedDate.getTime();
+
       // Verificar se há slots disponíveis reais para esta data
       // IMPORTANTE: Verificar slots independente do mês (pode haver slots em dezembro quando visualizando novembro)
-      const dateStr = date.toISOString().split('T')[0];
-      const hasAvailableSlots = !isPast && monthSlots[dateStr] && monthSlots[dateStr].length > 0;
-      
+      const dateStr = date.toISOString().split("T")[0];
+      const hasAvailableSlots =
+        !isPast && monthSlots[dateStr] && monthSlots[dateStr].length > 0;
+
       // Debug apenas para o primeiro dia do mês
       if (i === 0) {
-        console.log('📅 ScheduleClass - Debug primeiro dia:', {
+        console.log("📅 ScheduleClass - Debug primeiro dia:", {
           dateStr,
           isCurrentMonth,
           isPast,
           hasSlotsInMonth: !!monthSlots[dateStr],
           slotsCount: monthSlots[dateStr]?.length || 0,
           hasAvailableSlots,
-          monthSlotsKeys: Object.keys(monthSlots).slice(0, 5) // Primeiras 5 datas
+          monthSlotsKeys: Object.keys(monthSlots).slice(0, 5), // Primeiras 5 datas
         });
       }
 
@@ -296,7 +330,7 @@ const ScheduleClass = () => {
         isPast,
         isToday,
         isSelected,
-        hasAvailableSlots
+        hasAvailableSlots,
       });
     }
 
@@ -306,11 +340,15 @@ const ScheduleClass = () => {
   const calendarDays = generateCalendarDays();
 
   const handlePrevMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1)
+    );
   };
 
   const handleNextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1)
+    );
   };
 
   const handleDateSelect = (day) => {
@@ -329,13 +367,16 @@ const ScheduleClass = () => {
 
     try {
       // Formatar data para o formato esperado pela API (YYYY-MM-DD)
-      const formattedDate = selectedDate.toISOString().split('T')[0];
+      const formattedDate = selectedDate.toISOString().split("T")[0];
 
       let result;
       let message;
 
       // Verificar se está matriculado em curso completo
-      if (enrollmentStatus?.enrolled && enrollmentStatus.enrollmentType === 'full_course') {
+      if (
+        enrollmentStatus?.enrolled &&
+        enrollmentStatus.enrollmentType === "full_course"
+      ) {
         // Curso completo: usar POST /api/classes/schedule (sem cobrar)
         result = await scheduleClass({
           courseId: course._id || course.id,
@@ -347,11 +388,14 @@ const ScheduleClass = () => {
         if (result.success) {
           actions.addScheduledClass(result.class);
           await actions.refreshUser();
-          message = `Aula agendada com sucesso!\nData: ${selectedDate.toLocaleDateString('pt-BR')}\nHorário: ${selectedTime}\n\nSem custo adicional - você está matriculado no curso completo.`;
+          message = `Aula agendada com sucesso!\nData: ${selectedDate.toLocaleDateString(
+            "pt-BR"
+          )}\nHorário: ${selectedTime}\n\nSem custo adicional - você está matriculado no curso completo.`;
         }
       } else {
         // Aula avulsa: usar POST /api/enrollments/single-class (comprar e agendar)
         result = await enrollInSingleClass({
+          userId: state.user?._id || state.user?.id,
           courseId: course._id || course.id,
           date: formattedDate,
           time: selectedTime,
@@ -362,21 +406,29 @@ const ScheduleClass = () => {
           actions.addScheduledClass(result.scheduledClass);
           await actions.refreshUser();
           const price = course.pricing?.singleClass || course.price || 0;
-          message = `Aula avulsa comprada e agendada com sucesso!\nData: ${selectedDate.toLocaleDateString('pt-BR')}\nHorário: ${selectedTime}\n\n${price} créditos foram deduzidos da sua conta.`;
+          message = `Aula avulsa comprada e agendada com sucesso!\nData: ${selectedDate.toLocaleDateString(
+            "pt-BR"
+          )}\nHorário: ${selectedTime}\n\n${price} créditos foram deduzidos da sua conta.`;
         }
       }
 
       if (result.success) {
         // Voltar ao dashboard
-        actions.setCurrentPage('dashboard');
-        actions.showToast(message || 'Aula agendada com sucesso!', 'success');
+        actions.setCurrentPage("dashboard");
+        actions.showToast(message || "Aula agendada com sucesso!", "success");
       } else {
-        actions.showToast(result.error || 'Erro ao agendar aula. Tente novamente.', 'error');
+        actions.showToast(
+          result.error || "Erro ao agendar aula. Tente novamente.",
+          "error"
+        );
       }
     } catch (err) {
       // Tratar erro
-      console.error('Erro ao agendar aula:', err);
-      actions.showToast(err.message || 'Erro ao agendar aula. Tente novamente mais tarde.', 'error');
+      console.error("Erro ao agendar aula:", err);
+      actions.showToast(
+        err.message || "Erro ao agendar aula. Tente novamente mais tarde.",
+        "error"
+      );
     }
   };
 
@@ -390,30 +442,42 @@ const ScheduleClass = () => {
   };
 
   const handleGoBack = () => {
-    actions.setCurrentPage('course-details');
+    actions.setCurrentPage("course-details");
   };
 
   const formatSelectedDate = () => {
-    if (!selectedDate) return '';
-    return selectedDate.toLocaleDateString('pt-BR', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    if (!selectedDate) return "";
+    return selectedDate.toLocaleDateString("pt-BR", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const renderStepIndicator = () => (
     <div className="schedule-class__steps">
-      <div className={`schedule-class__step ${step >= 1 ? 'schedule-class__step--active' : ''}`}>
+      <div
+        className={`schedule-class__step ${
+          step >= 1 ? "schedule-class__step--active" : ""
+        }`}
+      >
         <div className="schedule-class__step-number">1</div>
         <span>Selecionar Data</span>
       </div>
-      <div className={`schedule-class__step ${step >= 2 ? 'schedule-class__step--active' : ''}`}>
+      <div
+        className={`schedule-class__step ${
+          step >= 2 ? "schedule-class__step--active" : ""
+        }`}
+      >
         <div className="schedule-class__step-number">2</div>
         <span>Escolher Horário</span>
       </div>
-      <div className={`schedule-class__step ${step >= 3 ? 'schedule-class__step--active' : ''}`}>
+      <div
+        className={`schedule-class__step ${
+          step >= 3 ? "schedule-class__step--active" : ""
+        }`}
+      >
         <div className="schedule-class__step-number">3</div>
         <span>Confirmar</span>
       </div>
@@ -422,44 +486,62 @@ const ScheduleClass = () => {
 
   const renderDateSelection = () => {
     const hasAnySlots = Object.keys(monthSlots).length > 0;
-    
+
     return (
       <Card className="schedule-class__card" padding="large">
         <h2 className="schedule-class__card-title">
           <Calendar size={24} />
           Selecione a data da sua aula
         </h2>
-        
+
         {!hasAnySlots && (
-          <div className="schedule-class__no-availability" style={{
-            padding: 'var(--spacing-4)',
-            marginBottom: 'var(--spacing-4)',
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            borderRadius: 'var(--radius-lg)',
-            textAlign: 'center'
-          }}>
-            <p style={{ margin: 0, color: 'var(--color-error)', fontWeight: 500 }}>
+          <div
+            className="schedule-class__no-availability"
+            style={{
+              padding: "var(--spacing-4)",
+              marginBottom: "var(--spacing-4)",
+              background: "rgba(239, 68, 68, 0.1)",
+              border: "1px solid rgba(239, 68, 68, 0.3)",
+              borderRadius: "var(--radius-lg)",
+              textAlign: "center",
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                color: "var(--color-error)",
+                fontWeight: 500,
+              }}
+            >
               ⚠️ Nenhum horário disponível encontrado para este mês.
             </p>
-            <p style={{ margin: 'var(--spacing-2) 0 0 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>
+            <p
+              style={{
+                margin: "var(--spacing-2) 0 0 0",
+                fontSize: "var(--font-size-sm)",
+                color: "var(--color-neutral-600)",
+              }}
+            >
               Tente navegar para outro mês ou entre em contato com o instrutor.
             </p>
           </div>
         )}
-        
+
         <div className="schedule-class__calendar">
           <div className="schedule-class__calendar-header">
-            <button 
+            <button
               className="schedule-class__nav-btn"
               onClick={handlePrevMonth}
             >
               <CaretLeft size={20} />
             </button>
             <h3 className="schedule-class__month-year">
-              {currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+              {currentMonth.toLocaleDateString("pt-BR", {
+                month: "long",
+                year: "numeric",
+              })}
             </h3>
-            <button 
+            <button
               className="schedule-class__nav-btn"
               onClick={handleNextMonth}
             >
@@ -469,8 +551,10 @@ const ScheduleClass = () => {
 
           <div className="schedule-class__calendar-grid">
             <div className="schedule-class__weekdays">
-              {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-                <div key={day} className="schedule-class__weekday">{day}</div>
+              {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((day) => (
+                <div key={day} className="schedule-class__weekday">
+                  {day}
+                </div>
               ))}
             </div>
             <div className="schedule-class__days">
@@ -478,13 +562,15 @@ const ScheduleClass = () => {
                 <button
                   key={index}
                   className={`schedule-class__day ${
-                    !day.isCurrentMonth ? 'schedule-class__day--other-month' : ''
+                    !day.isCurrentMonth
+                      ? "schedule-class__day--other-month"
+                      : ""
                   } ${
-                    day.isPast || !day.hasAvailableSlots ? 'schedule-class__day--disabled' : ''
-                  } ${
-                    day.isSelected ? 'schedule-class__day--selected' : ''
-                  } ${
-                    day.isToday ? 'schedule-class__day--today' : ''
+                    day.isPast || !day.hasAvailableSlots
+                      ? "schedule-class__day--disabled"
+                      : ""
+                  } ${day.isSelected ? "schedule-class__day--selected" : ""} ${
+                    day.isToday ? "schedule-class__day--today" : ""
                   }`}
                   onClick={() => handleDateSelect(day)}
                   disabled={day.isPast || !day.hasAvailableSlots}
@@ -516,7 +602,7 @@ const ScheduleClass = () => {
         <Clock size={24} />
         Escolha o horário
       </h2>
-      
+
       <div className="schedule-class__selected-date">
         <Calendar size={20} />
         <span>{formatSelectedDate()}</span>
@@ -539,7 +625,9 @@ const ScheduleClass = () => {
             <button
               key={time}
               className={`schedule-class__time-slot ${
-                selectedTime === time ? 'schedule-class__time-slot--selected' : ''
+                selectedTime === time
+                  ? "schedule-class__time-slot--selected"
+                  : ""
               }`}
               onClick={() => handleTimeSelect(time)}
             >
@@ -565,9 +653,9 @@ const ScheduleClass = () => {
         <div className="schedule-class__confirmation-icon">
           <Check size={48} />
         </div>
-        
+
         <h2 className="schedule-class__card-title">Confirmar Agendamento</h2>
-        
+
         <div className="schedule-class__summary">
           <div className="schedule-class__summary-item">
             <BookOpen size={20} />
@@ -580,9 +668,14 @@ const ScheduleClass = () => {
             <User size={20} />
             <div>
               <strong>Instrutor:</strong>
-              <span>{typeof course?.instructor === 'object' && course?.instructor !== null 
-                ? (course.instructor.name || course.instructor.username || 'Instrutor')
-                : course?.instructor || 'Instrutor'}</span>
+              <span>
+                {typeof course?.instructor === "object" &&
+                course?.instructor !== null
+                  ? course.instructor.name ||
+                    course.instructor.username ||
+                    "Instrutor"
+                  : course?.instructor || "Instrutor"}
+              </span>
             </div>
           </div>
           <div className="schedule-class__summary-item">
@@ -603,16 +696,27 @@ const ScheduleClass = () => {
             <VideoCamera size={20} />
             <div>
               <strong>Plataforma:</strong>
-              <span>Zoom (link será enviado por email)</span>
+              <span>Jitsi (link será enviado por email)</span>
             </div>
           </div>
         </div>
 
-        {enrollmentStatus?.enrolled && enrollmentStatus.enrollmentType === 'full_course' ? (
-          <div className="schedule-class__cost" style={{ background: 'var(--color-primary-50)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+        {enrollmentStatus?.enrolled &&
+        enrollmentStatus.enrollmentType === "full_course" ? (
+          <div
+            className="schedule-class__cost"
+            style={{
+              background: "var(--color-primary-50)",
+              padding: "1rem",
+              borderRadius: "var(--radius-md)",
+            }}
+          >
             <BookOpen size={24} weight="fill" />
             <div>
-              <div className="schedule-class__cost-amount" style={{ color: 'var(--color-primary-700)' }}>
+              <div
+                className="schedule-class__cost-amount"
+                style={{ color: "var(--color-primary-700)" }}
+              >
                 Sem custo adicional
               </div>
               <div className="schedule-class__cost-balance">
@@ -639,26 +743,37 @@ const ScheduleClass = () => {
             <ArrowLeft size={16} />
             Voltar
           </Button>
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             size="large"
             onClick={handleConfirmSchedule}
             disabled={
-              (enrollmentStatus?.enrolled && enrollmentStatus.enrollmentType === 'full_course')
-                ? (loading || enrollmentLoading)
-                : ((state.user?.credits || 0) < (course?.pricing?.singleClass || course?.price || 0) || loading || enrollmentLoading)
+              enrollmentStatus?.enrolled &&
+              enrollmentStatus.enrollmentType === "full_course"
+                ? loading || enrollmentLoading
+                : (state.user?.credits || 0) <
+                    (course?.pricing?.singleClass || course?.price || 0) ||
+                  loading ||
+                  enrollmentLoading
             }
             loading={loading || enrollmentLoading}
           >
-            {enrollmentStatus?.enrolled && enrollmentStatus.enrollmentType === 'full_course' ? (
+            {enrollmentStatus?.enrolled &&
+            enrollmentStatus.enrollmentType === "full_course" ? (
               <>
                 <Check size={16} weight="fill" />
-                {loading ? 'Agendando...' : 'Agendar Aula (Sem custo adicional)'}
+                {loading
+                  ? "Agendando..."
+                  : "Agendar Aula (Sem custo adicional)"}
               </>
             ) : (
               <>
                 <Coins size={16} weight="fill" />
-                {loading || enrollmentLoading ? 'Comprando e agendando...' : `Comprar e Agendar (${course?.pricing?.singleClass || course?.price || 0} créditos)`}
+                {loading || enrollmentLoading
+                  ? "Comprando e agendando..."
+                  : `Comprar e Agendar (${
+                      course?.pricing?.singleClass || course?.price || 0
+                    } créditos)`}
               </>
             )}
           </Button>
@@ -701,18 +816,26 @@ const ScheduleClass = () => {
       <div className="schedule-class">
         {/* Header */}
         <div className="schedule-class__header">
-          <Button variant="ghost" onClick={handleGoBack} className="schedule-class__back">
+          <Button
+            variant="ghost"
+            onClick={handleGoBack}
+            className="schedule-class__back"
+          >
             <ArrowLeft size={20} />
             Voltar aos Detalhes
           </Button>
-          
+
           <div className="schedule-class__header-content">
-              <h1 className="schedule-class__title">Agendar Aula</h1>
-              <p className="schedule-class__subtitle">
-                {course.title} - {typeof course?.instructor === 'object' && course?.instructor !== null 
-                  ? (course.instructor.name || course.instructor.username || 'Instrutor')
-                  : course?.instructor || 'Instrutor'}
-              </p>
+            <h1 className="schedule-class__title">Agendar Aula</h1>
+            <p className="schedule-class__subtitle">
+              {course.title} -{" "}
+              {typeof course?.instructor === "object" &&
+              course?.instructor !== null
+                ? course.instructor.name ||
+                  course.instructor.username ||
+                  "Instrutor"
+                : course?.instructor || "Instrutor"}
+            </p>
           </div>
         </div>
 
@@ -720,9 +843,7 @@ const ScheduleClass = () => {
         {renderStepIndicator()}
 
         {/* Content */}
-        <div className="schedule-class__content">
-          {renderContent()}
-        </div>
+        <div className="schedule-class__content">{renderContent()}</div>
       </div>
     </DashboardTemplate>
   );

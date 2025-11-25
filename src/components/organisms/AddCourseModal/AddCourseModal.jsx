@@ -10,7 +10,8 @@ import {
   Upload,
   X,
   Coins,
-  Calendar
+  Calendar,
+  PencilSimple
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts';
 import { useCourses } from '../../../hooks/useCourses';
@@ -69,6 +70,8 @@ const AddCourseModal = ({
   const [success, setSuccess] = useState(false);
   const [showAddRecurring, setShowAddRecurring] = useState(false);
   const [showAddSpecific, setShowAddSpecific] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   
   const [recurringForm, setRecurringForm] = useState({
     dayOfWeek: 1,
@@ -99,6 +102,38 @@ const AddCourseModal = ({
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validar tipo de arquivo
+      if (!file.type.startsWith('image/')) {
+        setError('Por favor, selecione um arquivo de imagem válido.');
+        return;
+      }
+      
+      // Validar tamanho (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('A imagem deve ter no máximo 5MB.');
+        return;
+      }
+      
+      setImageFile(file);
+      setError('');
+      
+      // Criar preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
   };
 
   const handleAddTag = () => {
@@ -413,7 +448,7 @@ const AddCourseModal = ({
       // Debug: Log do payload (apenas campos suportados pela API)
       console.log('📤 Enviando dados do curso:', JSON.stringify(cleanPayload, null, 2));
 
-      const result = await createCourse(cleanPayload);
+      const result = await createCourse(cleanPayload, imageFile);
 
       if (result.success) {
         setSuccess(true);
@@ -504,6 +539,8 @@ const AddCourseModal = ({
     setSuccess(false);
     setShowAddRecurring(false);
     setShowAddSpecific(false);
+    setImageFile(null);
+    setImagePreview(null);
   };
 
   return (
@@ -601,6 +638,64 @@ const AddCourseModal = ({
                 <option value="Inglês">Inglês</option>
                 <option value="Espanhol">Espanhol</option>
               </FormField>
+            </div>
+
+            {/* Image Upload */}
+            <div className="add-course-image-upload">
+              <label className="add-course-image-label">
+                <Upload size={20} />
+                Imagem do Curso
+              </label>
+              <div className="add-course-image-container">
+                {imagePreview ? (
+                  <>
+                    <div className="add-course-image-preview">
+                      <img src={imagePreview} alt="Preview" />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="add-course-image-remove"
+                        title="Remover imagem"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="add-course-image-actions">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="add-course-image-input"
+                        id="course-image-input"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="medium"
+                        onClick={() => document.getElementById('course-image-input').click()}
+                      >
+                        <Upload size={18} />
+                        Alterar Imagem
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="add-course-image-input"
+                      id="course-image-input"
+                    />
+                    <label htmlFor="course-image-input" className="add-course-image-placeholder">
+                      <Upload size={32} />
+                      <p>Clique para selecionar uma imagem</p>
+                      <p className="add-course-image-hint">Formatos: JPG, PNG, GIF (máx. 5MB)</p>
+                    </label>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

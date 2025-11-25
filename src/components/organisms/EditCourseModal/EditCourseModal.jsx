@@ -29,7 +29,7 @@ const EditCourseModal = ({
   className = '',
 }) => {
   const { actions, state } = useApp();
-  const { updateCourse, loading } = useCourses();
+  const { updateCourse, deleteCourseImage, loading } = useCourses();
   const { getInstructorAvailability, removeRecurringAvailability, addRecurringAvailability, addSpecificSlot } = useAvailability();
   
   const [formData, setFormData] = useState({
@@ -75,6 +75,7 @@ const EditCourseModal = ({
   const [showAddSpecific, setShowAddSpecific] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
   
   const [recurringForm, setRecurringForm] = useState({
     dayOfWeek: 1,
@@ -136,7 +137,14 @@ const EditCourseModal = ({
       // Carregar preview da imagem se existir
       if (course.image) {
         setImagePreview(course.image);
+      } else {
+        setImagePreview(null);
       }
+      
+      setImageFile(null);
+      setImageRemoved(false);
+      setError('');
+      setSuccess(false);
     }
   }, [isOpen, course]);
 
@@ -167,6 +175,54 @@ const EditCourseModal = ({
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validar tipo de arquivo
+      if (!file.type.startsWith('image/')) {
+        setError('Por favor, selecione um arquivo de imagem válido.');
+        return;
+      }
+      
+      // Validar tamanho (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('A imagem deve ter no máximo 5MB.');
+        return;
+      }
+      
+      setImageFile(file);
+      setError('');
+      
+      // Criar preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    const courseId = course?.id || course?._id;
+    const hasExistingImage = course?.image && !imageFile;
+    
+    // Se há uma imagem existente no curso (não apenas um preview local), deletar via API
+    if (hasExistingImage && courseId) {
+      try {
+        await deleteCourseImage(courseId);
+        actions.showToast('Imagem removida com sucesso!', 'success');
+      } catch (err) {
+        console.error('Erro ao remover imagem:', err);
+        setError('Erro ao remover imagem. Tente novamente.');
+        return;
+      }
+    }
+    
+    setImageFile(null);
+    setImagePreview(null);
+    setImageRemoved(true);
   };
 
   const handleAddTag = () => {
@@ -502,7 +558,31 @@ const EditCourseModal = ({
         return;
       }
 
-      const result = await updateCourse(courseId, cleanPayload, imageFile);
+      // Se a imagem foi removida, deletar via rota específica primeiro
+      if (imageRemoved && !imageFile && course?.image) {
+        try {
+          await deleteCourseImage(courseId);
+        } catch (err) {
+          console.error('Erro ao remover imagem:', err);
+          // Continuar mesmo se falhar ao remover imagem
+        }
+      }
+
+      // Enviar imageFile apenas se houver um arquivo novo
+      // Se não houver imageFile e não foi removida, enviar undefined para usar JSON normal
+      const imageToSend = imageFile || undefined;
+      
+      // Debug: verificar se imageFile está sendo passado
+      console.log('🖼️ EditCourseModal - imageFile:', imageFile);
+      console.log('🖼️ EditCourseModal - imageToSend:', imageToSend);
+      console.log('🖼️ EditCourseModal - Tipo de imageToSend:', typeof imageToSend);
+      if (imageToSend) {
+        console.log('🖼️ EditCourseModal - imageToSend é File?', imageToSend instanceof File);
+        console.log('🖼️ EditCourseModal - imageToSend.name:', imageToSend.name);
+        console.log('🖼️ EditCourseModal - imageToSend.size:', imageToSend.size);
+      }
+      
+      const result = await updateCourse(courseId, cleanPayload, imageToSend);
 
       if (result.success) {
         setSuccess(true);
@@ -690,6 +770,64 @@ const EditCourseModal = ({
                 <option value="Inglês">Inglês</option>
                 <option value="Espanhol">Espanhol</option>
               </FormField>
+            </div>
+
+            {/* Image Upload */}
+            <div className="edit-course-image-upload">
+              <label className="edit-course-image-label">
+                <Upload size={20} />
+                Imagem do Curso
+              </label>
+              <div className="edit-course-image-container">
+                {imagePreview ? (
+                  <>
+                    <div className="edit-course-image-preview">
+                      <img src={imagePreview} alt="Preview" />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="edit-course-image-remove"
+                        title="Remover imagem"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="edit-course-image-actions">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="edit-course-image-input"
+                        id="edit-course-image-input"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="medium"
+                        onClick={() => document.getElementById('edit-course-image-input').click()}
+                      >
+                        <Upload size={18} />
+                        Alterar Imagem
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="edit-course-image-input"
+                      id="edit-course-image-input"
+                    />
+                    <label htmlFor="edit-course-image-input" className="edit-course-image-placeholder">
+                      <Upload size={32} />
+                      <p>Clique para selecionar uma imagem</p>
+                      <p className="edit-course-image-hint">Formatos: JPG, PNG, GIF (máx. 5MB)</p>
+                    </label>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

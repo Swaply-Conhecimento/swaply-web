@@ -15,7 +15,7 @@ const ConfirmLogoutModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="small"
+      size="medium"
       closeOnOverlayClick={true}
       className="confirm-logout-modal"
     >

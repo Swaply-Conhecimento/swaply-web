@@ -108,8 +108,18 @@
 
 .notifications-page__filter-btn--active {
   background: var(--color-primary);
-  color: white;
+  color: #000000 !important;
   border-color: var(--color-primary);
+}
+
+.notifications-page__filter-btn--active:hover {
+  background: var(--color-primary);
+  color: #000000 !important;
+}
+
+.notifications-page__filter-btn--active svg {
+  color: #000000 !important;
+  fill: #000000 !important;
 }
 
 /* Notifications List */
@@ -314,7 +324,17 @@
 [data-theme="dark"] .notifications-page__filter-btn--active {
   background: var(--color-primary-700);
   border-color: var(--color-primary-700);
-  color: #FFFFFF;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .notifications-page__filter-btn--active:hover {
+  background: var(--color-primary-700);
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .notifications-page__filter-btn--active svg {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
 }
 [data-theme="dark"] .notifications-page__empty-content h2 {
   color: var(--color-neutral-100);

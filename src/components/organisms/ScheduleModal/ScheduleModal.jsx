@@ -454,7 +454,7 @@ const ScheduleModal = ({ isOpen, onClose, course }) => {
         </div>
         <div className="schedule-modal__summary-item">
           <strong>Plataforma:</strong>
-          <span><VideoCamera size={16} /> Zoom (link será enviado por email)</span>
+          <span><VideoCamera size={16} /> Jitsi (link será enviado por email)</span>
         </div>
       </Card>
 
