@@ -20,6 +20,10 @@ const Dashboard = () => {
   const [isLoadingCourses, setIsLoadingCourses] = useState(true);
   const [hasUserCourses, setHasUserCourses] = useState(false);
 
+  // Estatísticas dinâmicas para os cards
+  const [statsUsers, setStatsUsers] = useState(null);
+  const [statsCourses, setStatsCourses] = useState(null);
+
   // Carregar cursos da API ao montar o componente
   useEffect(() => {
     const loadCourses = async () => {
@@ -209,6 +213,89 @@ const Dashboard = () => {
         }
 
         console.log("✨ Carregamento de cursos concluído");
+        
+        // Buscar estatísticas de contagem (suporta vários endpoints plausíveis)
+        try {
+          const endpoints = [
+            '/api/stats/counts',
+            '/api/stats',
+          ];
+
+          let gotStats = false;
+
+          for (const ep of endpoints) {
+            try {
+              console.log(`📈 Tentando ${ep} ...`);
+              const resp = await fetch(ep);
+              if (!resp.ok) {
+                console.log(`ℹ️ ${ep} retornou status ${resp.status}`);
+                continue;
+              }
+              const json = await resp.json();
+              // Normalizar formatos diferentes
+              // Possíveis formatos: { users, courses } | { data: { activeUsers, activeCourses } } | { activeUsers, activeCourses }
+              if (json) {
+                if (typeof json.users === 'number' && typeof json.courses === 'number') {
+                  setStatsUsers(json.users);
+                  setStatsCourses(json.courses);
+                  gotStats = true;
+                } else if (json.data && typeof json.data.activeUsers === 'number' && typeof json.data.activeCourses === 'number') {
+                  setStatsUsers(json.data.activeUsers);
+                  setStatsCourses(json.data.activeCourses);
+                  gotStats = true;
+                } else if (typeof json.activeUsers === 'number' && typeof json.activeCourses === 'number') {
+                  setStatsUsers(json.activeUsers);
+                  setStatsCourses(json.activeCourses);
+                  gotStats = true;
+                } else {
+                  console.log(`ℹ️ ${ep} respondeu, mas formato inesperado:`, json);
+                }
+              }
+              if (gotStats) break;
+            } catch (e) {
+              console.log(`⚠️ Falha ao consultar ${ep}:`, e.message);
+            }
+          }
+
+          // Se não encontrou com os endpoints combinados, tentar rota separada para users e courses
+          if (!gotStats) {
+            try {
+              console.log('📈 Tentando separar /api/stats/courses e /api/stats/users ...');
+              const [rCourses, rUsers] = await Promise.allSettled([
+                fetch('/api/stats/courses'),
+                fetch('/api/stats/users'),
+              ]);
+
+              if (rCourses.status === 'fulfilled' && rCourses.value.ok) {
+                const j = await rCourses.value.json();
+                if (j && j.data && typeof j.data.activeCourses === 'number') {
+                  setStatsCourses(j.data.activeCourses);
+                  gotStats = true;
+                } else if (typeof j.courses === 'number') {
+                  setStatsCourses(j.courses);
+                  gotStats = true;
+                }
+              }
+
+              if (rUsers.status === 'fulfilled' && rUsers.value.ok) {
+                const j = await rUsers.value.json();
+                if (j && j.data && typeof j.data.activeUsers === 'number') {
+                  setStatsUsers(j.data.activeUsers);
+                  gotStats = true;
+                } else if (typeof j.users === 'number') {
+                  setStatsUsers(j.users);
+                  gotStats = true;
+                }
+              }
+            } catch (e) {
+              console.log('⚠️ Erro ao tentar endpoints separados de stats:', e.message);
+            }
+          }
+
+          if (!gotStats) console.warn('⚠️ Não foi possível obter estatísticas de contagem (nenhum endpoint disponível ou formato inesperado)');
+        } catch (statsError) {
+          console.warn('⚠️ Erro inesperado ao buscar stats:', statsError.message);
+        }
       } catch (err) {
         console.error("❌ Erro geral ao carregar cursos:", err);
         console.error("Detalhes do erro:", {
@@ -223,6 +310,14 @@ const Dashboard = () => {
 
     loadCourses();
   }, [getPopularCourses, getFeaturedCourses, getCourses, getTeachingCourses, isAuthenticated, state.user?._id]);
+
+  // Formata números (5200 -> 5.2k, 1200000 -> 1.2M)
+  const formatCount = (n) => {
+    if (n === null || n === undefined) return null;
+    if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+    if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+    return String(n);
+  };
 
   const handleCourseClick = (course) => {
     console.log('🖱️ Curso clicado (raw):', course);
@@ -268,7 +363,7 @@ const Dashboard = () => {
         <div className="dashboard__welcome">
           <div className="dashboard__welcome-content">
             <h1 className="dashboard__welcome-title">
-              Aprenda Ensinando - Ensine Aprendendo
+              Ensinar é aprender duas vezes.
             </h1>
             <p className="dashboard__welcome-text">
               Descubra novos conhecimentos e compartilhe sua expertise.
@@ -287,7 +382,9 @@ const Dashboard = () => {
             <div className="dashboard__stat-content">
               <div className="dashboard__stat-icon">📚</div>
               <div className="dashboard__stat-info">
-                <div className="dashboard__stat-value">150+</div>
+                <div className="dashboard__stat-value">
+                  {statsCourses !== null ? formatCount(statsCourses) : "150+"}
+                </div>
                 <div className="dashboard__stat-label">Cursos Disponíveis</div>
               </div>
             </div>
@@ -297,7 +394,9 @@ const Dashboard = () => {
             <div className="dashboard__stat-content">
               <div className="dashboard__stat-icon">👥</div>
               <div className="dashboard__stat-info">
-                <div className="dashboard__stat-value">5.2k</div>
+                <div className="dashboard__stat-value">
+                  {statsUsers !== null ? formatCount(statsUsers) : "5.2k"}
+                </div>
                 <div className="dashboard__stat-label">Estudantes Ativos</div>
               </div>
             </div>

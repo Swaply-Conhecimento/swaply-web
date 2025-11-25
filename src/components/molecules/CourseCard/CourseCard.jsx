@@ -18,10 +18,26 @@ const CourseCard = ({
   onClick,
   className = '',
   instructorId,
+  isFavorite: propIsFavorite,
   ...props
 }) => {
   const { state, actions } = useApp();
-  const isFavorite = state.user?.favorites?.includes(id) || false;
+  // Preferir a flag enviada pelo backend quando presente, mas permitir toggle/estado local
+  const initialFavorite = typeof propIsFavorite === 'boolean'
+    ? propIsFavorite
+    : (state.user?.favorites?.includes(id) || false);
+
+  const [localFavorite, setLocalFavorite] = React.useState(initialFavorite);
+
+  // Sincronizar quando propIsFavorite muda
+  React.useEffect(() => {
+    if (typeof propIsFavorite === 'boolean') {
+      setLocalFavorite(propIsFavorite);
+    } else {
+      // se o backend não enviou isFavorite, sincronizar com o state.user.favorites
+      setLocalFavorite(state.user?.favorites?.includes(id) || false);
+    }
+  }, [propIsFavorite, state.user?.favorites, id]);
 
   // Verificar se o curso pertence ao usuário atual
   // instructor pode ser string (nome) ou objeto com _id
@@ -36,7 +52,19 @@ const CourseCard = ({
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation(); // Evita trigger do onClick do card
-    actions.toggleFavorite(id);
+    // Atualizar otimista localmente para resposta imediata
+    const prev = localFavorite;
+    setLocalFavorite(!prev);
+    actions.toggleFavorite(id).then((res) => {
+      if (!res.success) {
+        // Reverter se falhar
+        setLocalFavorite(prev);
+        actions.showToast?.('Não foi possível atualizar favorito. Tente novamente.', 'error');
+      }
+    }).catch(() => {
+      setLocalFavorite(prev);
+      actions.showToast?.('Erro de rede. Tente novamente.', 'error');
+    });
   };
   return (
     <Card
@@ -60,11 +88,11 @@ const CourseCard = ({
           {category}
         </div>
         <button 
-          className={`course-card__favorite ${isFavorite ? 'course-card__favorite--active' : ''}`}
+          className={`course-card__favorite ${localFavorite ? 'course-card__favorite--active' : ''}`}
           onClick={handleFavoriteClick}
-          aria-label={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+          aria-label={localFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
         >
-          <Heart size={20} weight={isFavorite ? 'fill' : 'regular'} />
+          <Heart size={20} weight={localFavorite ? 'fill' : 'regular'} />
         </button>
       </div>
       
@@ -129,6 +157,7 @@ CourseCard.propTypes = {
   image: PropTypes.string,
   onClick: PropTypes.func,
   className: PropTypes.string,
+  isFavorite: PropTypes.bool,
 };
 
 export default CourseCard;

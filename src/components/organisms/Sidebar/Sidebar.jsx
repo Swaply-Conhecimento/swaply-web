@@ -139,11 +139,12 @@ const Sidebar = ({
   return (
     <aside className={`sidebar ${state.sidebarOpen ? 'sidebar--open' : 'sidebar--closed'} ${className}`}>
       <div className="sidebar__header">
-        <div className="sidebar__logo">
-          <Logo variant="simples" size="large" />
+          <div className="sidebar__logo">
+          {/* Mostrar logo maior quando a sidebar estiver aberta; usar versão menor quando fechada */}
+          <Logo variant="simples" size={state.sidebarOpen ? 'xlarge' : 'large'} />
           {state.sidebarOpen && (
             <div className="sidebar__brand">
-              <span className="sidebar__brand-name">Swaply</span>
+              {/* Nome da marca removido conforme solicitação */}
               {isAuthenticated && (
                 <div className="sidebar__credits">
                   <Coins size={20} weight="fill" />

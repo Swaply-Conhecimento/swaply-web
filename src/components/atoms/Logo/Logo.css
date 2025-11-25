@@ -23,7 +23,7 @@
 }
 
 .logo--xlarge {
-  height: 6rem; /* 96px */
+  height: 8rem; /* 128px - aumentado para sidebar grande */
   width: auto;
 }
 

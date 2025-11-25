@@ -48,7 +48,7 @@ const AddCourseModal = ({
     schedule: [],
     requirements: [],
     objectives: [],
-    status: 'draft'
+    status: 'active'
   });
 
   const [availability, setAvailability] = useState({
@@ -353,7 +353,7 @@ const AddCourseModal = ({
           singleClass: singleClassPrice,
           fullCourse: fullCoursePrice
         },
-        status: formData.status || 'draft',
+        status: formData.status || 'active',
       };
 
       // Campos opcionais - adicionar apenas se preenchidos
@@ -487,7 +487,7 @@ const AddCourseModal = ({
       schedule: [],
       requirements: [],
       objectives: [],
-      status: 'draft'
+      status: 'active'
     });
     setAvailability({
       recurringAvailability: [],

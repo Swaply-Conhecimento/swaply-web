@@ -1,6 +1,7 @@
-import React from 'react';
-import { Heart, BookOpen, Star } from '@phosphor-icons/react';
+import React, { useEffect, useState } from 'react';
+import { Heart, BookOpen } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts';
+import { useUser } from '../../../hooks/useUser';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import CourseGrid from '../../organisms/CourseGrid';
 import Card from '../../molecules/Card';
@@ -9,6 +10,11 @@ import './Favorites.css';
 
 const Favorites = () => {
   const { state, actions } = useApp();
+  const { getFavorites } = useUser();
+
+  const [favoriteCoursesFromApi, setFavoriteCoursesFromApi] = useState(null);
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
+  const [favoritesError, setFavoritesError] = useState(null);
 
   // Mock data - em uma aplicação real, isso viria de uma API
   const allCourses = [
@@ -64,10 +70,43 @@ const Favorites = () => {
     },
   ];
 
+  // Preferir usar os cursos retornados pela API de favoritos quando autenticado
+  useEffect(() => {
+    let isMounted = true;
+    const loadFavorites = async () => {
+      setFavoritesError(null);
+      if (!state.isAuthenticated) {
+        // Não autenticado: não tentar carregar do backend
+        setFavoriteCoursesFromApi(null);
+        return;
+      }
+      setLoadingFavorites(true);
+      try {
+        const result = await getFavorites();
+        // result.favorites segue o formato retornado por userService.getFavorites
+        if (isMounted && result && result.favorites) {
+          setFavoriteCoursesFromApi(result.favorites);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar favoritos:', err);
+        if (isMounted) setFavoritesError(err.message || 'Erro ao carregar favoritos');
+      } finally {
+        if (isMounted) setLoadingFavorites(false);
+      }
+    };
+
+    loadFavorites();
+
+    return () => { isMounted = false; };
+  }, [state.isAuthenticated, getFavorites]);
+
   // Filtrar apenas os cursos favoritos
-  const favoriteCourses = allCourses.filter(course => 
-    state.user?.favorites?.includes(course.id)
-  );
+  // Se a API retornou favoritos, use-os; caso contrário, use o mock/allCourses com base em state.user.favorites
+  const favoriteCourses = favoriteCoursesFromApi && favoriteCoursesFromApi.length > 0
+    ? favoriteCoursesFromApi
+    : allCourses.filter(course => (
+        typeof course.isFavorite === 'boolean' ? course.isFavorite : state.user?.favorites?.includes(course.id)
+      ));
 
   const handleCourseClick = (course) => {
     // Garantir que o curso tem ID
@@ -88,7 +127,20 @@ const Favorites = () => {
 
   const handleRemoveFavorite = (courseId, e) => {
     e.stopPropagation(); // Evita navegação para detalhes
-    actions.toggleFavorite(courseId);
+    // Otimista: atualizar UI localmente
+    if (favoriteCoursesFromApi) {
+      setFavoriteCoursesFromApi(prev => prev.filter(c => (c.id || c._id || c._id) !== courseId && (c.id || c._id) !== courseId));
+    }
+    actions.toggleFavorite(courseId).then((res) => {
+      if (!res.success) {
+        actions.showToast?.('Não foi possível remover dos favoritos. Tente novamente.', 'error');
+        // Recarregar favoritos para garantir consistência
+        getFavorites().then(r => r?.favorites && setFavoriteCoursesFromApi(r.favorites)).catch(() => {});
+      }
+    }).catch(() => {
+      actions.showToast?.('Erro de rede ao remover favorito.', 'error');
+      getFavorites().then(r => r?.favorites && setFavoriteCoursesFromApi(r.favorites)).catch(() => {});
+    });
   };
 
   const handleExploreCourses = () => {
@@ -127,48 +179,7 @@ const Favorites = () => {
         {/* Favorites Content */}
         {favoriteCourses.length > 0 ? (
           <div className="favorites__content">
-            {/* Quick Stats */}
-            <div className="favorites__stats">
-              <Card className="favorites__stat-card" padding="medium">
-                <div className="favorites__stat-content">
-                  <div className="favorites__stat-icon">
-                    <Heart size={24} weight="fill" />
-                  </div>
-                  <div className="favorites__stat-info">
-                    <div className="favorites__stat-value">{favoriteCourses.length}</div>
-                    <div className="favorites__stat-label">Favoritos</div>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="favorites__stat-card" padding="medium">
-                <div className="favorites__stat-content">
-                  <div className="favorites__stat-icon">
-                    <Star size={24} weight="fill" />
-                  </div>
-                  <div className="favorites__stat-info">
-                    <div className="favorites__stat-value">
-                      {(favoriteCourses.reduce((acc, course) => acc + course.rating, 0) / favoriteCourses.length).toFixed(1)}
-                    </div>
-                    <div className="favorites__stat-label">Avaliação Média</div>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="favorites__stat-card" padding="medium">
-                <div className="favorites__stat-content">
-                  <div className="favorites__stat-icon">
-                    <BookOpen size={24} />
-                  </div>
-                  <div className="favorites__stat-info">
-                    <div className="favorites__stat-value">
-                      {favoriteCourses.reduce((acc, course) => acc + course.price, 0)}
-                    </div>
-                    <div className="favorites__stat-label">Total em Créditos</div>
-                  </div>
-                </div>
-              </Card>
-            </div>
+            {/* Quick Stats removed as requested */}
 
             {/* Course Grid */}
             <CourseGrid

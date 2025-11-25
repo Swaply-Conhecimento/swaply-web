@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import LogoSemSlogan from '../../../assets/LogoSemSlogan.svg';
 import LogoComSlogan from '../../../assets/LogoComSlogan.svg';
-import LogoSimples2 from '../../../assets/LogoSimples2.svg';
+import LogoSimples2 from '../../../assets/LogoSimples2.png';
 import './Logo.css';
 
 const Logo = ({
