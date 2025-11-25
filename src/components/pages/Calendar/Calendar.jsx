@@ -153,32 +153,84 @@ const Calendar = () => {
 
   const handleDateClick = (day) => {
     const classes = getClassesForDate(day);
-    // Seleciona o dia se houver aulas, ou deseleciona se já estava selecionado
+    console.log('📅 Calendar - Dia clicado:', day);
+    console.log('📅 Calendar - Aulas encontradas para este dia:', classes.length);
+    console.log('📅 Calendar - Aulas:', classes);
+    
+    // Seleciona o dia se houver aulas
     if (classes.length > 0) {
+      // Se já estava selecionado, mantém selecionado (para atualizar a visualização)
       setSelectedDate(day);
-    } else if (selectedDate === day) {
-      setSelectedDate(null);
+    } else {
+      // Se não há aulas e já estava selecionado, deseleciona
+      if (selectedDate === day) {
+        setSelectedDate(null);
+      }
     }
   };
 
   const getClassesForDate = (day) => {
-    if (!calendarData?.events || !Array.isArray(calendarData.events)) return [];
+    if (!calendarData?.events || !Array.isArray(calendarData.events)) {
+      console.log('📅 Calendar - getClassesForDate: Sem eventos ou não é array');
+      return [];
+    }
     
-    return calendarData.events.filter(event => {
-      if (!event.date) return false;
+    // Criar data de referência para o dia selecionado (meio-dia para evitar problemas de timezone)
+    const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day, 12, 0, 0);
+    const targetYear = targetDate.getFullYear();
+    const targetMonth = targetDate.getMonth();
+    const targetDay = targetDate.getDate();
+    
+    console.log('📅 Calendar - getClassesForDate: Buscando para dia', day, 'do mês', targetMonth + 1, 'de', targetYear);
+    console.log('📅 Calendar - getClassesForDate: Total de eventos disponíveis', calendarData.events.length);
+    
+    const matchingEvents = calendarData.events.filter(event => {
+      // Tentar encontrar a data em diferentes campos possíveis
+      let eventDateValue = event.date || event.scheduledDate || event.startDate || event.start || event.classDate;
+      
+      if (!eventDateValue) {
+        return false;
+      }
       
       // Normalizar a data do evento
-      const eventDate = new Date(event.date);
-      if (isNaN(eventDate.getTime())) return false;
+      let eventDate;
+      if (typeof eventDateValue === 'string') {
+        // Se for string, pode ser ISO ou formato brasileiro
+        eventDate = new Date(eventDateValue);
+      } else if (eventDateValue instanceof Date) {
+        eventDate = new Date(eventDateValue);
+      } else {
+        return false;
+      }
       
-      // Criar data de referência para o dia selecionado
-      const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      if (isNaN(eventDate.getTime())) {
+        console.log('📅 Calendar - getClassesForDate: Data inválida para evento', event._id || event.id);
+        return false;
+      }
       
-      // Comparar apenas dia, mês e ano (ignorar hora)
-      return eventDate.getDate() === targetDate.getDate() && 
-             eventDate.getMonth() === targetDate.getMonth() &&
-             eventDate.getFullYear() === targetDate.getFullYear();
+      // Comparar apenas dia, mês e ano (ignorar hora e timezone)
+      const eventYear = eventDate.getFullYear();
+      const eventMonth = eventDate.getMonth();
+      const eventDay = eventDate.getDate();
+      
+      const matches = eventYear === targetYear && 
+                      eventMonth === targetMonth &&
+                      eventDay === targetDay;
+      
+      if (matches) {
+        console.log('📅 Calendar - getClassesForDate: Evento encontrado!', {
+          eventId: event._id || event.id,
+          eventDate: eventDate.toISOString(),
+          targetDate: targetDate.toISOString()
+        });
+      }
+      
+      return matches;
     });
+    
+    console.log('📅 Calendar - getClassesForDate: Eventos encontrados para o dia', day, ':', matchingEvents.length);
+    
+    return matchingEvents;
   };
 
   const hasClassOnDate = (day) => {

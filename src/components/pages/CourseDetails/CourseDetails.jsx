@@ -594,30 +594,7 @@ const CourseDetails = () => {
                     </Button>
                   </div>
                 </>
-              ) : (
-                <>
-                  <div className="course-details__price">
-                    <div className="course-details__price-main">
-                      <Play size={24} weight="fill" />
-                      <span className="course-details__price-label">
-                        Aula Avulsa Comprada
-                      </span>
-                    </div>
-                    <div className="course-details__price-detail">
-                      Você comprou uma aula avulsa neste curso
-                    </div>
-                  </div>
-                  <div className="course-details__purchase-options">
-                    <Button
-                      variant="outline"
-                      size="large"
-                      onClick={() => actions.setCurrentPage("my-courses")}
-                    >
-                      Ver Minha Aula
-                  </Button>
-                  </div>
-                </>
-              )
+              ) : null
             ) : (
               // Não matriculado - Mostrar opções de compra horizontal
               <>
