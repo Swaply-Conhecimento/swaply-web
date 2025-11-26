@@ -1,93 +1,83 @@
-# React + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-
-
 # 📐 Diagrama da Arquitetura de Rede
 
-## Diagrama Visual (Mermaid)
+## Arquitetura Implementada (Atual)
+
+Este diagrama representa a arquitetura REAL do projeto implementado:
 
 ```mermaid
 graph TB
-    subgraph "Dispositivo IoT"
+    subgraph "Hardware IoT"
         DHT22[DHT22 Sensor<br/>Temperatura/Umidade]
         ESP32[ESP32 DevKit v1<br/>Cliente CoAP]
     end
 
     subgraph "Rede Local"
-        WIFI[Roteador WiFi<br/>2.4 GHz]
+        WIFI[Roteador WiFi<br/>2.4 GHz<br/>SSID: Wokwi-GUEST]
     end
 
     subgraph "Internet"
         INTERNET[Internet]
     end
 
-    subgraph "Servidor CoAP"
-        SERVER[Servidor CoAP<br/>coap.me:5683]
+    subgraph "Servidor CoAP Remoto"
+        SERVER[Servidor CoAP Publico<br/>coap.me:5683<br/>Endpoint: /sink]
+        RESP[Resposta: 2.01 Created<br/>POST OK]
     end
 
-    subgraph "Backend"
-        DB[(Banco de Dados<br/>MongoDB/InfluxDB)]
-        DASH[Dashboard<br/>Grafana/Node-RED]
-    end
-
-    DHT22 -->|GPIO4<br/>Físico| ESP32
-    ESP32 <-->|WiFi<br/>802.11n| WIFI
-    WIFI -->|Internet| INTERNET
-    INTERNET -->|CoAP UDP:5683| SERVER
-    SERVER -->|Armazena| DB
-    DB -->|Visualiza| DASH
+    DHT22 -->|GPIO4<br/>Conexão Física| ESP32
+    ESP32 <-->|WiFi 802.11n| WIFI
+    WIFI -->|Roteamento IP| INTERNET
+    INTERNET -->|CoAP POST<br/>UDP:5683| SERVER
+    SERVER -->|Resposta CoAP| RESP
+    RESP -.->|ACK| ESP32
 
     style DHT22 fill:#90EE90
     style ESP32 fill:#87CEEB
     style WIFI fill:#FFD700
     style SERVER fill:#FF6B6B
-    style DB fill:#9370DB
-    style DASH fill:#20B2AA
+    style RESP fill:#98FB98
 ```
 
-## Fluxo de Dados
+## Fluxo de Dados (Implementado)
 
 ```
 ┌─────────────┐
-│   DHT22     │  Lê temperatura e umidade
-│   Sensor    │
+│   DHT22     │  Lê temperatura e umidade a cada 5 segundos
+│   Sensor    │  Exemplo: Temp: 24.0°C, Umidade: 40.0%
 └──────┬──────┘
-       │ GPIO4 (dados)
+       │ GPIO4 (comunicação digital)
        ▼
 ┌─────────────────┐
-│                 │  Formata em JSON
-│     ESP32       │  {"temp": 25.5, "hum": 60.2, ...}
-│   DevKit v1     │
-│                 │
+│                 │  1. Lê valores do sensor
+│     ESP32       │  2. Formata em JSON:
+│   DevKit v1     │     {"temp":24.0,"hum":40.0,"device":"ESP32-DHT22","id":1}
+│                 │  3. Envia via CoAP POST
 │  Cliente CoAP   │
 └────────┬────────┘
          │ WiFi (2.4 GHz)
+         │ SSID: Wokwi-GUEST
          ▼
 ┌─────────────────┐
 │  Roteador WiFi  │  Roteamento IP
+│   (Simulado)    │
 └────────┬────────┘
-         │ Internet (TCP/IP)
+         │ Internet
+         │ Protocolo: UDP na porta 5683
          ▼
 ┌─────────────────┐
-│  Servidor CoAP  │  Recebe POST
-│   coap.me:5683  │  Retorna 2.01 Created
+│  Servidor CoAP  │  Recebe requisição POST
+│   coap.me:5683  │  Endpoint: /sink
+│   (Publico)     │
 └────────┬────────┘
-         │ Processa dados
+         │
          ▼
 ┌─────────────────┐
-│ Banco de Dados  │  Armazena histórico
-│  MongoDB/Influx │
+│  Resposta CoAP  │  Código: 65 (2.01 Created)
+│   "POST OK"     │  Confirmação de recebimento
 └─────────────────┘
+
+NOTA: O servidor coap.me/sink é um servidor público de testes que apenas
+      recebe e confirma os dados. Não há armazenamento permanente.
 ```
 
 ## Protocolos Utilizados
@@ -123,14 +113,16 @@ graph TB
 
 ### 4. Camada de Servidor
 
-- **Servidor CoAP**: Recebe e processa requisições
-- **Endpoint**: `/sink` (aceita qualquer POST)
-- **Resposta**: Código 2.01 Created
+- **Servidor CoAP**: `coap.me` - servidor público de testes
+- **Endpoint**: `/sink` (aceita qualquer POST e retorna confirmação)
+- **Resposta**: Código 65 (2.01 Created) com payload "POST OK"
+- **Função**: Valida a comunicação CoAP (não armazena dados permanentemente)
 
-### 5. Camada de Armazenamento
+**Nota**: Este é um servidor de demonstração. Para produção, seria necessário:
 
-- **Banco de dados**: Persistência dos dados
-- **Dashboard**: Visualização em tempo real
+- Servidor CoAP próprio (Eclipse Californium, Aiocoap, etc.)
+- Banco de dados para persistência
+- Dashboard para visualização
 
 ---
 
