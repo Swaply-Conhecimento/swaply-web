@@ -29,13 +29,7 @@ graph TB
     WIFI -->|Roteamento IP| INTERNET
     INTERNET -->|CoAP POST<br/>UDP:5683| SERVER
     SERVER -->|Resposta CoAP| RESP
-    RESP -.->|ACK| ESP32
-
-    style DHT22 fill:#90EE90
-    style ESP32 fill:#87CEEB
-    style WIFI fill:#FFD700
-    style SERVER fill:#FF6B6B
-    style RESP fill:#98FB98
+    RESP -.->|ACK - Confirmação de recebimento<br/>Dados entregues com sucesso| ESP32
 ```
 
 ## Fluxo de Dados (Implementado)
@@ -79,6 +73,31 @@ graph TB
 NOTA: O servidor coap.me/sink é um servidor público de testes que apenas
       recebe e confirma os dados. Não há armazenamento permanente.
 ```
+
+## O que é ACK?
+
+**ACK** (Acknowledgment = Reconhecimento) é uma mensagem de confirmação enviada pelo servidor para informar ao cliente que:
+
+- ✅ A mensagem foi **recebida com sucesso**
+- ✅ O servidor **processou** a requisição
+- ✅ A operação foi **bem-sucedida**
+
+### No protocolo CoAP:
+
+1. **Cliente (ESP32)** envia uma requisição **CON** (Confirmable) via POST
+2. **Servidor (coap.me)** processa e responde com:
+   - **Código de resposta**: 2.01 Created (sucesso)
+   - **ACK implícito**: A resposta em si é o reconhecimento
+3. **Cliente** recebe a confirmação e sabe que os dados foram entregues
+
+### Tipos de mensagens CoAP:
+
+- **CON (Confirmable)**: Requer confirmação (ACK)
+- **NON (Non-confirmable)**: Não requer confirmação
+- **ACK (Acknowledgment)**: Resposta confirmando recebimento
+- **RST (Reset)**: Indica erro ou recusa
+
+No projeto, o ESP32 envia mensagens CON e recebe ACK do servidor com código 2.01 Created.
 
 ## Protocolos Utilizados
 
