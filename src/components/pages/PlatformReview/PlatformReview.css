@@ -1,0 +1,152 @@
+.platform-review-page {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.platform-review-page__card {
+  width: 100%;
+}
+
+.platform-review-page__header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.platform-review-page__title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--color-text-primary, #333);
+}
+
+.platform-review-page__subtitle {
+  font-size: 16px;
+  color: var(--color-text-secondary, #666);
+}
+
+.platform-review-page__success {
+  padding: 12px 16px;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  color: #155724;
+  margin-bottom: 24px;
+}
+
+.platform-review-page__error {
+  padding: 12px 16px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  color: #721c24;
+  margin-bottom: 24px;
+}
+
+.platform-review-page__form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.platform-review-page__section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.platform-review-page__section-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--color-text-primary, #333);
+}
+
+.platform-review-page__required {
+  color: var(--color-danger, #dc3545);
+}
+
+.platform-review-page__categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.platform-review-page__category {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.platform-review-page__category-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary, #333);
+}
+
+.platform-review-page__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary, #333);
+}
+
+.platform-review-page__textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.platform-review-page__textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #52357B);
+  box-shadow: 0 0 0 3px rgba(82, 53, 123, 0.1);
+}
+
+.platform-review-page__checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--color-text-primary, #333);
+}
+
+.platform-review-page__checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.platform-review-page__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border, #e0e0e0);
+}
+
+@media (max-width: 768px) {
+  .platform-review-page {
+    padding: 16px;
+  }
+
+  .platform-review-page__categories {
+    grid-template-columns: 1fr;
+  }
+
+  .platform-review-page__actions {
+    flex-direction: column-reverse;
+  }
+  
+  .platform-review-page__actions button {
+    width: 100%;
+  }
+}
+

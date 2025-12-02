@@ -12,6 +12,7 @@ import courseService from './courses';
 import reviewService from './reviews';
 import notificationService from './notifications';
 import classService from './classes';
+import feedbackService from './feedback';
 
 /**
  * Exportação de serviços organizados por domínio
@@ -35,6 +36,9 @@ export const api = {
   // Agendamento de Aulas
   classes: classService,
 
+  // Feedback da Plataforma
+  feedback: feedbackService,
+
   // Helpers
   helpers: {
     getErrorMessage,
@@ -52,7 +56,8 @@ export {
   courseService, 
   reviewService, 
   notificationService,
-  classService
+  classService,
+  feedbackService
 };
 
 export { 

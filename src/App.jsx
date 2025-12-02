@@ -15,6 +15,7 @@ import {
   ForgotPassword,
   ResetPassword,
   Terms,
+  PlatformReview,
 } from "./components/pages";
 import { AddCourseModal } from "./components/organisms";
 import { SvgColorBlindFilters } from "./components/molecules";
@@ -49,7 +50,8 @@ const AppContent = () => {
     'my-courses-completed',
     'my-courses-teaching',
     'schedule-class',
-    'notifications'
+    'notifications',
+    'platform-review'
   ];
 
   // Verificar se usuário está tentando acessar rota protegida sem autenticação
@@ -109,6 +111,8 @@ const AppContent = () => {
         return <ResetPassword />;
       case "terms":
         return <Terms />;
+      case "platform-review":
+        return <PlatformReview />;
       default:
         return <Dashboard />;
     }

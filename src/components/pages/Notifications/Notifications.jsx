@@ -12,6 +12,7 @@ import {
   Circle
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts';
+import { useNotificationActions } from '../../../hooks/useNotificationActions';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../molecules/Card';
 import Button from '../../atoms/Button';
@@ -19,6 +20,7 @@ import './Notifications.css';
 
 const Notifications = () => {
   const { state, actions } = useApp();
+  const { handleNotificationClick: handleNotificationAction } = useNotificationActions();
   const [filter, setFilter] = useState('all'); // 'all', 'unread', 'read'
   const [typeFilter, setTypeFilter] = useState('all'); // 'all', 'class', 'course', 'credit', 'system'
 
@@ -53,17 +55,8 @@ const Notifications = () => {
   };
 
   const handleNotificationClick = (notification) => {
-    if (!notification.isRead) {
-      handleMarkAsRead(notification.id);
-    }
-
-    // Navegar baseado no tipo de notificação
-    if (notification.data?.courseId) {
-      actions.setSelectedCourse({ id: notification.data.courseId });
-      actions.setCurrentPage('course-details');
-    } else if (notification.data?.page) {
-      actions.setCurrentPage(notification.data.page);
-    }
+    // Usar o hook para processar ações de notificação
+    handleNotificationAction(notification);
   };
 
   const getNotificationIcon = (type) => {

@@ -19,6 +19,7 @@ import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../molecules/Card';
 import Button from '../../atoms/Button';
 import LoadingScreen from '../../atoms/LoadingScreen';
+import CourseReviewModal from '../../organisms/CourseReviewModal';
 import './CourseDetails.css';
 
 const CourseDetails = () => {
@@ -28,6 +29,7 @@ const CourseDetails = () => {
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
   // Obter ID do curso do selectedCourse
   // Pode vir como id ou _id, e pode ser string ou objeto
@@ -135,6 +137,16 @@ const CourseDetails = () => {
     fetchCourse();
   }, [courseId, getCourseById]);
 
+  // Verificar se deve abrir modal de avaliação
+  useEffect(() => {
+    const shouldOpenReview = sessionStorage.getItem('openReviewModal') === 'true';
+    if (shouldOpenReview && courseData) {
+      setReviewModalOpen(true);
+      // Remover flag do sessionStorage
+      sessionStorage.removeItem('openReviewModal');
+    }
+  }, [courseData]);
+
   const handlePurchaseCourse = async () => {
     if (!courseData) return;
     
@@ -177,6 +189,15 @@ const CourseDetails = () => {
 
   const handleGoBack = () => {
     actions.setCurrentPage('dashboard');
+  };
+
+  const handleReviewSuccess = (reviewData) => {
+    // Atualizar dados do curso se necessário
+    // Por exemplo, recarregar avaliações ou atualizar rating
+    if (courseData) {
+      // Pode atualizar o rating localmente se necessário
+      // Ou recarregar o curso completo
+    }
   };
 
   // Loading state
@@ -526,6 +547,17 @@ const CourseDetails = () => {
           )}
         </div>
       </div>
+
+      {/* Modal de Avaliação */}
+      {courseData && (
+        <CourseReviewModal
+          isOpen={reviewModalOpen}
+          onClose={() => setReviewModalOpen(false)}
+          courseId={courseData.id}
+          courseTitle={courseData.title}
+          onSuccess={handleReviewSuccess}
+        />
+      )}
     </DashboardTemplate>
   );
 };
