@@ -20,6 +20,40 @@ const feedbackService = {
       throw new Error(getErrorMessage(error));
     }
   },
+
+  /**
+   * GET /feedback/platform
+   * Obter feedback do usuário atual
+   */
+  getUserFeedback: async () => {
+    try {
+      const response = await apiClient.get('/feedback/platform');
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || 'Feedback obtido com sucesso',
+      };
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
+
+  /**
+   * GET /feedback/stats
+   * Obter estatísticas agregadas (admin)
+   */
+  getFeedbackStats: async () => {
+    try {
+      const response = await apiClient.get('/feedback/stats');
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || 'Estatísticas obtidas com sucesso',
+      };
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
 };
 
 export default feedbackService;

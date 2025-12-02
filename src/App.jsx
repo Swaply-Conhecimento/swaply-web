@@ -50,7 +50,7 @@ const AppContent = () => {
     'schedule-class',
     'notifications',
     'platform-review'
-  ];
+  ], []);
 
   // Verificar se usuário está tentando acessar rota protegida sem autenticação
   // Só executar depois que o loading terminar para não interferir na restauração do token
@@ -62,7 +62,7 @@ const AppContent = () => {
       // Redirecionar para login se tentar acessar área protegida
       actions.setCurrentPage('auth');
     }
-  }, [state.isAuthenticated, state.currentPage]);
+  }, [state.isAuthenticated, state.currentPage, state.isLoading, protectedPages, actions]);
 
   // Se ainda está carregando, mostrar tela de loading
   if (state.isLoading) {

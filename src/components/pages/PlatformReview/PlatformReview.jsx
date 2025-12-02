@@ -44,6 +44,17 @@ const PlatformReview = () => {
       return;
     }
 
+    // Validação de limite de caracteres
+    if (formData.comment && formData.comment.length > 2000) {
+      setError('O comentário não pode ter mais de 2000 caracteres');
+      return;
+    }
+
+    if (formData.suggestions && formData.suggestions.length > 2000) {
+      setError('As sugestões não podem ter mais de 2000 caracteres');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -180,7 +191,11 @@ const PlatformReview = () => {
                   setFormData(prev => ({ ...prev, comment: e.target.value }))
                 }
                 rows={4}
+                maxLength={2000}
               />
+              <span className="platform-review-page__char-count">
+                {formData.comment.length}/2000 caracteres
+              </span>
             </div>
 
             {/* Sugestões */}
@@ -196,7 +211,11 @@ const PlatformReview = () => {
                   setFormData(prev => ({ ...prev, suggestions: e.target.value }))
                 }
                 rows={3}
+                maxLength={2000}
               />
+              <span className="platform-review-page__char-count">
+                {formData.suggestions.length}/2000 caracteres
+              </span>
             </div>
 
             {/* Recomendaria */}

@@ -11,16 +11,6 @@ import {
   Calendar,
   ArrowLeft,
   VideoCamera,
-  Globe
-} from '@phosphor-icons/react';
-import { useApp } from '../../../contexts';
-import { useCourses } from '../../../hooks/useCourses';
-import DashboardTemplate from '../../templates/DashboardTemplate';
-import Card from '../../molecules/Card';
-import Button from '../../atoms/Button';
-import LoadingScreen from '../../atoms/LoadingScreen';
-import CourseReviewModal from '../../organisms/CourseReviewModal';
-import './CourseDetails.css';
   Globe,
   PencilSimple,
   CaretDown,
@@ -33,6 +23,7 @@ import DashboardTemplate from "../../templates/DashboardTemplate";
 import Card from "../../molecules/Card";
 import Button from "../../atoms/Button";
 import LoadingScreen from "../../atoms/LoadingScreen";
+import CourseReviewModal from "../../organisms/CourseReviewModal";
 import { CourseReviews } from "../../organisms";
 import "./CourseDetails.css";
 
@@ -397,7 +388,7 @@ const CourseDetails = () => {
     actions.setCurrentPage("dashboard");
   };
 
-  const handleReviewSuccess = (reviewData) => {
+  const handleReviewSuccess = () => {
     // Atualizar dados do curso se necessário
     // Por exemplo, recarregar avaliações ou atualizar rating
     if (courseData) {
@@ -968,7 +959,7 @@ const CourseDetails = () => {
           ) && (
             <CourseReviews
               courseId={courseData._id || courseData.id}
-              onReviewSubmit={async (review) => {
+              onReviewSubmit={async () => {
                 // Atualizar dados do curso após nova avaliação
                 if (!courseId) return;
                 try {
