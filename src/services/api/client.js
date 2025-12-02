@@ -38,6 +38,12 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Se o body for FormData, remover Content-Type para o browser definir automaticamente com boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+    
     return config;
   },
   (error) => {
@@ -63,9 +69,13 @@ apiClient.interceptors.response.use(
       
       // Se falhou no refresh token, fazer logout
       if (originalRequest.url.includes('/auth/refresh-token')) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/';
+        // Só remover token se realmente for erro 401 (token inválido)
+        // Não remover por timeout ou erros de rede
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          window.location.href = '/';
+        }
         return Promise.reject(error);
       }
 
@@ -89,8 +99,8 @@ apiClient.interceptors.response.use(
       const refreshToken = localStorage.getItem('refreshToken');
       
       if (!refreshToken) {
+        // Só remover e redirecionar se realmente não houver refreshToken
         localStorage.removeItem('token');
-        window.location.href = '/';
         return Promise.reject(error);
       }
 
@@ -112,9 +122,12 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/';
+        // Só remover tokens se refresh falhou com 401 (token realmente inválido)
+        if (refreshError.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          window.location.href = '/';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

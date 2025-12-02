@@ -517,6 +517,172 @@
   border-color: var(--color-primary-200);
 }
 
+/* Dark Theme - Textos e Ícones */
+[data-theme="dark"] .profile__section-title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile__section-title svg,
+[data-theme="dark"] .profile__section-title * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile__name {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile__username {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .profile__bio {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="dark"] .profile__stat-label,
+[data-theme="dark"] .profile__stat-value {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile__course-title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile__course-category {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-theme="dark"] .profile__course-stats {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .profile__course-stats svg,
+[data-theme="dark"] .profile__course-stats * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile svg,
+[data-theme="dark"] .profile [class*="icon"],
+[data-theme="dark"] .profile [class*="Icon"] {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+/* Credit History */
+.profile__view-history-btn {
+  margin-top: var(--spacing-2);
+  font-size: var(--font-size-sm);
+}
+
+.profile__credit-history {
+  margin-top: var(--spacing-6);
+}
+
+.profile__credit-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-4);
+}
+
+.profile__credit-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.profile__credit-history-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-3);
+  background: var(--color-neutral-50);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-neutral-200);
+  transition: all var(--transition-fast);
+}
+
+.profile__credit-history-item:hover {
+  background: var(--color-neutral-100);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile__credit-history-icon {
+  font-size: var(--font-size-2xl);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profile__credit-history-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile__credit-history-description {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-neutral-900);
+  margin: 0 0 var(--spacing-1) 0;
+}
+
+.profile__credit-history-date {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-600);
+  margin: 0;
+}
+
+.profile__credit-history-amount {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-neutral-700);
+  white-space: nowrap;
+}
+
+.profile__credit-history-amount--positive {
+  color: var(--color-success);
+}
+
+.profile__credit-history-amount--negative {
+  color: var(--color-error);
+}
+
+/* Dark Theme - Credit History */
+[data-theme="dark"] .profile__credit-history-item {
+  background: var(--color-card);
+  border-color: var(--color-neutral-200);
+}
+
+[data-theme="dark"] .profile__credit-history-item:hover {
+  background: var(--color-neutral-50);
+}
+
+[data-theme="dark"] .profile__credit-history-description {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .profile__credit-history-date {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-theme="dark"] .profile__credit-history-amount {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="dark"] .profile__credit-history-amount--positive {
+  color: var(--color-success);
+}
+
+[data-theme="dark"] .profile__credit-history-amount--negative {
+  color: #FCA5A5;
+}
+
 /* High Contrast Mode */
 @media (prefers-contrast: high) {
   .profile__stat-card,

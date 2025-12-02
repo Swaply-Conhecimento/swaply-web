@@ -44,29 +44,50 @@
 .calendar-page__mode-toggle {
   display: flex;
   align-items: center;
-  gap: var(--spacing-3);
-  background: white;
-  padding: var(--spacing-3) var(--spacing-4);
+  gap: var(--spacing-4);
+  background: var(--color-card);
+  padding: var(--spacing-4) var(--spacing-6);
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-neutral-200);
   box-shadow: var(--shadow-sm);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 220px;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-page__mode-toggle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--color-primary-800) 0%, var(--color-primary-700) 100%);
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+.calendar-page__mode-toggle:hover::before {
+  opacity: 0.1;
 }
 
 .calendar-page__toggle-label {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-size: var(--font-size-base);
+  font-weight: 600;
   color: var(--color-neutral-700);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
 }
 
-/* Dark mode - toggle de modo */
-[data-theme="dark"] .calendar-page__mode-toggle {
-  background: var(--color-card);
-  border-color: var(--color-neutral-700);
+.calendar-page__mode-toggle:hover .calendar-page__toggle-label {
+  color: var(--color-primary-800);
+  transform: scale(1.02);
 }
 
-[data-theme="dark"] .calendar-page__toggle-label {
-  color: #FFFFFF;
-}
 
 /* Content */
 .calendar-page__content {
@@ -78,15 +99,10 @@
 
 /* Calendar */
 .calendar-page__calendar-card {
-  background: white;
+  background: var(--color-card);
   border: 1px solid var(--color-neutral-200);
 }
 
-/* Dark mode - fundo escuro para o card do calendário */
-[data-theme="dark"] .calendar-page__calendar-card {
-  background: var(--color-card);
-  border-color: var(--color-neutral-700);
-}
 
 .calendar__header {
   display: flex;
@@ -104,7 +120,7 @@
   width: 40px;
   height: 40px;
   border: 1px solid var(--color-neutral-200);
-  background: white;
+  background: var(--color-card);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -117,20 +133,6 @@
   border-color: var(--color-primary-200);
 }
 
-/* Dark mode - botões de navegação escuros */
-[data-theme="dark"] .calendar__nav-btn,
-body[data-theme="dark"] .calendar__nav-btn {
-  background: var(--color-card);
-  border-color: var(--color-neutral-700);
-  color: #FFFFFF;
-}
-
-[data-theme="dark"] .calendar__nav-btn:hover,
-body[data-theme="dark"] .calendar__nav-btn:hover {
-  background: var(--color-primary-800);
-  color: #FFFFFF;
-  border-color: var(--color-primary-700);
-}
 
 .calendar__month-year {
   font-size: var(--font-size-xl);
@@ -157,21 +159,10 @@ body[data-theme="dark"] .calendar__nav-btn:hover {
   font-weight: 600;
 }
 
-/* Dark mode - cabeçalhos dos dias - maior especificidade e importante */
-[data-theme="dark"] .calendar__day-header,
-[data-theme="dark"] .calendar-page__calendar-card .calendar__day-header,
-[data-theme="dark"] .calendar__grid .calendar__day-header,
-body[data-theme="dark"] .calendar__day-header,
-body[data-theme="dark"] .calendar-page__calendar-card .calendar__day-header,
-body[data-theme="dark"] .calendar__grid .calendar__day-header {
-  background: var(--color-neutral-800) !important;
-  color: #FFFFFF !important;
-  border: none !important;
-}
 
 
 .calendar__day {
-  background: white;
+  background: rgba(255, 255, 255, 0.4);
   border: none;
   padding: var(--spacing-3);
   text-align: center;
@@ -189,17 +180,9 @@ body[data-theme="dark"] .calendar__grid .calendar__day-header {
 .calendar__day--empty {
   background: var(--color-neutral-50);
   cursor: default;
+  opacity: 0.4;
 }
 
-/* Dark mode - dias do calendário */
-[data-theme="dark"] .calendar__day {
-  background: var(--color-card);
-  color: #FFFFFF;
-}
-
-[data-theme="dark"] .calendar__day--empty {
-  background: var(--color-neutral-900);
-}
 
 .calendar__day:hover:not(.calendar__day--empty) {
   background: var(--color-primary-50);
@@ -219,7 +202,24 @@ body[data-theme="dark"] .calendar__grid .calendar__day-header {
 .calendar__day--selected {
   background: var(--color-primary-700);
   color: white;
-  box-shadow: inset 0 0 0 2px white;
+  outline: 3px solid white;
+  outline-offset: -3px;
+  z-index: 10;
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.calendar__day--today {
+  background: linear-gradient(135deg, var(--color-primary-800) 0%, var(--color-primary-700) 100%);
+  color: white;
+  font-weight: 700;
+  border: 2px solid var(--color-primary-600);
+  box-shadow: var(--shadow-md);
+}
+
+.calendar__day--today:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
 }
 
 .calendar__legend {
@@ -282,7 +282,7 @@ body[data-theme="dark"] .calendar__grid .calendar__day-header {
 .calendar-page__time-slot {
   padding: var(--spacing-2) var(--spacing-3);
   border: 1px solid var(--color-neutral-200);
-  background: white;
+  background: var(--color-card);
   border-radius: var(--radius-base);
   font-size: var(--font-size-sm);
   cursor: pointer;
@@ -320,7 +320,7 @@ body[data-theme="dark"] .calendar__grid .calendar__day-header {
 }
 
 .calendar-page__upcoming-item:hover {
-  background: white;
+  background: var(--color-card);
   border-color: var(--color-primary-200);
 }
 
@@ -393,14 +393,19 @@ body[data-theme="dark"] .calendar__grid .calendar__day-header {
 }
 
 /* Animation */
-.calendar-page > * {
+.calendar-page>* {
   opacity: 0;
   transform: translateY(20px);
   animation: fadeInUp 0.6s ease-out forwards;
 }
 
-.calendar-page > *:nth-child(1) { animation-delay: 0.1s; }
-.calendar-page > *:nth-child(2) { animation-delay: 0.2s; }
+.calendar-page>*:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.calendar-page>*:nth-child(2) {
+  animation-delay: 0.2s;
+}
 
 @keyframes fadeInUp {
   to {
@@ -414,46 +419,46 @@ body[data-theme="dark"] .calendar__grid .calendar__day-header {
   .calendar-page {
     gap: var(--spacing-6);
   }
-  
+
   .calendar-page__header-content {
     flex-direction: column;
     gap: var(--spacing-4);
     align-items: stretch;
   }
-  
+
   .calendar-page__title {
     justify-content: center;
     text-align: center;
     font-size: var(--font-size-2xl);
   }
-  
+
   .calendar-page__subtitle {
     text-align: center;
   }
-  
+
   .calendar-page__mode-toggle {
     justify-content: center;
   }
-  
+
   .calendar-page__content {
     grid-template-columns: 1fr;
     gap: var(--spacing-6);
   }
-  
+
   .calendar-page__side-panel {
     order: -1;
     position: static;
   }
-  
+
   .calendar__grid {
     font-size: var(--font-size-sm);
   }
-  
+
   .calendar__day {
     min-height: 40px;
     padding: var(--spacing-2);
   }
-  
+
   .calendar-page__time-slots {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -464,20 +469,20 @@ body[data-theme="dark"] .calendar__grid .calendar__day-header {
     font-size: var(--font-size-xl);
     gap: var(--spacing-2);
   }
-  
+
   .calendar-page__mode-toggle {
     flex-direction: column;
     gap: var(--spacing-2);
   }
-  
+
   .calendar__month-year {
     font-size: var(--font-size-lg);
   }
-  
+
   .calendar-page__time-slots {
     grid-template-columns: 1fr 1fr;
   }
-  
+
   .calendar-page__upcoming-item {
     flex-direction: column;
     gap: var(--spacing-2);
@@ -485,160 +490,214 @@ body[data-theme="dark"] .calendar__grid .calendar__day-header {
   }
 }
 
-/* Dark Theme Support */
+/* ========================================
+   DARK THEME - PALETA ROXA ESCURA
+   ======================================== */
+
+/* Header e Títulos */
 [data-theme="dark"] .calendar-page__title {
   color: #FFFFFF;
 }
 
 [data-theme="dark"] .calendar-page__title svg {
-  color: var(--color-primary-300);
+  color: var(--color-primary-700);
 }
 
 [data-theme="dark"] .calendar-page__subtitle {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.7);
 }
 
+/* Toggle de Modo - Usar cor da sidebar */
 [data-theme="dark"] .calendar-page__mode-toggle {
-  background: var(--color-card);
-  border-color: var(--color-neutral-700);
+  background: var(--color-sidebar) !important;
+  border-color: var(--color-primary-800) !important;
 }
 
 [data-theme="dark"] .calendar-page__toggle-label {
-  color: #FFFFFF;
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
+/* Cards - Usar cor da sidebar no modo escuro */
 [data-theme="dark"] .calendar-page__calendar-card,
-body[data-theme="dark"] .calendar-page__calendar-card,
+[data-theme="dark"] .calendar-page__calendar-card.card,
 [data-theme="dark"] .calendar-page__hours-card,
-body[data-theme="dark"] .calendar-page__hours-card,
+[data-theme="dark"] .calendar-page__hours-card.card,
 [data-theme="dark"] .calendar-page__upcoming-card,
-body[data-theme="dark"] .calendar-page__upcoming-card,
+[data-theme="dark"] .calendar-page__upcoming-card.card,
 [data-theme="dark"] .calendar-page__summary-card,
-body[data-theme="dark"] .calendar-page__summary-card {
-  background: var(--color-card);
-  border-color: var(--color-neutral-700);
+[data-theme="dark"] .calendar-page__summary-card.card {
+  background-color: var(--color-sidebar) !important;
+  background: var(--color-sidebar) !important;
+  border-color: var(--color-primary-800) !important;
 }
 
+/* Garantir que cards dentro dos cards também usem cor da sidebar */
+[data-theme="dark"] .calendar-page__calendar-card .card,
+[data-theme="dark"] .calendar-page__hours-card .card,
+[data-theme="dark"] .calendar-page__upcoming-card .card,
+[data-theme="dark"] .calendar-page__summary-card .card {
+  background-color: var(--color-sidebar) !important;
+  background: var(--color-sidebar) !important;
+  border-color: var(--color-primary-800) !important;
+}
+
+/* Header do Calendário */
 [data-theme="dark"] .calendar__header {
-  border-bottom-color: var(--color-neutral-700);
+  border-bottom-color: var(--color-primary-800) !important;
 }
 
 [data-theme="dark"] .calendar__month-year {
-  color: var(--color-neutral-100);
+  color: #FFFFFF !important;
 }
 
-/* Removido duplicado - já definido acima */
-
-[data-theme="dark"] .calendar__grid,
-body[data-theme="dark"] .calendar__grid {
-  background: var(--color-neutral-700);
+/* Botões de Navegação - Usar cor da sidebar */
+[data-theme="dark"] .calendar__nav-btn {
+  background: var(--color-sidebar) !important;
+  border-color: var(--color-primary-800) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
-[data-theme="dark"] .calendar__day,
-body[data-theme="dark"] .calendar__day {
-  background: var(--color-card);
-  color: #FFFFFF;
-  border-color: transparent;
+[data-theme="dark"] .calendar__nav-btn:hover {
+  background: var(--color-primary-800) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-primary-700) !important;
 }
 
-[data-theme="dark"] .calendar__day--empty,
-body[data-theme="dark"] .calendar__day--empty {
-  background: var(--color-neutral-900);
+/* Grid do Calendário - Roxo Escuro */
+[data-theme="dark"] .calendar__grid {
+  background: var(--color-primary-800) !important;
 }
 
-[data-theme="dark"] .calendar__day:hover:not(.calendar__day--empty):not(.calendar__day--has-class) {
-  background: var(--color-primary-900);
-  color: var(--color-neutral-100);
+/* Cabeçalhos dos Dias da Semana - Usar cor da sidebar */
+[data-theme="dark"] .calendar__day-header {
+  background: var(--color-sidebar) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
+/* Dias do Calendário - Cor similar ao fundo mas não igual aos vazios */
+[data-theme="dark"] .calendar__day {
+  background: rgba(30, 41, 59, 0.7) !important;
+  /* Similar ao fundo mas visível */
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-theme="dark"] .calendar__day--empty {
+  background: rgba(15, 23, 42, 0.9) !important;
+  /* Mais escuro e diferente dos dias normais */
+  color: rgba(255, 255, 255, 0.25) !important;
+}
+
+[data-theme="dark"] .calendar__day:hover:not(.calendar__day--empty):not(.calendar__day--has-class):not(.calendar__day--selected):not(.calendar__day--today) {
+  background: var(--color-primary-800) !important;
+  color: #FFFFFF !important;
+}
+
+/* Dia com Aula Agendada */
 [data-theme="dark"] .calendar__day--has-class {
-  background: var(--color-primary-700);
-  color: #FFFFFF;
-  font-weight: 600;
+  background: var(--color-primary-800) !important;
+  color: #FFFFFF !important;
 }
 
 [data-theme="dark"] .calendar__day--has-class:hover {
-  background: var(--color-primary-600);
-  color: #FFFFFF;
+  background: var(--color-primary-700) !important;
 }
 
-[data-theme="dark"] .calendar__day--selected {
-  background: var(--color-primary-600);
-  color: #FFFFFF;
-  box-shadow: inset 0 0 0 2px var(--color-primary-400);
+/* Dia Selecionado - Borda branca e z-index alto */
+[data-theme="dark"] .calendar__day--selected,
+[data-theme="dark"] .calendar__day.calendar__day--selected,
+[data-theme="dark"] button.calendar__day--selected {
+  background: var(--color-primary-700) !important;
+  color: #FFFFFF !important;
+  border: 3px solid #FFFFFF !important;
+  outline: none !important;
+  z-index: 10 !important;
+  position: relative !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5), 0 0 8px rgba(255, 255, 255, 0.3) !important;
 }
 
+/* Dia Atual (Hoje) */
+[data-theme="dark"] .calendar__day--today {
+  background: linear-gradient(135deg, var(--color-primary-800) 0%, var(--color-primary-700) 100%) !important;
+  color: #FFFFFF !important;
+  font-weight: 700;
+  border: 2px solid var(--color-primary-600) !important;
+  box-shadow: 0 0 0 1px var(--color-primary-500) !important;
+}
+
+[data-theme="dark"] .calendar__day--today:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px var(--color-primary-500), var(--shadow-md) !important;
+}
+
+/* Legenda */
 [data-theme="dark"] .calendar__legend {
-  border-top-color: var(--color-neutral-700);
+  border-top-color: var(--color-primary-800) !important;
 }
 
 [data-theme="dark"] .calendar__legend-item {
-  color: var(--color-neutral-300);
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 [data-theme="dark"] .calendar__legend-dot--available {
-  background: var(--color-neutral-600);
+  background: var(--color-primary-700) !important;
 }
 
 [data-theme="dark"] .calendar__legend-dot--scheduled {
-  background: var(--color-primary-600);
+  background: var(--color-primary-600) !important;
 }
 
+/* Títulos dos Cards Laterais */
+[data-theme="dark"] .calendar-page__card-title {
+  color: #FFFFFF !important;
+}
+
+/* Time Slots - Horários Disponíveis - Usar cor da sidebar */
 [data-theme="dark"] .calendar-page__time-slot {
-  background: var(--color-card);
-  border-color: var(--color-neutral-700);
-  color: var(--color-neutral-200);
+  background: var(--color-sidebar) !important;
+  border-color: var(--color-primary-800) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
 [data-theme="dark"] .calendar-page__time-slot:hover {
-  background: var(--color-primary-900);
-  border-color: var(--color-primary-700);
-  color: var(--color-neutral-100);
+  background: var(--color-primary-800) !important;
+  border-color: var(--color-primary-700) !important;
+  color: #FFFFFF !important;
 }
 
-[data-theme="dark"] .calendar-page__card-title {
-  color: var(--color-neutral-100);
+[data-theme="dark"] .calendar-page__time-slot--selected {
+  background: var(--color-primary-700) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-primary-600) !important;
 }
 
+/* Próximas Aulas - Usar cor da sidebar */
 [data-theme="dark"] .calendar-page__upcoming-item {
-  background: var(--color-neutral-900);
-  border-color: var(--color-neutral-700);
+  background: var(--color-sidebar) !important;
+  border-color: var(--color-primary-800) !important;
 }
 
 [data-theme="dark"] .calendar-page__upcoming-item:hover {
-  background: var(--color-card);
-  border-color: var(--color-primary-700);
+  background: var(--color-primary-800) !important;
+  border-color: var(--color-primary-700) !important;
 }
 
 [data-theme="dark"] .calendar-page__upcoming-course {
-  color: var(--color-neutral-100);
+  color: #FFFFFF !important;
 }
 
 [data-theme="dark"] .calendar-page__upcoming-meta {
-  color: var(--color-neutral-400);
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 [data-theme="dark"] .calendar-page__upcoming-time {
-  color: var(--color-primary-400);
+  color: var(--color-primary-400) !important;
 }
 
+/* Resumo do Agendamento */
 [data-theme="dark"] .calendar-page__summary-row span:first-child {
-  color: var(--color-neutral-400);
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 [data-theme="dark"] .calendar-page__summary-row span:last-child {
-  color: var(--color-neutral-100);
-}
-
-/* Melhorar contraste dos elementos que ainda estão muito claros */
-[data-theme="dark"] .calendar-page__time-slot {
-  background: var(--color-neutral-900);
-  border-color: var(--color-neutral-700);
-  color: var(--color-neutral-200);
-}
-
-[data-theme="dark"] .calendar-page__time-slot:hover {
-  background: var(--color-primary-800);
-  border-color: var(--color-primary-600);
   color: #FFFFFF;
 }

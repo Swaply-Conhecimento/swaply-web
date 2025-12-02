@@ -150,10 +150,10 @@
 /* Labels e mensagens de formulário no modo escuro */
 [data-theme="dark"] .input-label,
 [data-theme="dark"] label {
-  color: var(--color-neutral-300);
+  color: #FFFFFF !important;
 }
 [data-theme="dark"] .input-message {
-  color: var(--color-neutral-400);
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 [data-theme="dark"] .input-message--error {
   color: #FCA5A5;
@@ -175,6 +175,80 @@
 [data-theme="dark"] [class*="label"]:not(.sidebar__menu-label),
 [data-theme="dark"] [class*="subtitle"] {
   color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* Ícones no modo escuro - linhas internas brancas */
+[data-theme="dark"] svg,
+[data-theme="dark"] svg *,
+[data-theme="dark"] [class*="icon"] svg,
+[data-theme="dark"] [class*="Icon"] svg,
+[data-theme="dark"] [class*="icon"] svg *,
+[data-theme="dark"] [class*="Icon"] svg * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* Ícones Phosphor no modo escuro */
+[data-theme="dark"] [class*="phosphor"],
+[data-theme="dark"] svg[class*="phosphor"],
+[data-theme="dark"] svg[class*="Phosphor"] {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* Todos os SVGs no modo escuro */
+[data-theme="dark"] svg:not([fill="none"]) {
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] svg[stroke] {
+  stroke: #FFFFFF !important;
+}
+
+/* Textos com cores neutras escuras no modo escuro */
+[data-theme="dark"] [style*="color: var(--color-neutral-700)"],
+[data-theme="dark"] [style*="color: var(--color-neutral-800)"],
+[data-theme="dark"] [style*="color: var(--color-neutral-900)"],
+[data-theme="dark"] [style*="color: var(--color-primary-900)"],
+[data-theme="dark"] [style*="color: var(--color-primary-800)"] {
+  color: #FFFFFF !important;
+}
+
+/* Classes com cores neutras escuras */
+[data-theme="dark"] [class*="neutral-700"],
+[data-theme="dark"] [class*="neutral-800"],
+[data-theme="dark"] [class*="neutral-900"],
+[data-theme="dark"] [class*="primary-900"],
+[data-theme="dark"] [class*="primary-800"] {
+  color: #FFFFFF !important;
+}
+
+/* Textos que usam variáveis CSS de cores escuras */
+[data-theme="dark"] * {
+  --text-color-dark: #FFFFFF;
+}
+
+[data-theme="dark"] [style*="--color-neutral-700"],
+[data-theme="dark"] [style*="--color-neutral-800"],
+[data-theme="dark"] [style*="--color-neutral-900"],
+[data-theme="dark"] [style*="--color-primary-900"],
+[data-theme="dark"] [style*="--color-primary-800"] {
+  color: #FFFFFF !important;
+}
+
+/* Regra geral para textos com cores escuras no modo escuro */
+[data-theme="dark"] * {
+  /* Sobrescrever cores de texto escuras */
+}
+
+[data-theme="dark"] *[style*="color: rgb(51, 65, 85)"],
+[data-theme="dark"] *[style*="color: rgb(30, 41, 59)"],
+[data-theme="dark"] *[style*="color: rgb(15, 23, 42)"],
+[data-theme="dark"] *[style*="color: rgb(82, 53, 123)"],
+[data-theme="dark"] *[style*="color: rgb(84, 89, 172)"] {
+  color: #FFFFFF !important;
 }
 
 /* High Contrast Theme for better accessibility */

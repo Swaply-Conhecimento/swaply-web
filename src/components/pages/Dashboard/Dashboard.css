@@ -438,6 +438,27 @@
   color: #FFFFFF;
 }
 
+/* Dark Theme - Ícones e Textos Adicionais */
+[data-theme="dark"] .dashboard__stat-label,
+[data-theme="dark"] .dashboard__stat-value {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .dashboard__cta-title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .dashboard__section-title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .dashboard svg,
+[data-theme="dark"] .dashboard [class*="icon"],
+[data-theme="dark"] .dashboard [class*="Icon"] {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
 /* High Contrast Mode */
 @media (prefers-contrast: high) {
   .dashboard__welcome {

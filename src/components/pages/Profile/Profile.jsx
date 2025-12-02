@@ -8,10 +8,12 @@ import {
   Calendar,
   Trophy,
   GraduationCap,
-  PencilSimple
+  PencilSimple,
+  CalendarCheck
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts';
 import { useUser } from '../../../hooks/useUser';
+import { useCredits } from '../../../hooks';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../molecules/Card';
 import Button from '../../atoms/Button';
@@ -20,11 +22,15 @@ import './Profile.css';
 const Profile = () => {
   const { state, actions } = useApp();
   const { getEnrolledCourses, getTeachingCourses, getStats, loading } = useUser();
+  const { getCreditHistory } = useCredits();
   
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [teachingCourses, setTeachingCourses] = useState([]);
   const [userStats, setUserStats] = useState(null);
   const [isLoadingCourses, setIsLoadingCourses] = useState(true);
+  const [creditHistory, setCreditHistory] = useState([]);
+  const [showCreditHistory, setShowCreditHistory] = useState(false);
+  const [loadingCredits, setLoadingCredits] = useState(false);
 
   // Carregar dados do usuário ao montar componente
   useEffect(() => {
@@ -61,6 +67,29 @@ const Profile = () => {
     }
   }, [state.user]);
 
+  // Carregar histórico de créditos quando necessário
+  const loadCreditHistory = async () => {
+    if (showCreditHistory && creditHistory.length === 0) {
+      setLoadingCredits(true);
+      try {
+        const result = await getCreditHistory({ page: 1, limit: 20 });
+        if (result.success) {
+          setCreditHistory(result.transactions || []);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar histórico de créditos:', error);
+      } finally {
+        setLoadingCredits(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (showCreditHistory) {
+      loadCreditHistory();
+    }
+  }, [showCreditHistory]);
+
   // Dados do usuário vindos do contexto (já carregados na autenticação)
   const userProfile = state.user || {};
   
@@ -87,6 +116,10 @@ const Profile = () => {
 
   const handleViewSchedule = () => {
     actions.setCurrentPage('calendar');
+  };
+
+  const handleAvailabilitySettings = () => {
+    actions.setCurrentPage('availability-settings');
   };
 
   const handleViewMoreCompleted = () => {
@@ -120,6 +153,39 @@ const Profile = () => {
     actions.setCurrentPage('course-details');
   };
 
+  const handleEditCourse = (course) => {
+    // Garantir que o curso tem ID
+    const courseId = course.id || course._id;
+    if (!courseId) {
+      console.error('❌ Erro: Curso sem ID no Profile', course);
+      return;
+    }
+    
+    // Preparar dados do curso para edição
+    const courseData = {
+      id: courseId,
+      _id: courseId,
+      title: course.title,
+      description: course.description || '',
+      category: course.category || '',
+      subcategory: course.subcategory || '',
+      level: course.level || 'Iniciante',
+      language: course.language || course.courseLanguage || 'Português',
+      pricePerHour: course.pricePerHour || 10,
+      totalHours: course.totalHours || 10,
+      maxStudents: course.maxStudents || 30,
+      tags: course.tags || [],
+      features: course.features || [],
+      requirements: course.requirements || [],
+      objectives: course.objectives || [],
+      status: course.status || 'draft',
+      instructor: course.instructor || 'Você'
+    };
+    
+    actions.setSelectedCourse(courseData);
+    actions.openModal('editCourse');
+  };
+
   return (
     <DashboardTemplate>
       <div className="profile">
@@ -151,6 +217,12 @@ const Profile = () => {
                 <Calendar size={18} />
                 Minha Agenda
               </Button>
+              {userProfile.isInstructor && (
+                <Button variant="outline" onClick={handleAvailabilitySettings}>
+                  <CalendarCheck size={18} />
+                  Configurar Disponibilidade
+                </Button>
+              )}
             </div>
           </div>
         </Card>
@@ -316,7 +388,8 @@ const Profile = () => {
                           <Button 
                             variant="ghost" 
                             size="small"
-                            onClick={() => handleViewCourse(course)}
+                            onClick={() => handleEditCourse(course)}
+                            title="Editar curso"
                           >
                             <PencilSimple size={18} />
                           </Button>
@@ -382,6 +455,74 @@ const Profile = () => {
                 Ver Todas as Aulas Agendadas
               </Button>
             </div>
+          </Card>
+        )}
+
+        {/* Credit History */}
+        {showCreditHistory && (
+          <Card className="profile__credit-history" padding="large">
+            <div className="profile__credit-history-header">
+              <h2 className="profile__section-title">
+                <Coins size={24} />
+                Histórico de Créditos
+              </h2>
+              <Button 
+                variant="ghost" 
+                size="small"
+                onClick={() => setShowCreditHistory(false)}
+              >
+                Fechar
+              </Button>
+            </div>
+            
+            {loadingCredits ? (
+              <div className="profile__loading">
+                <p>Carregando histórico...</p>
+              </div>
+            ) : creditHistory.length > 0 ? (
+              <div className="profile__credit-history-list">
+                {creditHistory.map((transaction) => {
+                  const isPositive = transaction.type === 'credit_purchase' || transaction.type === 'credit_earned' || transaction.type === 'refund';
+                  const isNegative = transaction.type === 'credit_spent';
+                  
+                  return (
+                    <div key={transaction._id} className="profile__credit-history-item">
+                      <div className="profile__credit-history-icon">
+                        {isPositive ? '➕' : isNegative ? '➖' : '💰'}
+                      </div>
+                      <div className="profile__credit-history-info">
+                        <h4 className="profile__credit-history-description">
+                          {transaction.description || 'Transação'}
+                        </h4>
+                        <p className="profile__credit-history-date">
+                          {transaction.createdAt 
+                            ? new Date(transaction.createdAt).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })
+                            : 'Data não disponível'}
+                        </p>
+                      </div>
+                      <div className={`profile__credit-history-amount ${
+                        isPositive ? 'profile__credit-history-amount--positive' : 
+                        isNegative ? 'profile__credit-history-amount--negative' : ''
+                      }`}>
+                        {isPositive ? '+' : isNegative ? '-' : ''}
+                        {transaction.credits || transaction.amount || 0} créditos
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="profile__empty-state">
+                <Coins size={48} weight="duotone" />
+                <p>Nenhuma transação encontrada</p>
+              </div>
+            )}
           </Card>
         )}
       </div>

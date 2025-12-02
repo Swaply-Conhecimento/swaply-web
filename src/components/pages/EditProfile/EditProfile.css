@@ -247,6 +247,21 @@
   border-color: #FFFFFF;
 }
 
+/* Botão Voltar no modo escuro */
+[data-theme="dark"] .edit-profile__back-button {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .edit-profile__back-button svg,
+[data-theme="dark"] .edit-profile__back-button * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .edit-profile__empty-skills {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .edit-profile {

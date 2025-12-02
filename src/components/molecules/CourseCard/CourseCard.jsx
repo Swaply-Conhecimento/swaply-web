@@ -17,14 +17,54 @@ const CourseCard = ({
   image,
   onClick,
   className = '',
+  instructorId,
+  isFavorite: propIsFavorite,
   ...props
 }) => {
   const { state, actions } = useApp();
-  const isFavorite = state.user?.favorites?.includes(id) || false;
+  // Preferir a flag enviada pelo backend quando presente, mas permitir toggle/estado local
+  const initialFavorite = typeof propIsFavorite === 'boolean'
+    ? propIsFavorite
+    : (state.user?.favorites?.includes(id) || false);
+
+  const [localFavorite, setLocalFavorite] = React.useState(initialFavorite);
+
+  // Sincronizar quando propIsFavorite muda
+  React.useEffect(() => {
+    if (typeof propIsFavorite === 'boolean') {
+      setLocalFavorite(propIsFavorite);
+    } else {
+      // se o backend não enviou isFavorite, sincronizar com o state.user.favorites
+      setLocalFavorite(state.user?.favorites?.includes(id) || false);
+    }
+  }, [propIsFavorite, state.user?.favorites, id]);
+
+  // Verificar se o curso pertence ao usuário atual
+  // instructor pode ser string (nome) ou objeto com _id
+  const isMyCourse = state.user && state.user._id && (
+    (instructorId && instructorId === state.user._id) ||
+    (typeof instructor === 'object' && instructor !== null && (
+      (instructor._id && instructor._id === state.user._id) ||
+      (instructor.id && instructor.id === state.user._id)
+    )) ||
+    (typeof instructor === 'string' && instructor === state.user._id)
+  );
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation(); // Evita trigger do onClick do card
-    actions.toggleFavorite(id);
+    // Atualizar otimista localmente para resposta imediata
+    const prev = localFavorite;
+    setLocalFavorite(!prev);
+    actions.toggleFavorite(id).then((res) => {
+      if (!res.success) {
+        // Reverter se falhar
+        setLocalFavorite(prev);
+        actions.showToast?.('Não foi possível atualizar favorito. Tente novamente.', 'error');
+      }
+    }).catch(() => {
+      setLocalFavorite(prev);
+      actions.showToast?.('Erro de rede. Tente novamente.', 'error');
+    });
   };
   return (
     <Card
@@ -48,40 +88,56 @@ const CourseCard = ({
           {category}
         </div>
         <button 
-          className={`course-card__favorite ${isFavorite ? 'course-card__favorite--active' : ''}`}
+          className={`course-card__favorite ${localFavorite ? 'course-card__favorite--active' : ''}`}
           onClick={handleFavoriteClick}
-          aria-label={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+          aria-label={localFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
         >
-          <Heart size={20} weight={isFavorite ? 'fill' : 'regular'} />
+          <Heart size={20} weight={localFavorite ? 'fill' : 'regular'} />
         </button>
       </div>
       
       <div className="course-card__content">
         <h3 className="course-card__title">{title}</h3>
-        <p className="course-card__instructor">{instructor}</p>
+        <p className="course-card__instructor">
+          {typeof instructor === 'object' && instructor !== null 
+            ? (instructor.name || instructor.username || 'Instrutor')
+            : instructor}
+        </p>
         
-        <div className="course-card__stats">
-          {rating && (
-            <div className="course-card__stat">
-              <span className="course-card__icon">⭐</span>
-              <span>{rating}</span>
-            </div>
-          )}
-          {students && (
-            <div className="course-card__stat">
-              <span className="course-card__icon">👥</span>
-              <span>{students} alunos</span>
-            </div>
-          )}
-        </div>
+        {(rating > 0 || students > 0) && (
+          <div className="course-card__stats">
+            {rating > 0 && (
+              <div className="course-card__stat">
+                <span className="course-card__icon">⭐</span>
+                <span>{rating}</span>
+              </div>
+            )}
+            {students > 0 && (
+              <div className="course-card__stat">
+                <span className="course-card__icon">👥</span>
+                <span>{students} alunos</span>
+              </div>
+            )}
+          </div>
+        )}
         
-        {price && (
+        {price && !isMyCourse && (
           <div className="course-card__footer">
             <div className="course-card__price">
               {price} crédito{price !== 1 ? 's' : ''}
             </div>
             <Button variant="primary" size="small">
               Comprar Aula
+            </Button>
+          </div>
+        )}
+        {isMyCourse && (
+          <div className="course-card__footer">
+            <div className="course-card__price">
+              Seu curso
+            </div>
+            <Button variant="outline" size="small" disabled>
+              Meu Curso
             </Button>
           </div>
         )}
@@ -101,6 +157,7 @@ CourseCard.propTypes = {
   image: PropTypes.string,
   onClick: PropTypes.func,
   className: PropTypes.string,
+  isFavorite: PropTypes.bool,
 };
 
 export default CourseCard;

@@ -16,8 +16,9 @@ import {
   ResetPassword,
   Terms,
   PlatformReview,
+  AvailabilitySettings,
 } from "./components/pages";
-import { AddCourseModal } from "./components/organisms";
+import { AddCourseModal, EditCourseModal } from "./components/organisms";
 import { SvgColorBlindFilters } from "./components/molecules";
 import { ToastContainer } from "./components/molecules/Toast";
 import LoadingScreen from "./components/atoms/LoadingScreen";
@@ -38,11 +39,8 @@ const AppContent = () => {
     // O redirecionamento é feito automaticamente pelo AppContext após login bem-sucedido
   };
 
-  // Rotas públicas que não precisam de autenticação
-  const publicPages = ['auth', 'dashboard', 'course-details', 'settings', 'forgot-password', 'reset-password', 'terms'];
-  
   // Rotas protegidas que exigem autenticação
-  const protectedPages = [
+  const protectedPages = React.useMemo(() => [
     'profile',
     'edit-profile',
     'favorites', 
@@ -55,7 +53,11 @@ const AppContent = () => {
   ];
 
   // Verificar se usuário está tentando acessar rota protegida sem autenticação
+  // Só executar depois que o loading terminar para não interferir na restauração do token
   React.useEffect(() => {
+    // Aguardar o loading terminar antes de verificar autenticação
+    if (state.isLoading) return;
+    
     if (!state.isAuthenticated && protectedPages.includes(state.currentPage)) {
       // Redirecionar para login se tentar acessar área protegida
       actions.setCurrentPage('auth');
@@ -113,6 +115,8 @@ const AppContent = () => {
         return <Terms />;
       case "platform-review":
         return <PlatformReview />;
+      case "availability-settings":
+        return <AvailabilitySettings />;
       default:
         return <Dashboard />;
     }
@@ -129,6 +133,11 @@ const AppContent = () => {
       <AddCourseModal
         isOpen={state.modals.addCourse}
         onClose={() => actions.closeModal("addCourse")}
+      />
+      <EditCourseModal
+        isOpen={state.modals.editCourse}
+        onClose={() => actions.closeModal("editCourse")}
+        course={state.selectedCourse}
       />
       
       {/* Toast Notifications */}

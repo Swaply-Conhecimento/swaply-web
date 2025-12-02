@@ -18,6 +18,11 @@ const Dashboard = () => {
   const [popularCourses, setPopularCourses] = useState([]);
   const [featuredCourses, setFeaturedCourses] = useState([]);
   const [isLoadingCourses, setIsLoadingCourses] = useState(true);
+  const [hasUserCourses, setHasUserCourses] = useState(false);
+
+  // Estatísticas dinâmicas para os cards
+  const [statsUsers, setStatsUsers] = useState(null);
+  const [statsCourses, setStatsCourses] = useState(null);
 
   // Carregar cursos da API ao montar o componente
   useEffect(() => {
@@ -37,21 +42,29 @@ const Dashboard = () => {
 
           // O instructor pode vir como objeto populado ou apenas como ID
           let instructorName = "Instrutor";
+          let instructorId = null;
+          let instructorObject = null;
+          
           if (typeof course.instructor === 'object' && course.instructor !== null) {
             instructorName = course.instructor.name || course.instructor.username || "Instrutor";
+            instructorId = course.instructor._id || course.instructor.id;
+            instructorObject = course.instructor;
           } else if (typeof course.instructor === 'string') {
             // Se for apenas um ID, manter o ID mas não usar como nome
             instructorName = "Instrutor";
+            instructorId = course.instructor;
           }
 
           return {
             id: courseId,
             _id: courseId, // Garantir que _id também está presente
             title: course.title || 'Sem título',
-            instructor: instructorName,
+            instructor: instructorName, // Nome do instrutor para exibição
+            instructorId: instructorId, // ID do instrutor para verificação de propriedade
+            instructorObject: instructorObject, // Objeto completo do instrutor se disponível
             category: course.category || '',
-            rating: course.rating || 0,
-            students: course.currentStudents || course.students || 0,
+            rating: course.rating || null,
+            students: course.currentStudents || course.students || null,
             price: course.pricePerHour || course.price || 0,
             image: course.image || '',
             // Manter outros campos importantes para o CourseDetails
@@ -128,7 +141,11 @@ const Dashboard = () => {
             const teachingResult = await getTeachingCourses({ limit: 12 });
             console.log("👤 Cursos do usuário:", teachingResult.courses?.length || 0, teachingResult.courses);
             
-            if (teachingResult.courses && teachingResult.courses.length > 0) {
+            // Verificar se o usuário tem cursos criados
+            const userHasCourses = teachingResult.courses && teachingResult.courses.length > 0;
+            setHasUserCourses(userHasCourses);
+            
+            if (userHasCourses) {
               const adapted = teachingResult.courses.map(adaptCourse).filter(c => c !== null);
               if (adapted.length > 0) {
                 console.log("✅ Usando cursos do usuário como principal");
@@ -139,55 +156,146 @@ const Dashboard = () => {
             }
           } catch (teachingError) {
             console.warn("⚠️ Erro ao carregar cursos do usuário:", teachingError.message);
+            setHasUserCourses(false);
           }
+        } else {
+          setHasUserCourses(false);
         }
 
-        // Sempre tentar carregar cursos gerais (mesmo que já tenha carregado outros)
-        // Isso garante que cursos recém-criados apareçam
-        // Tentar buscar cursos com status "active" primeiro, depois tentar sem filtro
-        console.log("🔄 Carregando cursos gerais (fallback/complemento)...");
+        // Carregar todos os cursos criados com status active
+        // GET /api/courses?page=1&limit=20&status=active
+        console.log("🔄 Carregando todos os cursos criados (status=active)...");
         try {
-          // Primeiro tentar buscar cursos "active"
-          let generalResult = await getCourses({
+          const allCoursesResult = await getCourses({
             page: 1,
-            limit: 12,
+            limit: 20,
             status: 'active'
           });
 
-          // Se não encontrou cursos "active", tentar sem filtro de status
-          if (!generalResult.courses || generalResult.courses.length === 0) {
-            console.log("🔄 Nenhum curso 'active' encontrado, tentando sem filtro de status...");
-            generalResult = await getCourses({
-              page: 1,
-              limit: 12,
-              // Sem filtro de status para incluir "draft" também
-            });
-          }
+          console.log("🔄 Resposta completa de todos os cursos:", allCoursesResult);
+          console.log("🔄 Número de cursos retornados:", allCoursesResult.courses?.length || 0);
 
-          console.log("🔄 Resposta completa de cursos gerais:", generalResult);
-          console.log("🔄 Número de cursos retornados:", generalResult.courses?.length || 0);
-
-          if (generalResult.courses && generalResult.courses.length > 0) {
-            console.log("🔄 Primeiro curso (exemplo):", generalResult.courses[0]);
-            const adaptedCourses = generalResult.courses.map(adaptCourse).filter(c => c !== null);
+          if (allCoursesResult.courses && allCoursesResult.courses.length > 0) {
+            console.log("🔄 Primeiro curso (exemplo):", allCoursesResult.courses[0]);
+            const adaptedCourses = allCoursesResult.courses.map(adaptCourse).filter(c => c !== null);
             console.log("🔄 Cursos adaptados:", adaptedCourses);
             
             if (adaptedCourses.length > 0) {
-              // Se não carregou nenhum curso antes, usar os gerais
-              if (!hasLoadedAnyCourses) {
-                console.log("✅ Usando cursos gerais como principal");
-                setPopularCourses(adaptedCourses.slice(0, 6));
-                setFeaturedCourses(adaptedCourses.slice(6, 12));
-              }
+              // Usar os cursos como principal, dividindo entre populares e em destaque
+              console.log("✅ Usando todos os cursos criados como principal");
+              setPopularCourses(adaptedCourses.slice(0, 10));
+              setFeaturedCourses(adaptedCourses.slice(10, 20));
+              hasLoadedAnyCourses = true;
             }
           } else {
-            console.warn("⚠️ Nenhum curso geral retornado pela API");
+            console.warn("⚠️ Nenhum curso 'active' retornado pela API");
+            
+            // Fallback: tentar sem filtro de status se não encontrou cursos active
+            if (!hasLoadedAnyCourses) {
+              console.log("🔄 Tentando buscar cursos sem filtro de status...");
+              const fallbackResult = await getCourses({
+                page: 1,
+                limit: 20,
+              });
+              
+              if (fallbackResult.courses && fallbackResult.courses.length > 0) {
+                const adaptedCourses = fallbackResult.courses.map(adaptCourse).filter(c => c !== null);
+                if (adaptedCourses.length > 0) {
+                  setPopularCourses(adaptedCourses.slice(0, 10));
+                  setFeaturedCourses(adaptedCourses.slice(10, 20));
+                  hasLoadedAnyCourses = true;
+                }
+              }
+            }
           }
-        } catch (fallbackError) {
-          console.error("❌ Erro ao carregar cursos gerais:", fallbackError.message, fallbackError);
+        } catch (allCoursesError) {
+          console.error("❌ Erro ao carregar todos os cursos:", allCoursesError.message, allCoursesError);
         }
 
         console.log("✨ Carregamento de cursos concluído");
+        
+        // Buscar estatísticas de contagem (suporta vários endpoints plausíveis)
+        try {
+          const endpoints = [
+            '/api/stats/counts',
+            '/api/stats',
+          ];
+
+          let gotStats = false;
+
+          for (const ep of endpoints) {
+            try {
+              console.log(`📈 Tentando ${ep} ...`);
+              const resp = await fetch(ep);
+              if (!resp.ok) {
+                console.log(`ℹ️ ${ep} retornou status ${resp.status}`);
+                continue;
+              }
+              const json = await resp.json();
+              // Normalizar formatos diferentes
+              // Possíveis formatos: { users, courses } | { data: { activeUsers, activeCourses } } | { activeUsers, activeCourses }
+              if (json) {
+                if (typeof json.users === 'number' && typeof json.courses === 'number') {
+                  setStatsUsers(json.users);
+                  setStatsCourses(json.courses);
+                  gotStats = true;
+                } else if (json.data && typeof json.data.activeUsers === 'number' && typeof json.data.activeCourses === 'number') {
+                  setStatsUsers(json.data.activeUsers);
+                  setStatsCourses(json.data.activeCourses);
+                  gotStats = true;
+                } else if (typeof json.activeUsers === 'number' && typeof json.activeCourses === 'number') {
+                  setStatsUsers(json.activeUsers);
+                  setStatsCourses(json.activeCourses);
+                  gotStats = true;
+                } else {
+                  console.log(`ℹ️ ${ep} respondeu, mas formato inesperado:`, json);
+                }
+              }
+              if (gotStats) break;
+            } catch (e) {
+              console.log(`⚠️ Falha ao consultar ${ep}:`, e.message);
+            }
+          }
+
+          // Se não encontrou com os endpoints combinados, tentar rota separada para users e courses
+          if (!gotStats) {
+            try {
+              console.log('📈 Tentando separar /api/stats/courses e /api/stats/users ...');
+              const [rCourses, rUsers] = await Promise.allSettled([
+                fetch('/api/stats/courses'),
+                fetch('/api/stats/users'),
+              ]);
+
+              if (rCourses.status === 'fulfilled' && rCourses.value.ok) {
+                const j = await rCourses.value.json();
+                if (j && j.data && typeof j.data.activeCourses === 'number') {
+                  setStatsCourses(j.data.activeCourses);
+                  gotStats = true;
+                } else if (typeof j.courses === 'number') {
+                  setStatsCourses(j.courses);
+                  gotStats = true;
+                }
+              }
+
+              if (rUsers.status === 'fulfilled' && rUsers.value.ok) {
+                const j = await rUsers.value.json();
+                if (j && j.data && typeof j.data.activeUsers === 'number') {
+                  setStatsUsers(j.data.activeUsers);
+                  gotStats = true;
+                } else if (typeof j.users === 'number') {
+                  setStatsUsers(j.users);
+                  gotStats = true;
+                }
+              }
+            } catch (e) {
+              console.log('⚠️ Erro ao tentar endpoints separados de stats:', e.message);
+            }
+          }
+
+          if (!gotStats) console.warn('⚠️ Não foi possível obter estatísticas de contagem (nenhum endpoint disponível ou formato inesperado)');
+        } catch (statsError) {
+          console.warn('⚠️ Erro inesperado ao buscar stats:', statsError.message);
+        }
       } catch (err) {
         console.error("❌ Erro geral ao carregar cursos:", err);
         console.error("Detalhes do erro:", {
@@ -201,7 +309,15 @@ const Dashboard = () => {
     };
 
     loadCourses();
-  }, [getPopularCourses, getFeaturedCourses, getCourses, getTeachingCourses, isAuthenticated]);
+  }, [getPopularCourses, getFeaturedCourses, getCourses, getTeachingCourses, isAuthenticated, state.user?._id]);
+
+  // Formata números (5200 -> 5.2k, 1200000 -> 1.2M)
+  const formatCount = (n) => {
+    if (n === null || n === undefined) return null;
+    if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+    if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+    return String(n);
+  };
 
   const handleCourseClick = (course) => {
     console.log('🖱️ Curso clicado (raw):', course);
@@ -223,8 +339,6 @@ const Dashboard = () => {
     
     // Passar o curso completo com ID garantido para o CourseDetails
     const courseWithId = {
-      id: courseId,
-      _id: courseId,
       ...course,
       // Garantir que o ID não seja sobrescrito
       id: courseId,
@@ -249,7 +363,7 @@ const Dashboard = () => {
         <div className="dashboard__welcome">
           <div className="dashboard__welcome-content">
             <h1 className="dashboard__welcome-title">
-              Aprenda Ensinando - Ensine Aprendendo
+              Ensinar é aprender duas vezes.
             </h1>
             <p className="dashboard__welcome-text">
               Descubra novos conhecimentos e compartilhe sua expertise.
@@ -268,7 +382,9 @@ const Dashboard = () => {
             <div className="dashboard__stat-content">
               <div className="dashboard__stat-icon">📚</div>
               <div className="dashboard__stat-info">
-                <div className="dashboard__stat-value">150+</div>
+                <div className="dashboard__stat-value">
+                  {statsCourses !== null ? formatCount(statsCourses) : "150+"}
+                </div>
                 <div className="dashboard__stat-label">Cursos Disponíveis</div>
               </div>
             </div>
@@ -278,7 +394,9 @@ const Dashboard = () => {
             <div className="dashboard__stat-content">
               <div className="dashboard__stat-icon">👥</div>
               <div className="dashboard__stat-info">
-                <div className="dashboard__stat-value">5.2k</div>
+                <div className="dashboard__stat-value">
+                  {statsUsers !== null ? formatCount(statsUsers) : "5.2k"}
+                </div>
                 <div className="dashboard__stat-label">Estudantes Ativos</div>
               </div>
             </div>
@@ -355,31 +473,32 @@ const Dashboard = () => {
           </>
         )}
 
-        {/* Call to Action */}
-        <Card className="dashboard__cta" padding="large">
-          <div className="dashboard__cta-content">
-            {isAuthenticated ? (
-              <>
-                <h2 className="dashboard__cta-title">
-                  Pronto para compartilhar seu conhecimento?
-                </h2>
-                <p className="dashboard__cta-text">
-                  Crie seu primeiro curso e comece a ensinar milhares de pessoas
-                  ao redor do mundo.
-                  <br />A cada hora de aula, você ganha 1 crédito para usar em
-                  outros cursos!
-                </p>
-                <div className="dashboard__cta-actions">
-                  <Button
-                    variant="primary"
-                    size="large"
-                    onClick={() => actions.openModal("addCourse")}
-                  >
-                    Criar Novo Curso
-                  </Button>
-                </div>
-              </>
-            ) : (
+        {/* Call to Action - Só mostra se usuário não tiver cursos criados */}
+        {(!isAuthenticated || !hasUserCourses) && (
+          <Card className="dashboard__cta" padding="large">
+            <div className="dashboard__cta-content">
+              {isAuthenticated ? (
+                <>
+                  <h2 className="dashboard__cta-title">
+                    Pronto para compartilhar seu conhecimento?
+                  </h2>
+                  <p className="dashboard__cta-text">
+                    Crie seu primeiro curso e comece a ensinar milhares de pessoas
+                    ao redor do mundo.
+                    <br />A cada hora de aula, você ganha 1 crédito para usar em
+                    outros cursos!
+                  </p>
+                  <div className="dashboard__cta-actions">
+                    <Button
+                      variant="primary"
+                      size="large"
+                      onClick={() => actions.openModal("addCourse")}
+                    >
+                      Criar Novo Curso
+                    </Button>
+                  </div>
+                </>
+              ) : (
               <>
                 <h2 className="dashboard__cta-title">
                   Comece a aprender e ensinar hoje!
@@ -416,6 +535,7 @@ const Dashboard = () => {
             )}
           </div>
         </Card>
+        )}
       </div>
     </DashboardTemplate>
   );

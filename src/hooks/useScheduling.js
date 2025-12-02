@@ -118,6 +118,7 @@ export const useScheduling = () => {
 
   /**
    * Verificar disponibilidade
+   * Conforme documentação: GET /classes/course/:courseId/availability
    */
   const checkAvailability = useCallback(
     async (courseId, startDate, endDate) => {
@@ -125,7 +126,7 @@ export const useScheduling = () => {
       setError(null);
 
       try {
-        const result = await classService.getAvailability(
+        const result = await classService.getCourseAvailability(
           courseId,
           startDate,
           endDate
@@ -232,14 +233,15 @@ export const useScheduling = () => {
   }, []);
 
   /**
-   * Obter link de entrada
+   * Obter link de acesso à sala virtual (Jitsi)
+   * Conforme documentação: GET /classes/:id/access
    */
   const getJoinLink = useCallback(async (classId) => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await classService.getJoinLink(classId);
+      const result = await classService.getClassAccess(classId);
       return result;
     } catch (err) {
       setError(err.message);

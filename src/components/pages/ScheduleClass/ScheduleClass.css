@@ -25,6 +25,21 @@
   color: var(--color-primary-800);
 }
 
+/* Dark Theme - Botão Voltar */
+[data-theme="dark"] .schedule-class__back {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .schedule-class__back:hover {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .schedule-class__back svg,
+[data-theme="dark"] .schedule-class__back * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
 .schedule-class__header-content {
   text-align: center;
 }
@@ -565,16 +580,55 @@
   border-color: var(--color-neutral-100);
 }
 
+[data-theme="dark"] .schedule-class__day--today {
+  background: linear-gradient(135deg, var(--color-primary-800) 0%, var(--color-primary-700) 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+  border-color: var(--color-primary-500);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .schedule-class__day--today:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
 [data-theme="dark"] .schedule-class__time-slot {
   background: var(--color-card);
   border-color: var(--color-neutral-200);
-  color: var(--color-neutral-800);
+  color: #FFFFFF !important;
 }
 
 [data-theme="dark"] .schedule-class__time-slot:hover {
   background: var(--color-primary-100);
-  color: var(--color-primary-900);
+  color: #FFFFFF !important;
   border-color: var(--color-primary-300);
+}
+
+[data-theme="dark"] .schedule-class__day {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .schedule-class__day:hover:not(.schedule-class__day--disabled) {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .schedule-class__nav-btn {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .schedule-class__nav-btn svg,
+[data-theme="dark"] .schedule-class__nav-btn * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .schedule-class__title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .schedule-class__subtitle {
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 [data-theme="dark"] .schedule-class__summary-item {
@@ -584,6 +638,23 @@
 
 [data-theme="dark"] .schedule-class__selected-date {
   background: linear-gradient(135deg, var(--color-primary-100) 0%, rgba(178, 216, 206, 0.3) 100%);
-  color: var(--color-primary-900);
+  color: #FFFFFF !important;
   border-color: var(--color-primary-200);
+}
+
+/* Dark Theme - Textos e Ícones Adicionais */
+[data-theme="dark"] .schedule-class__summary-item {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .schedule-class__summary-item-label,
+[data-theme="dark"] .schedule-class__summary-item-value {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .schedule-class svg,
+[data-theme="dark"] .schedule-class [class*="icon"],
+[data-theme="dark"] .schedule-class [class*="Icon"] {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
 }

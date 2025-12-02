@@ -395,12 +395,18 @@
 }
 
 [data-theme="dark"] .sidebar__menu-button {
-  color: var(--color-neutral-700);
+  color: #FFFFFF !important;
 }
 
 [data-theme="dark"] .sidebar__menu-button:hover {
   background-color: rgba(82, 53, 123, 0.2);
-  color: var(--color-neutral-800);
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .sidebar__menu-button svg,
+[data-theme="dark"] .sidebar__menu-button * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
 }
 
 [data-theme="dark"] .sidebar__menu-button--active {

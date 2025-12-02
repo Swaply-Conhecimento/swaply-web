@@ -9,7 +9,9 @@ import {
   FileText,
   Upload,
   X,
-  Coins
+  Coins,
+  Calendar,
+  PencilSimple
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts';
 import { useCourses } from '../../../hooks/useCourses';
@@ -37,19 +39,62 @@ const AddCourseModal = ({
     pricePerHour: 10,
     totalHours: 10,
     maxStudents: 30,
+    pricing: {
+      singleClass: 10,
+      fullCourse: 100
+    },
     tags: [],
     features: [],
     curriculum: [],
     schedule: [],
     requirements: [],
     objectives: [],
-    status: 'draft'
+    status: 'active'
+  });
+
+  const [availability, setAvailability] = useState({
+    recurringAvailability: [],
+    specificSlots: [],
+    minAdvanceBooking: 2,
+    maxAdvanceBooking: 60,
+    slotDuration: 1,
+    bufferTime: 0,
+    timezone: 'America/Sao_Paulo'
   });
 
   const [newTag, setNewTag] = useState('');
   const [newFeature, setNewFeature] = useState('');
+  const [newFeatureDescription, setNewFeatureDescription] = useState('');
+  const [editingFeatureIndex, setEditingFeatureIndex] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showAddRecurring, setShowAddRecurring] = useState(false);
+  const [showAddSpecific, setShowAddSpecific] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  
+  const [recurringForm, setRecurringForm] = useState({
+    dayOfWeek: 1,
+    startTime: '09:00',
+    endTime: '18:00'
+  });
+
+  const [specificForm, setSpecificForm] = useState({
+    date: '',
+    startTime: '09:00',
+    endTime: '18:00',
+    reason: ''
+  });
+
+  const daysOfWeek = [
+    { value: 0, label: 'Domingo' },
+    { value: 1, label: 'Segunda-feira' },
+    { value: 2, label: 'Terça-feira' },
+    { value: 3, label: 'Quarta-feira' },
+    { value: 4, label: 'Quinta-feira' },
+    { value: 5, label: 'Sexta-feira' },
+    { value: 6, label: 'Sábado' }
+  ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -59,11 +104,51 @@ const AddCourseModal = ({
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validar tipo de arquivo
+      if (!file.type.startsWith('image/')) {
+        setError('Por favor, selecione um arquivo de imagem válido.');
+        return;
+      }
+      
+      // Validar tamanho (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('A imagem deve ter no máximo 5MB.');
+        return;
+      }
+      
+      setImageFile(file);
+      setError('');
+      
+      // Criar preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+  };
+
   const handleAddTag = () => {
-    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+    if (!newTag.trim()) return;
+    
+    // Permitir adicionar múltiplas tags separadas por vírgula
+    const tagsToAdd = newTag
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0 && !formData.tags.includes(tag));
+    
+    if (tagsToAdd.length > 0) {
       setFormData(prev => ({
         ...prev,
-        tags: [...prev.tags, newTag.trim()]
+        tags: [...prev.tags, ...tagsToAdd]
       }));
       setNewTag('');
     }
@@ -77,19 +162,156 @@ const AddCourseModal = ({
   };
 
   const handleAddFeature = () => {
-    if (newFeature.trim() && !formData.features.includes(newFeature.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        features: [...prev.features, newFeature.trim()]
-      }));
+    if (!newFeature.trim()) return;
+    
+    const featureTitle = newFeature.trim();
+    const featureDescription = newFeatureDescription.trim();
+    
+    // Verificar se já existe (comparando apenas o título)
+    const exists = formData.features.some(f => {
+      const title = typeof f === 'string' ? f : f.title || f.name;
+      return title === featureTitle;
+    });
+    
+    if (exists) {
+      setError('Este recurso já foi adicionado.');
+      return;
+    }
+    
+    // Criar objeto de recurso com título e descrição opcional
+    const newFeatureObj = featureDescription 
+      ? { title: featureTitle, description: featureDescription }
+      : featureTitle;
+    
+    setFormData(prev => ({
+      ...prev,
+      features: [...prev.features, newFeatureObj]
+    }));
+    
+    setNewFeature('');
+    setNewFeatureDescription('');
+  };
+
+  const handleEditFeature = (index) => {
+    const feature = formData.features[index];
+    if (typeof feature === 'string') {
+      setNewFeature(feature);
+      setNewFeatureDescription('');
+    } else {
+      setNewFeature(feature.title || feature.name || '');
+      setNewFeatureDescription(feature.description || '');
+    }
+    setEditingFeatureIndex(index);
+  };
+
+  const handleUpdateFeature = () => {
+    if (!newFeature.trim() || editingFeatureIndex === null) return;
+    
+    const featureTitle = newFeature.trim();
+    const featureDescription = newFeatureDescription.trim();
+    
+    const updatedFeature = featureDescription 
+      ? { title: featureTitle, description: featureDescription }
+      : featureTitle;
+    
+    setFormData(prev => ({
+      ...prev,
+      features: prev.features.map((f, i) => i === editingFeatureIndex ? updatedFeature : f)
+    }));
+    
+    setNewFeature('');
+    setNewFeatureDescription('');
+    setEditingFeatureIndex(null);
+  };
+
+  const handleCancelEditFeature = () => {
+    setNewFeature('');
+    setNewFeatureDescription('');
+    setEditingFeatureIndex(null);
+  };
+
+  const handleRemoveFeature = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== indexToRemove)
+    }));
+    if (editingFeatureIndex === indexToRemove) {
+      setEditingFeatureIndex(null);
       setNewFeature('');
+      setNewFeatureDescription('');
     }
   };
 
-  const handleRemoveFeature = (featureToRemove) => {
-    setFormData(prev => ({
+  const handleAddRecurringSlot = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const newSlot = {
+      dayOfWeek: recurringForm.dayOfWeek,
+      startTime: recurringForm.startTime,
+      endTime: recurringForm.endTime,
+      isActive: true
+    };
+    
+    setAvailability(prev => ({
       ...prev,
-      features: prev.features.filter(f => f !== featureToRemove)
+      recurringAvailability: [...prev.recurringAvailability, newSlot]
+    }));
+    
+    setRecurringForm({
+      dayOfWeek: 1,
+      startTime: '09:00',
+      endTime: '18:00'
+    });
+    setShowAddRecurring(false);
+  };
+
+  const handleRemoveRecurringSlot = (index) => {
+    setAvailability(prev => ({
+      ...prev,
+      recurringAvailability: prev.recurringAvailability.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleAddSpecificSlot = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (!specificForm.date) {
+      setError('Por favor, selecione uma data.');
+      return;
+    }
+    
+    const newSlot = {
+      date: specificForm.date,
+      startTime: specificForm.startTime,
+      endTime: specificForm.endTime,
+      isAvailable: true,
+      reason: specificForm.reason || undefined
+    };
+    
+    setAvailability(prev => ({
+      ...prev,
+      specificSlots: [...prev.specificSlots, newSlot]
+    }));
+    
+    setSpecificForm({
+      date: '',
+      startTime: '09:00',
+      endTime: '18:00',
+      reason: ''
+    });
+    setShowAddSpecific(false);
+    setError('');
+  };
+
+  const handleRemoveSpecificSlot = (index) => {
+    setAvailability(prev => ({
+      ...prev,
+      specificSlots: prev.specificSlots.filter((_, i) => i !== index)
     }));
   };
 
@@ -132,6 +354,8 @@ const AddCourseModal = ({
 
     const pricePerHourNum = Number(formData.pricePerHour);
     const totalHoursNum = Number(formData.totalHours);
+    const singleClassPrice = Number(formData.pricing?.singleClass || formData.pricePerHour);
+    const fullCoursePrice = Number(formData.pricing?.fullCourse || (formData.pricePerHour * formData.totalHours));
 
     if (Number.isNaN(pricePerHourNum) || pricePerHourNum < 1 || pricePerHourNum > 100) {
       setError('O preço por hora deve ser um número entre 1 e 100 créditos.');
@@ -139,6 +363,14 @@ const AddCourseModal = ({
     }
     if (Number.isNaN(totalHoursNum) || totalHoursNum < 1 || totalHoursNum > 100) {
       setError('O total de horas deve ser entre 1 e 100 horas.');
+      return;
+    }
+    if (Number.isNaN(singleClassPrice) || singleClassPrice < 1) {
+      setError('Preço da aula avulsa deve ser maior que 0.');
+      return;
+    }
+    if (Number.isNaN(fullCoursePrice) || fullCoursePrice < 1) {
+      setError('Preço do curso completo deve ser maior que 0.');
       return;
     }
 
@@ -152,7 +384,11 @@ const AddCourseModal = ({
         language: formData.language,
         pricePerHour: pricePerHourNum,
         totalHours: totalHoursNum,
-        status: formData.status || 'draft',
+        pricing: {
+          singleClass: singleClassPrice,
+          fullCourse: fullCoursePrice
+        },
+        status: formData.status || 'active',
       };
 
       // Campos opcionais - adicionar apenas se preenchidos
@@ -188,10 +424,31 @@ const AddCourseModal = ({
         courseData.tags = formData.tags;
       }
 
-      // Debug: Log do payload (apenas campos suportados pela API)
-      console.log('📤 Enviando dados do curso:', JSON.stringify(courseData, null, 2));
+      // Adicionar disponibilidade (obrigatória)
+      // Sempre incluir disponibilidade, mesmo que vazia, para complementar o payload
+      const availabilityData = {
+        recurringAvailability: availability.recurringAvailability || [],
+        minAdvanceBooking: availability.minAdvanceBooking || 2,
+        maxAdvanceBooking: availability.maxAdvanceBooking || 60,
+        slotDuration: availability.slotDuration || 1,
+        bufferTime: availability.bufferTime || 0,
+        timezone: availability.timezone || 'America/Sao_Paulo'
+      };
+      
+      // Adicionar specificSlots apenas se houver
+      if (availability.specificSlots && availability.specificSlots.length > 0) {
+        availabilityData.specificSlots = availability.specificSlots;
+      }
+      
+      courseData.availability = availabilityData;
 
-      const result = await createCourse(courseData);
+      // Limpar campos undefined do payload
+      const cleanPayload = JSON.parse(JSON.stringify(courseData));
+
+      // Debug: Log do payload (apenas campos suportados pela API)
+      console.log('📤 Enviando dados do curso:', JSON.stringify(cleanPayload, null, 2));
+
+      const result = await createCourse(cleanPayload, imageFile);
 
       if (result.success) {
         setSuccess(true);
@@ -255,18 +512,35 @@ const AddCourseModal = ({
       pricePerHour: 10,
       totalHours: 10,
       maxStudents: 30,
+      pricing: {
+        singleClass: 10,
+        fullCourse: 100
+      },
       tags: [],
       features: [],
       curriculum: [],
       schedule: [],
       requirements: [],
       objectives: [],
-      status: 'draft'
+      status: 'active'
+    });
+    setAvailability({
+      recurringAvailability: [],
+      specificSlots: [],
+      minAdvanceBooking: 2,
+      maxAdvanceBooking: 60,
+      slotDuration: 1,
+      bufferTime: 0,
+      timezone: 'America/Sao_Paulo'
     });
     setNewTag('');
     setNewFeature('');
     setError('');
     setSuccess(false);
+    setShowAddRecurring(false);
+    setShowAddSpecific(false);
+    setImageFile(null);
+    setImagePreview(null);
   };
 
   return (
@@ -365,6 +639,64 @@ const AddCourseModal = ({
                 <option value="Espanhol">Espanhol</option>
               </FormField>
             </div>
+
+            {/* Image Upload */}
+            <div className="add-course-image-upload">
+              <label className="add-course-image-label">
+                <Upload size={20} />
+                Imagem do Curso
+              </label>
+              <div className="add-course-image-container">
+                {imagePreview ? (
+                  <>
+                    <div className="add-course-image-preview">
+                      <img src={imagePreview} alt="Preview" />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="add-course-image-remove"
+                        title="Remover imagem"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="add-course-image-actions">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="add-course-image-input"
+                        id="course-image-input"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="medium"
+                        onClick={() => document.getElementById('course-image-input').click()}
+                      >
+                        <Upload size={18} />
+                        Alterar Imagem
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="add-course-image-input"
+                      id="course-image-input"
+                    />
+                    <label htmlFor="course-image-input" className="add-course-image-placeholder">
+                      <Upload size={32} />
+                      <p>Clique para selecionar uma imagem</p>
+                      <p className="add-course-image-hint">Formatos: JPG, PNG, GIF (máx. 5MB)</p>
+                    </label>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -406,6 +738,46 @@ const AddCourseModal = ({
               fullWidth
             />
           </div>
+
+          <div className="add-course-row" style={{ marginTop: '1rem' }}>
+            <FormField
+              label="Preço Aula Avulsa (Créditos)"
+              name="pricing.singleClass"
+              type="number"
+              value={formData.pricing?.singleClass || formData.pricePerHour}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData(prev => ({
+                  ...prev,
+                  pricing: {
+                    ...prev.pricing,
+                    singleClass: value ? Number(value) : prev.pricePerHour
+                  }
+                }));
+              }}
+              min="1"
+              fullWidth
+            />
+
+            <FormField
+              label="Preço Curso Completo (Créditos)"
+              name="pricing.fullCourse"
+              type="number"
+              value={formData.pricing?.fullCourse || (formData.pricePerHour * formData.totalHours)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData(prev => ({
+                  ...prev,
+                  pricing: {
+                    ...prev.pricing,
+                    fullCourse: value ? Number(value) : (prev.pricePerHour * prev.totalHours)
+                  }
+                }));
+              }}
+              min="1"
+              fullWidth
+            />
+          </div>
         </div>
 
         {/* Tags */}
@@ -422,7 +794,13 @@ const AddCourseModal = ({
                 type="text"
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Ex: react, javascript, web"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+                placeholder="Ex: react, javascript, web (separadas por vírgula)"
                 fullWidth
               />
               <Button 
@@ -434,6 +812,9 @@ const AddCourseModal = ({
                 + Adicionar
               </Button>
             </div>
+            <p className="add-course-category-hint">
+              💡 Dica: Você pode adicionar múltiplas tags de uma vez, separadas por vírgula
+            </p>
             
             {formData.tags.length > 0 && (
               <div className="add-course-category-list">
@@ -462,8 +843,9 @@ const AddCourseModal = ({
           </h3>
           
           <div className="add-course-categories">
-            <div className="add-course-category-input">
+            <div className="add-course-feature-form">
               <FormField
+                label="Título do Recurso *"
                 name="newFeature"
                 type="text"
                 value={newFeature}
@@ -471,33 +853,341 @@ const AddCourseModal = ({
                 placeholder="Ex: Certificado, Material complementar"
                 fullWidth
               />
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={handleAddFeature}
-                disabled={!newFeature.trim() || loading}
-              >
-                + Adicionar
-              </Button>
+              <FormField
+                label="Descrição/Subtópicos (opcional)"
+                name="newFeatureDescription"
+                type="textarea"
+                value={newFeatureDescription}
+                onChange={(e) => setNewFeatureDescription(e.target.value)}
+                placeholder="Ex: Certificado reconhecido internacionalmente, Material em PDF e vídeos complementares..."
+                fullWidth
+              />
+              <div className="add-course-feature-actions">
+                {editingFeatureIndex !== null ? (
+                  <>
+                    <Button 
+                      type="button" 
+                      variant="primary" 
+                      onClick={handleUpdateFeature}
+                      disabled={!newFeature.trim() || loading}
+                    >
+                      Atualizar
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={handleCancelEditFeature}
+                      disabled={loading}
+                    >
+                      Cancelar
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleAddFeature}
+                    disabled={!newFeature.trim() || loading}
+                  >
+                    + Adicionar Recurso
+                  </Button>
+                )}
+              </div>
             </div>
             
             {formData.features.length > 0 && (
-              <div className="add-course-category-list">
-                {formData.features.map((feature, index) => (
-                  <div key={index} className="add-course-category-tag">
-                    <span>{feature}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFeature(feature)}
-                      className="add-course-category-remove"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ))}
+              <div className="add-course-feature-list">
+                {formData.features.map((feature, index) => {
+                  const featureTitle = typeof feature === 'string' ? feature : feature.title || feature.name || '';
+                  const featureDescription = typeof feature === 'object' ? feature.description : null;
+                  
+                  return (
+                    <div key={index} className="add-course-feature-item">
+                      <div className="add-course-feature-content">
+                        <div className="add-course-feature-title">
+                          <span>{featureTitle}</span>
+                          {featureDescription && (
+                            <span className="add-course-feature-has-desc">📝</span>
+                          )}
+                        </div>
+                        {featureDescription && (
+                          <div className="add-course-feature-desc-preview">
+                            {featureDescription.substring(0, 50)}{featureDescription.length > 50 ? '...' : ''}
+                          </div>
+                        )}
+                      </div>
+                      <div className="add-course-feature-actions">
+                        <button
+                          type="button"
+                          onClick={() => handleEditFeature(index)}
+                          className="add-course-feature-edit"
+                          title="Editar"
+                        >
+                          <PencilSimple size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFeature(index)}
+                          className="add-course-category-remove"
+                          title="Remover"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
+        </div>
+
+        {/* Availability Section */}
+        <div className="add-course-section">
+          <h3 className="add-course-section__title">
+            <Calendar size={20} />
+            Configurar Disponibilidade
+          </h3>
+
+          <>
+              {/* Recurring Availability */}
+              <div className="add-course-availability-subsection">
+                <div className="add-course-availability-header">
+                  <h4 className="add-course-availability-title">
+                    <Clock size={18} />
+                    Horários Recorrentes
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="small"
+                    onClick={() => setShowAddRecurring(!showAddRecurring)}
+                  >
+                    <Plus size={16} />
+                    Adicionar
+                  </Button>
+                </div>
+
+                {showAddRecurring && (
+                  <div className="add-course-availability-form">
+                    <div className="add-course-row">
+                      <FormField
+                        label="Dia da Semana"
+                        name="dayOfWeek"
+                        type="select"
+                        value={recurringForm.dayOfWeek}
+                        onChange={(e) => setRecurringForm({ ...recurringForm, dayOfWeek: parseInt(e.target.value) })}
+                        fullWidth
+                      >
+                        {daysOfWeek.map((day) => (
+                          <option key={day.value} value={day.value}>
+                            {day.label}
+                          </option>
+                        ))}
+                      </FormField>
+                      <FormField
+                        label="Horário Inicial"
+                        name="startTime"
+                        type="time"
+                        value={recurringForm.startTime}
+                        onChange={(e) => setRecurringForm({ ...recurringForm, startTime: e.target.value })}
+                        fullWidth
+                      />
+                      <FormField
+                        label="Horário Final"
+                        name="endTime"
+                        type="time"
+                        value={recurringForm.endTime}
+                        onChange={(e) => setRecurringForm({ ...recurringForm, endTime: e.target.value })}
+                        fullWidth
+                      />
+                    </div>
+                    <div className="add-course-availability-form-actions">
+                      <Button 
+                        type="button" 
+                        variant="primary" 
+                        size="small"
+                        onClick={handleAddRecurringSlot}
+                      >
+                        Adicionar
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="small"
+                        onClick={() => setShowAddRecurring(false)}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {availability.recurringAvailability.length > 0 && (
+                  <div className="add-course-availability-list">
+                    {availability.recurringAvailability.map((slot, index) => (
+                      <div key={index} className="add-course-availability-item">
+                        <span>
+                          {daysOfWeek.find(d => d.value === slot.dayOfWeek)?.label} - {slot.startTime} às {slot.endTime}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveRecurringSlot(index)}
+                          className="add-course-category-remove"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Specific Slots */}
+              <div className="add-course-availability-subsection">
+                <div className="add-course-availability-header">
+                  <h4 className="add-course-availability-title">
+                    <Calendar size={18} />
+                    Horários Específicos
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="small"
+                    onClick={() => setShowAddSpecific(!showAddSpecific)}
+                  >
+                    <Plus size={16} />
+                    Adicionar
+                  </Button>
+                </div>
+
+                {showAddSpecific && (
+                  <div className="add-course-availability-form">
+                    <div className="add-course-row">
+                      <FormField
+                        label="Data"
+                        name="date"
+                        type="date"
+                        value={specificForm.date}
+                        onChange={(e) => setSpecificForm({ ...specificForm, date: e.target.value })}
+                        fullWidth
+                      />
+                      <FormField
+                        label="Horário Inicial"
+                        name="startTime"
+                        type="time"
+                        value={specificForm.startTime}
+                        onChange={(e) => setSpecificForm({ ...specificForm, startTime: e.target.value })}
+                        fullWidth
+                      />
+                      <FormField
+                        label="Horário Final"
+                        name="endTime"
+                        type="time"
+                        value={specificForm.endTime}
+                        onChange={(e) => setSpecificForm({ ...specificForm, endTime: e.target.value })}
+                        fullWidth
+                      />
+                    </div>
+                    <div className="add-course-row">
+                      <FormField
+                        label="Motivo (opcional)"
+                        name="reason"
+                        type="text"
+                        value={specificForm.reason}
+                        onChange={(e) => setSpecificForm({ ...specificForm, reason: e.target.value })}
+                        placeholder="Ex: Feriado, Evento especial"
+                        fullWidth
+                      />
+                    </div>
+                    <div className="add-course-availability-form-actions">
+                      <Button 
+                        type="button" 
+                        variant="primary" 
+                        size="small"
+                        onClick={handleAddSpecificSlot}
+                      >
+                        Adicionar
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="small"
+                        onClick={() => setShowAddSpecific(false)}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {availability.specificSlots.length > 0 && (
+                  <div className="add-course-availability-list">
+                    {availability.specificSlots.map((slot, index) => (
+                      <div key={index} className="add-course-availability-item">
+                        <span>
+                          {new Date(slot.date).toLocaleDateString('pt-BR')} - {slot.startTime} às {slot.endTime}
+                          {slot.reason && ` - ${slot.reason}`}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSpecificSlot(index)}
+                          className="add-course-category-remove"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Availability Settings */}
+              <div className="add-course-availability-subsection">
+                <h4 className="add-course-availability-title">
+                  Configurações Gerais
+                </h4>
+                <div className="add-course-row">
+                  <FormField
+                    label="Antecedência Mínima (horas)"
+                    name="minAdvanceBooking"
+                    type="number"
+                    value={availability.minAdvanceBooking}
+                    onChange={(e) => setAvailability({ ...availability, minAdvanceBooking: parseInt(e.target.value) || 2 })}
+                    min="0"
+                    fullWidth
+                  />
+                  <FormField
+                    label="Antecedência Máxima (dias)"
+                    name="maxAdvanceBooking"
+                    type="number"
+                    value={availability.maxAdvanceBooking}
+                    onChange={(e) => setAvailability({ ...availability, maxAdvanceBooking: parseInt(e.target.value) || 60 })}
+                    min="1"
+                    fullWidth
+                  />
+                  <FormField
+                    label="Duração da Aula (horas)"
+                    name="slotDuration"
+                    type="number"
+                    value={availability.slotDuration}
+                    onChange={(e) => setAvailability({ ...availability, slotDuration: parseFloat(e.target.value) || 1 })}
+                    min="0.5"
+                    step="0.5"
+                    fullWidth
+                  />
+                  <FormField
+                    label="Tempo de Buffer (minutos)"
+                    name="bufferTime"
+                    type="number"
+                    value={availability.bufferTime}
+                    onChange={(e) => setAvailability({ ...availability, bufferTime: parseInt(e.target.value) || 0 })}
+                    min="0"
+                    fullWidth
+                  />
+                </div>
+              </div>
+          </>
         </div>
 
         {/* Form Actions */}

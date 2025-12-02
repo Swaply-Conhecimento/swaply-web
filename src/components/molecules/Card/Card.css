@@ -166,7 +166,8 @@
 }
 
 /* Special Course Card Styles */
-.course-card {
+.course-card,
+.card--course {
   display: flex;
   flex-direction: column;
   height: 100%;

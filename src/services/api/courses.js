@@ -168,10 +168,53 @@ const courseService = {
   /**
    * POST /courses
    * Criar novo curso
+   * Suporta tanto JSON quanto FormData (quando há imagem)
    */
-  createCourse: async (courseData) => {
+  createCourse: async (courseData, imageFile = null) => {
     try {
-      const { data } = await apiClient.post('/courses', courseData);
+      let dataToSend = courseData;
+      let headers = {};
+
+      // Se houver imagem (arquivo), usar FormData
+      if (imageFile) {
+        const formData = new FormData();
+        
+        // Adicionar campos do curso (remover 'image' se existir, pois será enviado como arquivo)
+        Object.keys(courseData).forEach(key => {
+          // Pular o campo 'image' do courseData, pois será enviado como arquivo
+          if (key === 'image') return;
+          
+          const value = courseData[key];
+          
+          // Tratar objetos aninhados (como pricing e availability)
+          // Todos os objetos e arrays devem ser enviados como JSON string
+          // O backend deve fazer o parse dessas strings JSON
+          if (Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value));
+          } else if (typeof value === 'object' && value !== null) {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            // Valores primitivos
+            formData.append(key, value);
+          }
+        });
+        
+        // Adicionar imagem como arquivo
+        formData.append('image', imageFile);
+        
+        dataToSend = formData;
+        // Não definir Content-Type manualmente - deixar o browser definir com boundary
+        headers = {};
+      } else {
+        // Quando não há imageFile, remover o campo 'image' do JSON para evitar enviar image: {}
+        const { image, ...dataWithoutImage } = courseData;
+        dataToSend = dataWithoutImage;
+        headers = {
+          'Content-Type': 'application/json',
+        };
+      }
+
+      const { data } = await apiClient.post('/courses', dataToSend, { headers });
       return {
         success: true,
         course: data.data,
@@ -190,10 +233,70 @@ const courseService = {
   /**
    * PUT /courses/:id
    * Atualizar curso
+   * Suporta tanto JSON quanto FormData (quando há imagem)
    */
-  updateCourse: async (courseId, courseData) => {
+  updateCourse: async (courseId, courseData, imageFile = null) => {
     try {
-      const { data } = await apiClient.put(`/courses/${courseId}`, courseData);
+      // Debug: verificar o que está sendo recebido
+      console.log('📤 updateCourse - imageFile recebido:', imageFile);
+      console.log('📤 updateCourse - Tipo de imageFile:', typeof imageFile);
+      if (imageFile) {
+        console.log('📤 updateCourse - imageFile é File?', imageFile instanceof File);
+        console.log('📤 updateCourse - imageFile.name:', imageFile.name);
+        console.log('📤 updateCourse - imageFile.size:', imageFile.size);
+      }
+      
+      let dataToSend = courseData;
+      let headers = {};
+
+      // Se houver imagem (arquivo), usar FormData
+      // Se imageFile for undefined, usar JSON normal (sem campo image)
+      if (imageFile !== null && imageFile !== undefined) {
+        console.log('📤 updateCourse - Usando FormData para enviar imagem');
+        const formData = new FormData();
+        
+        // Adicionar campos do curso (remover 'image' se existir, pois será enviado como arquivo)
+        Object.keys(courseData).forEach(key => {
+          // Pular o campo 'image' do courseData, pois será enviado como arquivo
+          if (key === 'image') return;
+          
+          const value = courseData[key];
+          
+          // Tratar objetos aninhados (como pricing e availability)
+          // Todos os objetos e arrays devem ser enviados como JSON string
+          // O backend deve fazer o parse dessas strings JSON
+          if (Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value));
+          } else if (typeof value === 'object' && value !== null) {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            // Valores primitivos
+            formData.append(key, value);
+          }
+        });
+        
+        // Adicionar imagem como arquivo
+        formData.append('image', imageFile);
+        
+        // Debug: verificar se a imagem foi adicionada ao FormData
+        console.log('📤 updateCourse - FormData criado, verificando se image foi adicionado...');
+        for (let pair of formData.entries()) {
+          console.log('📤 updateCourse - FormData entry:', pair[0], pair[1] instanceof File ? `File: ${pair[1].name} (${pair[1].size} bytes)` : pair[1]);
+        }
+        
+        dataToSend = formData;
+        // Não definir Content-Type manualmente - deixar o browser definir com boundary
+        headers = {};
+      } else {
+        // Quando não há imageFile, remover o campo 'image' do JSON para evitar enviar image: {}
+        const { image, ...dataWithoutImage } = courseData;
+        dataToSend = dataWithoutImage;
+        headers = {
+          'Content-Type': 'application/json',
+        };
+      }
+
+      const { data } = await apiClient.put(`/courses/${courseId}`, dataToSend, { headers });
       return {
         success: true,
         course: data.data,
@@ -242,6 +345,22 @@ const courseService = {
       return {
         success: true,
         image: data.data.image,
+        message: data.message,
+      };
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
+
+  /**
+   * DELETE /courses/:id/image
+   * Remover imagem do curso
+   */
+  deleteCourseImage: async (courseId) => {
+    try {
+      const { data } = await apiClient.delete(`/courses/${courseId}/image`);
+      return {
+        success: true,
         message: data.message,
       };
     } catch (error) {

@@ -147,6 +147,17 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
+/* Botão Voltar no modo escuro */
+[data-theme="dark"] .terms-page .btn--ghost {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .terms-page .btn--ghost svg,
+[data-theme="dark"] .terms-page .btn--ghost * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
 /* Mobile */
 @media (max-width: 768px) {
   .terms-page {

@@ -405,6 +405,73 @@
   color: var(--color-primary-900);
 }
 
+/* Dark Theme - Textos e Ícones */
+[data-theme="dark"] .my-courses__back {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .my-courses__back svg,
+[data-theme="dark"] .my-courses__back * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .my-courses__title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .my-courses__subtitle {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .my-courses__tab {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .my-courses__tab:hover {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .my-courses__course-title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .my-courses__course-category {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-theme="dark"] .my-courses__course-instructor {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .my-courses__stat {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .my-courses__stat svg {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+[data-theme="dark"] .my-courses__summary-title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .my-courses__summary-stat-value {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .my-courses__summary-stat-label {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .my-courses svg,
+[data-theme="dark"] .my-courses [class*="icon"],
+[data-theme="dark"] .my-courses [class*="Icon"] {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
 /* High Contrast Mode */
 @media (prefers-contrast: high) {
   .my-courses__course-card,

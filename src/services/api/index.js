@@ -13,6 +13,10 @@ import reviewService from './reviews';
 import notificationService from './notifications';
 import classService from './classes';
 import feedbackService from './feedback';
+import creditService from './credits';
+import availabilityService from './availability';
+import enrollmentService from './enrollments';
+import feedbackService from './feedback';
 
 /**
  * Exportação de serviços organizados por domínio
@@ -39,6 +43,15 @@ export const api = {
   // Feedback da Plataforma
   feedback: feedbackService,
 
+  // Créditos e Transações
+  credits: creditService,
+
+  // Disponibilidade
+  availability: availabilityService,
+
+  // Matrículas
+  enrollments: enrollmentService,
+
   // Helpers
   helpers: {
     getErrorMessage,
@@ -50,14 +63,17 @@ export const api = {
 /**
  * Exportações individuais para facilitar imports
  */
-export { 
+export {
   authService, 
   userService, 
   courseService, 
   reviewService, 
   notificationService,
   classService,
-  feedbackService
+  feedbackService,
+  creditService,
+  availabilityService,
+  enrollmentService
 };
 
 export { 

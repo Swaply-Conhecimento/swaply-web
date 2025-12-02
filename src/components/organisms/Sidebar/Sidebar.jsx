@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { 
   House, 
@@ -16,12 +16,14 @@ import {
 } from '@phosphor-icons/react';
 import { useApp } from '../../../contexts';
 import Logo from '../../atoms/Logo';
+import ConfirmLogoutModal from '../../molecules/ConfirmLogoutModal/ConfirmLogoutModal';
 import './Sidebar.css';
 
 const Sidebar = ({
   className = '',
 }) => {
   const { state, actions } = useApp();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const unreadNotificationsCount = state.notifications.filter(n => !n.isRead).length;
   const isAuthenticated = state.isAuthenticated;
   // Menu para usuários NÃO autenticados
@@ -121,22 +123,28 @@ const Sidebar = ({
     if (item.action === 'openModal') {
       actions.openModal(item.modal);
     } else if (item.action === 'logout') {
-      // Logout real
-      await actions.logout();
-      actions.setCurrentPage('auth');
+      // Mostrar modal de confirmação antes de fazer logout
+      setShowLogoutModal(true);
     } else if (item.page) {
       actions.setCurrentPage(item.page);
     }
   };
 
+  const handleConfirmLogout = async () => {
+    setShowLogoutModal(false);
+    await actions.logout();
+    actions.setCurrentPage('auth');
+  };
+
   return (
     <aside className={`sidebar ${state.sidebarOpen ? 'sidebar--open' : 'sidebar--closed'} ${className}`}>
       <div className="sidebar__header">
-        <div className="sidebar__logo">
-          <Logo variant="simples" size="large" />
+          <div className="sidebar__logo">
+          {/* Mostrar logo maior quando a sidebar estiver aberta; usar versão menor quando fechada */}
+          <Logo variant="simples" size={state.sidebarOpen ? 'xlarge' : 'large'} />
           {state.sidebarOpen && (
             <div className="sidebar__brand">
-              <span className="sidebar__brand-name">Swaply</span>
+              {/* Nome da marca removido conforme solicitação */}
               {isAuthenticated && (
                 <div className="sidebar__credits">
                   <Coins size={20} weight="fill" />
@@ -214,6 +222,14 @@ const Sidebar = ({
           {state.sidebarOpen ? '←' : '→'}
         </span>
       </button>
+
+      {/* Modal de Confirmação de Logout */}
+      <ConfirmLogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleConfirmLogout}
+        userName={state.user?.name || state.user?.email}
+      />
     </aside>
   );
 };
