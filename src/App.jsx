@@ -65,8 +65,53 @@ const AppContent = () => {
       '/availability-settings': 'availability-settings',
     };
 
-    // Obter pathname da URL (remover query strings e hash)
+    // Obter pathname e query params da URL
     const pathname = window.location.pathname.toLowerCase();
+    const searchParams = new URLSearchParams(window.location.search);
+    const reviewParam = searchParams.get('review');
+    
+    // Processar URLs de cursos com review: /courses/:id?review=1
+    const courseReviewMatch = pathname.match(/^\/courses\/([^/]+)$/);
+    if (courseReviewMatch && reviewParam === '1') {
+      const courseId = courseReviewMatch[1];
+      console.log(`🔄 Detectada URL de avaliação de curso: /courses/${courseId}?review=1`);
+      
+      // Se a página requer autenticação e o usuário não está autenticado,
+      // salvar dados para redirecionar após login
+      if (!state.isAuthenticated) {
+        sessionStorage.setItem('redirectAfterLogin', 'course-details');
+        sessionStorage.setItem('redirectCourseId', courseId);
+        sessionStorage.setItem('openReviewModal', 'true');
+      } else {
+        // Navegar para o curso e abrir modal de avaliação
+        actions.setSelectedCourse({ id: courseId });
+        actions.setCurrentPage('course-details');
+        sessionStorage.setItem('openReviewModal', 'true');
+      }
+      
+      // Limpar a URL do navegador
+      window.history.replaceState({}, '', '/');
+      sessionStorage.setItem('urlProcessed', 'true');
+      return;
+    }
+    
+    // Processar outras URLs de cursos: /courses/:id (sem review)
+    if (courseReviewMatch && !reviewParam) {
+      const courseId = courseReviewMatch[1];
+      console.log(`🔄 Detectada URL de curso: /courses/${courseId}`);
+      
+      if (!state.isAuthenticated) {
+        sessionStorage.setItem('redirectAfterLogin', 'course-details');
+        sessionStorage.setItem('redirectCourseId', courseId);
+      } else {
+        actions.setSelectedCourse({ id: courseId });
+        actions.setCurrentPage('course-details');
+      }
+      
+      window.history.replaceState({}, '', '/');
+      sessionStorage.setItem('urlProcessed', 'true');
+      return;
+    }
     
     // Se encontrar uma correspondência no mapa, navegar para a página
     if (urlToPageMap[pathname] && urlToPageMap[pathname] !== state.currentPage) {

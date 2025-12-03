@@ -527,11 +527,31 @@ export const AppProvider = ({ children }) => {
         
         // Verificar se há uma página salva para redirecionar após login
         const redirectPage = sessionStorage.getItem('redirectAfterLogin');
+        const redirectCourseId = sessionStorage.getItem('redirectCourseId');
+        const shouldOpenReview = sessionStorage.getItem('openReviewModal') === 'true';
+        
         if (redirectPage) {
           sessionStorage.removeItem('redirectAfterLogin');
+          
+          // Se há um courseId para redirecionar, definir o curso selecionado
+          if (redirectCourseId && redirectPage === 'course-details') {
+            sessionStorage.removeItem('redirectCourseId');
+            dispatch({ type: actionTypes.SET_SELECTED_COURSE, payload: { id: redirectCourseId } });
+            
+            // Se deve abrir modal de review, manter a flag
+            if (shouldOpenReview) {
+              // Flag já está no sessionStorage, não precisa remover aqui
+            } else {
+              sessionStorage.removeItem('openReviewModal');
+            }
+          } else {
+            sessionStorage.removeItem('openReviewModal');
+          }
+          
           dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: redirectPage });
-          console.log(`✅ Redirecionando para página salva: ${redirectPage}`);
+          console.log(`✅ Redirecionando para página salva: ${redirectPage}${redirectCourseId ? ` com curso: ${redirectCourseId}` : ''}`);
         } else {
+          sessionStorage.removeItem('openReviewModal');
           dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'dashboard' });
         }
 
@@ -569,11 +589,31 @@ export const AppProvider = ({ children }) => {
         
         // Verificar se há uma página salva para redirecionar após registro
         const redirectPage = sessionStorage.getItem('redirectAfterLogin');
+        const redirectCourseId = sessionStorage.getItem('redirectCourseId');
+        const shouldOpenReview = sessionStorage.getItem('openReviewModal') === 'true';
+        
         if (redirectPage) {
           sessionStorage.removeItem('redirectAfterLogin');
+          
+          // Se há um courseId para redirecionar, definir o curso selecionado
+          if (redirectCourseId && redirectPage === 'course-details') {
+            sessionStorage.removeItem('redirectCourseId');
+            dispatch({ type: actionTypes.SET_SELECTED_COURSE, payload: { id: redirectCourseId } });
+            
+            // Se deve abrir modal de review, manter a flag
+            if (shouldOpenReview) {
+              // Flag já está no sessionStorage, não precisa remover aqui
+            } else {
+              sessionStorage.removeItem('openReviewModal');
+            }
+          } else {
+            sessionStorage.removeItem('openReviewModal');
+          }
+          
           dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: redirectPage });
-          console.log(`✅ Redirecionando para página salva: ${redirectPage}`);
+          console.log(`✅ Redirecionando para página salva: ${redirectPage}${redirectCourseId ? ` com curso: ${redirectCourseId}` : ''}`);
         } else {
+          sessionStorage.removeItem('openReviewModal');
           dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'dashboard' });
         }
 
