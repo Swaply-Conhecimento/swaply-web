@@ -10,24 +10,49 @@ const authService = {
    */
   register: async (userData) => {
     try {
-      const { data } = await apiClient.post('/auth/register', userData);
-      // Garantir que a API retornou token válido
+      const response = await apiClient.post('/auth/register', userData);
+      const { data } = response;
+      
+      // Log para debug
+      console.log('📥 Resposta do registro:', {
+        status: response.status,
+        success: data?.success,
+        hasToken: !!data?.data?.token,
+        hasUser: !!data?.data?.user,
+        message: data?.message,
+      });
+
+      // Se a resposta indica sucesso mas tem token, usar mesmo que tenha mensagem
+      // (alguns backends retornam warnings mesmo em sucesso)
+      if (response.status >= 200 && response.status < 300 && data?.data?.token) {
+        // Armazenar tokens
+        localStorage.setItem('token', data.data.token);
+        localStorage.setItem('refreshToken', data.data.refreshToken);
+
+        return {
+          success: true,
+          user: data.data.user,
+          token: data.data.token,
+          refreshToken: data.data.refreshToken,
+        };
+      }
+
+      // Se não houver token, tratar como falha explícita
       if (!data?.data?.token) {
-        // Se não houver token, tratar como falha explícita
         throw new Error(data?.message || 'Token não recebido no registro');
       }
 
-      // Armazenar tokens
-      localStorage.setItem('token', data.data.token);
-      localStorage.setItem('refreshToken', data.data.refreshToken);
-
-      return {
-        success: true,
-        user: data.data.user,
-        token: data.data.token,
-        refreshToken: data.data.refreshToken,
-      };
+      // Fallback - se chegou aqui, algo está errado
+      throw new Error('Resposta inesperada do servidor');
     } catch (error) {
+      // Log detalhado do erro para debug
+      console.error('❌ Erro no registro:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        code: error.code,
+      });
+      
       throw new Error(getErrorMessage(error));
     }
   },

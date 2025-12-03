@@ -16,7 +16,6 @@ import feedbackService from './feedback';
 import creditService from './credits';
 import availabilityService from './availability';
 import enrollmentService from './enrollments';
-import feedbackService from './feedback';
 
 /**
  * Exportação de serviços organizados por domínio

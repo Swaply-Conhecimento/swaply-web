@@ -524,7 +524,16 @@ export const AppProvider = ({ children }) => {
         });
 
         dispatch({ type: actionTypes.SET_USER, payload: user });
-        dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'dashboard' });
+        
+        // Verificar se há uma página salva para redirecionar após login
+        const redirectPage = sessionStorage.getItem('redirectAfterLogin');
+        if (redirectPage) {
+          sessionStorage.removeItem('redirectAfterLogin');
+          dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: redirectPage });
+          console.log(`✅ Redirecionando para página salva: ${redirectPage}`);
+        } else {
+          dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'dashboard' });
+        }
 
         console.log('✅ AppContext: Estado atualizado, usuário autenticado');
         return { success: true };
@@ -557,8 +566,17 @@ export const AppProvider = ({ children }) => {
         });
         
         dispatch({ type: actionTypes.SET_USER, payload: user });
-        dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'dashboard' });
         
+        // Verificar se há uma página salva para redirecionar após registro
+        const redirectPage = sessionStorage.getItem('redirectAfterLogin');
+        if (redirectPage) {
+          sessionStorage.removeItem('redirectAfterLogin');
+          dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: redirectPage });
+          console.log(`✅ Redirecionando para página salva: ${redirectPage}`);
+        } else {
+          dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: 'dashboard' });
+        }
+
         console.log('✅ AppContext: Estado atualizado, usuário registrado e autenticado');
         return { success: true };
       } catch (error) {

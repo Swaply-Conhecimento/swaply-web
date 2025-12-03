@@ -33,6 +33,64 @@ const AppContent = () => {
   useTheme();
   useAccessibility();
 
+  // Processar URLs diretas quando a aplicação carrega
+  // Converte URLs como /feedback/plataforma para o sistema de roteamento interno
+  React.useEffect(() => {
+    // Só processar após o loading terminar para não interferir com a restauração de token
+    if (state.isLoading) return;
+
+    // Verificar se já processamos a URL (evitar processar múltiplas vezes)
+    const urlProcessed = sessionStorage.getItem('urlProcessed');
+    if (urlProcessed === 'true') return;
+
+    // Mapeamento de URLs para páginas internas
+    const urlToPageMap = {
+      '/feedback/plataforma': 'platform-review',
+      '/platform-review': 'platform-review',
+      '/dashboard': 'dashboard',
+      '/auth': 'auth',
+      '/login': 'auth',
+      '/register': 'auth',
+      '/profile': 'profile',
+      '/edit-profile': 'edit-profile',
+      '/settings': 'settings',
+      '/favorites': 'favorites',
+      '/calendar': 'calendar',
+      '/my-courses': 'my-courses-completed',
+      '/notifications': 'notifications',
+      '/schedule-class': 'schedule-class',
+      '/terms': 'terms',
+      '/forgot-password': 'forgot-password',
+      '/reset-password': 'reset-password',
+      '/availability-settings': 'availability-settings',
+    };
+
+    // Obter pathname da URL (remover query strings e hash)
+    const pathname = window.location.pathname.toLowerCase();
+    
+    // Se encontrar uma correspondência no mapa, navegar para a página
+    if (urlToPageMap[pathname] && urlToPageMap[pathname] !== state.currentPage) {
+      console.log(`🔄 Convertendo URL ${pathname} para página: ${urlToPageMap[pathname]}`);
+      
+      // Se a página requer autenticação e o usuário não está autenticado,
+      // salvar a página desejada para redirecionar após login
+      if (protectedPages.includes(urlToPageMap[pathname]) && !state.isAuthenticated) {
+        sessionStorage.setItem('redirectAfterLogin', urlToPageMap[pathname]);
+      }
+      
+      // Limpar a URL do navegador para manter limpa
+      window.history.replaceState({}, '', '/');
+      
+      // Marcar que já processamos a URL
+      sessionStorage.setItem('urlProcessed', 'true');
+      
+      actions.setCurrentPage(urlToPageMap[pathname]);
+    } else {
+      // Mesmo que não encontre correspondência, marcar como processado
+      sessionStorage.setItem('urlProcessed', 'true');
+    }
+  }, [state.isLoading, state.currentPage, state.isAuthenticated, actions, protectedPages]);
+
   // Não precisa mais dessa função, o AppContext cuida do redirecionamento
   const handleLogin = () => {
     // Função vazia mantida para compatibilidade, mas não faz nada

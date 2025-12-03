@@ -140,6 +140,16 @@ apiClient.interceptors.response.use(
 
 // Helper para extrair mensagem de erro
 export const getErrorMessage = (error) => {
+  // Erro de timeout
+  if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+    return 'A requisição demorou muito para responder. O servidor pode estar sobrecarregado ou em "cold start". Tente novamente em alguns instantes.';
+  }
+  
+  // Erro de conexão
+  if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+    return 'Erro de conexão. Verifique sua internet e tente novamente. Se o problema persistir, o servidor pode estar temporariamente indisponível.';
+  }
+
   if (error.response?.data?.message) {
     return error.response.data.message;
   }

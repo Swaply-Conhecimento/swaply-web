@@ -292,7 +292,11 @@ const Dashboard = () => {
             }
           }
 
-          if (!gotStats) console.warn('⚠️ Não foi possível obter estatísticas de contagem (nenhum endpoint disponível ou formato inesperado)');
+          if (!gotStats) {
+            // Silenciar warning - não é crítico se as estatísticas não estiverem disponíveis
+            // Os cards podem funcionar sem elas
+            console.debug('ℹ️ Estatísticas de contagem não disponíveis (opcional)');
+          }
         } catch (statsError) {
           console.warn('⚠️ Erro inesperado ao buscar stats:', statsError.message);
         }

@@ -89,6 +89,11 @@ const AuthForm = ({
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Prevenir duplo submit - se já está carregando, não fazer nada
+    if (loading) {
+      return;
+    }
+
     if (validateForm()) {
       onSubmit(formData);
     }

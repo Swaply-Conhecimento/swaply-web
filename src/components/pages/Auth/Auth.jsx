@@ -31,6 +31,12 @@ const Auth = ({ onLogin, initialMode }) => {
   }, []);
 
   const handleSubmit = async (formData) => {
+    // Prevenir duplo submit - se já está carregando, não fazer nada
+    if (loading) {
+      console.warn('⚠️ Tentativa de submit enquanto já está processando. Ignorando...');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
