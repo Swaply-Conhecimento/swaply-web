@@ -33,14 +33,36 @@ const AppContent = () => {
   useTheme();
   useAccessibility();
 
+  // Não precisa mais dessa função, o AppContext cuida do redirecionamento
+  const handleLogin = () => {
+    // Função vazia mantida para compatibilidade, mas não faz nada
+    // O redirecionamento é feito automaticamente pelo AppContext após login bem-sucedido
+  };
+
+  // Rotas protegidas que exigem autenticação
+  const protectedPages = React.useMemo(() => [
+    'profile',
+    'edit-profile',
+    'favorites', 
+    'calendar',
+    'my-courses-completed',
+    'my-courses-teaching',
+    'schedule-class',
+    'notifications',
+    'platform-review'
+  ], []);
+
   // Processar URLs diretas quando a aplicação carrega
   // Converte URLs como /feedback/plataforma para o sistema de roteamento interno
   React.useEffect(() => {
     // Só processar após o loading terminar para não interferir com a restauração de token
     if (state.isLoading) return;
 
-    // Verificar se já processamos a URL (evitar processar múltiplas vezes)
-    const urlProcessed = sessionStorage.getItem('urlProcessed');
+    // Verificar se já processamos a URL nesta sessão (evitar processar múltiplas vezes)
+    // Usar uma chave única baseada na URL atual para permitir processar URLs diferentes
+    const currentUrl = window.location.pathname + window.location.search;
+    const urlProcessedKey = `urlProcessed_${currentUrl}`;
+    const urlProcessed = sessionStorage.getItem(urlProcessedKey);
     if (urlProcessed === 'true') return;
 
     // Mapeamento de URLs para páginas internas
@@ -91,7 +113,7 @@ const AppContent = () => {
       
       // Limpar a URL do navegador
       window.history.replaceState({}, '', '/');
-      sessionStorage.setItem('urlProcessed', 'true');
+      sessionStorage.setItem(urlProcessedKey, 'true');
       return;
     }
     
@@ -109,7 +131,7 @@ const AppContent = () => {
       }
       
       window.history.replaceState({}, '', '/');
-      sessionStorage.setItem('urlProcessed', 'true');
+      sessionStorage.setItem(urlProcessedKey, 'true');
       return;
     }
     
@@ -127,33 +149,14 @@ const AppContent = () => {
       window.history.replaceState({}, '', '/');
       
       // Marcar que já processamos a URL
-      sessionStorage.setItem('urlProcessed', 'true');
+      sessionStorage.setItem(urlProcessedKey, 'true');
       
       actions.setCurrentPage(urlToPageMap[pathname]);
     } else {
       // Mesmo que não encontre correspondência, marcar como processado
-      sessionStorage.setItem('urlProcessed', 'true');
+      sessionStorage.setItem(urlProcessedKey, 'true');
     }
   }, [state.isLoading, state.currentPage, state.isAuthenticated, actions, protectedPages]);
-
-  // Não precisa mais dessa função, o AppContext cuida do redirecionamento
-  const handleLogin = () => {
-    // Função vazia mantida para compatibilidade, mas não faz nada
-    // O redirecionamento é feito automaticamente pelo AppContext após login bem-sucedido
-  };
-
-  // Rotas protegidas que exigem autenticação
-  const protectedPages = React.useMemo(() => [
-    'profile',
-    'edit-profile',
-    'favorites', 
-    'calendar',
-    'my-courses-completed',
-    'my-courses-teaching',
-    'schedule-class',
-    'notifications',
-    'platform-review'
-  ], []);
 
   // Verificar se usuário está tentando acessar rota protegida sem autenticação
   // Só executar depois que o loading terminar para não interferir na restauração do token
